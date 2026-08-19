@@ -1977,4 +1977,15 @@ export const dataRepository = {
       (l) => String(l.parentId) === String(parentId) && l.status === 'active'
     );
   },
+
+  async getStudents(): Promise<any[]> {
+    if (isDBConnected()) {
+      return await User.find({ role: 'student' }).select('_id name email preferredLanguage').lean();
+    }
+    try {
+      return await User.find({ role: 'student' }).select('_id name email preferredLanguage').lean();
+    } catch (e) {
+      return [];
+    }
+  },
 };

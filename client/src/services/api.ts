@@ -1325,3 +1325,51 @@ export const deleteNotification = async (
     return { success: false, message: 'Failed to delete notification' };
   }
 };
+
+// --- FEATURE 12: LEARNING ANALYTICS API HELPERS ---
+export const fetchStudentAnalytics = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/analytics/student`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student analytics' };
+  }
+};
+
+export const fetchTeacherAnalytics = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/analytics/teacher`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher analytics' };
+  }
+};
+
+export const fetchParentStudentAnalytics = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/analytics/parent/${studentId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent student analytics' };
+  }
+};

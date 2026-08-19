@@ -18,11 +18,13 @@ import { studentGoalRouter, achievementRouter } from './student-goal.routes.js';
 import examPreparationRoutes from './exam-preparation.routes.js';
 import careerRoutes from './career.routes.js';
 import notificationRoutes from './notification.routes.js';
+import analyticsRoutes from './analytics.routes.js';
 
 const router = Router();
 
 router.use('/', healthRoutes);
 router.use('/auth', authRoutes);
+router.use('/analytics', analyticsRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/parent', parentRouter);
 router.use('/student/parent-link', studentParentLinkRouter);
