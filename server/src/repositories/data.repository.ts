@@ -22,9 +22,14 @@ import { ScholarshipSourceModel, IScholarshipSource } from '../models/scholarshi
 import { StudentScholarshipProfileModel, IStudentScholarshipProfile } from '../models/student-scholarship-profile.model.js';
 import { Intervention, IIntervention } from '../models/intervention.model.js';
 import { StudentSavedScholarship, IStudentSavedScholarship } from '../models/student-saved-scholarship.model.js';
+import { ParentProfile, IParentProfile } from '../models/parent-profile.model.js';
+import { ParentStudentLink, IParentStudentLink } from '../models/parent-student-link.model.js';
 import { User } from '../models/user.model.js';
 
 // In-Memory Storage Containers for Offline Mode
+const inMemParentProfiles = new Map<string, any>();
+const inMemParentStudentLinks: any[] = [];
+const inMemParentInvitations: any[] = [];
 const inMemSavedScholarships: any[] = [];
 const inMemInterventions: any[] = [];
 const inMemSubjects: any[] = [];
@@ -1236,5 +1241,162 @@ export const dataRepository = {
 
   async getStudentStudyPlan(studentId: string): Promise<any> {
     return await this.getStudyPlan(studentId);
+  },
+
+  // --- PARENT / GUARDIAN LINKING & INSIGHTS ---
+  async createParentInvitation(data: {
+    studentId: string;
+    code: string;
+    relationship: string;
+    expiresAt: Date;
+  }): Promise<any> {
+    if (isDBConnected()) {
+      return await ParentStudentLink.create({
+        parentId: new mongoose.Types.ObjectId(), // Placeholder until accepted
+        studentId: data.studentId,
+        relationship: data.relationship,
+        status: 'pending',
+        invitationCode: data.code,
+        expiresAt: data.expiresAt,
+      });
+    }
+    const inv = {
+      _id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      studentId: data.studentId,
+      code: data.code,
+      relationship: data.relationship,
+      status: 'pending',
+      expiresAt: data.expiresAt,
+      createdAt: new Date(),
+    };
+    inMemParentInvitations.push(inv);
+    return inv;
+  },
+
+  async getParentInvitationByCode(code: string): Promise<any> {
+    if (isDBConnected()) {
+      return await ParentStudentLink.findOne({ invitationCode: code }).lean();
+    }
+    return inMemParentInvitations.find((i) => i.code === code) || null;
+  },
+
+  async getStudentInvitations(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ParentStudentLink.find({ studentId, status: { $in: ['pending', 'active'] } })
+        .sort({ createdAt: -1 })
+        .lean();
+    }
+    return inMemParentInvitations
+      .filter((i) => String(i.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  async revokeParentInvitation(studentId: string, code: string): Promise<boolean> {
+    if (isDBConnected()) {
+      const res = await ParentStudentLink.updateOne(
+        { studentId, invitationCode: code },
+        { $set: { status: 'revoked' } }
+      );
+      return res.modifiedCount > 0;
+    }
+    const inv = inMemParentInvitations.find(
+      (i) => String(i.studentId) === String(studentId) && i.code === code
+    );
+    if (inv) {
+      inv.status = 'revoked';
+      return true;
+    }
+    return false;
+  },
+
+  async activateParentStudentLink(data: {
+    parentId: string;
+    studentId: string;
+    relationship: string;
+    code: string;
+  }): Promise<any> {
+    if (isDBConnected()) {
+      const link = await ParentStudentLink.findOneAndUpdate(
+        { invitationCode: data.code },
+        {
+          $set: {
+            parentId: data.parentId,
+            relationship: data.relationship,
+            status: 'active',
+            linkedAt: new Date(),
+          },
+        },
+        { new: true }
+      ).populate('studentId', 'name email preferredLanguage').lean();
+
+      await ParentProfile.findOneAndUpdate(
+        { userId: data.parentId },
+        { $addToSet: { linkedStudentIds: data.studentId } },
+        { upsert: true }
+      );
+
+      return link;
+    }
+
+    const inv = inMemParentInvitations.find((i) => i.code === data.code);
+    if (inv) {
+      inv.status = 'active';
+      inv.parentId = data.parentId;
+    }
+
+    let link = inMemParentStudentLinks.find(
+      (l) => String(l.parentId) === String(data.parentId) && String(l.studentId) === String(data.studentId)
+    );
+    if (!link) {
+      const studentUser = (await this.getUserById(data.studentId)) || {
+        _id: data.studentId,
+        name: 'Student',
+        email: 'student@example.com',
+      };
+      link = {
+        _id: `link_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        parentId: data.parentId,
+        studentId: studentUser,
+        relationship: data.relationship,
+        status: 'active',
+        linkedAt: new Date(),
+      };
+      inMemParentStudentLinks.push(link);
+    }
+    return link;
+  },
+
+  async getLinkedStudentsForParent(parentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      const links = await ParentStudentLink.find({ parentId, status: 'active' })
+        .populate('studentId', 'name email role preferredLanguage createdAt')
+        .lean();
+      return links.map((l) => ({
+        linkId: l._id,
+        relationship: l.relationship,
+        linkedAt: l.linkedAt,
+        student: l.studentId,
+      }));
+    }
+
+    const links = inMemParentStudentLinks.filter(
+      (l) => String(l.parentId) === String(parentId) && l.status === 'active'
+    );
+    return links.map((l) => ({
+      linkId: l._id,
+      relationship: l.relationship,
+      linkedAt: l.linkedAt,
+      student: typeof l.studentId === 'object' ? l.studentId : { _id: l.studentId, name: 'Student' },
+    }));
+  },
+
+  async checkParentStudentLinkActive(parentId: string, studentId: string): Promise<boolean> {
+    if (isDBConnected()) {
+      const link = await ParentStudentLink.findOne({ parentId, studentId, status: 'active' }).lean();
+      return !!link;
+    }
+    return inMemParentStudentLinks.some(
+      (l) => String(l.parentId) === String(parentId) && String(l.studentId?._id || l.studentId) === String(studentId) && l.status === 'active'
+    );
   },
 };

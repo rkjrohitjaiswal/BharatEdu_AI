@@ -56,7 +56,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       return;
     }
 
-    const userRole: UserRole = role === 'teacher' ? 'teacher' : 'student';
+    const userRole: UserRole = role === 'teacher' ? 'teacher' : role === 'parent' ? 'parent' : 'student';
     const lang: PreferredLanguage = ['english', 'hindi', 'gujarati'].includes(preferredLanguage)
       ? preferredLanguage
       : 'english';

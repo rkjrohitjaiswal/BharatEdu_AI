@@ -18,6 +18,7 @@ import {
   LogIn,
   UserPlus,
   LogOut,
+  Key,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -48,6 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'Progress Tracker', path: '/progress', icon: LineChart },
     { name: 'Scholarships', path: '/scholarships', icon: Award },
     { name: 'Saved Scholarships', path: '/scholarships/saved', icon: Award },
+    { name: 'Parent Link', path: '/parent-link', icon: Users, badge: 'Access' },
   ];
 
   const teacherNav: NavGroupItem[] = [
@@ -55,6 +57,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'Remediation Portal', path: '/teacher/interventions', icon: Sparkles },
     { name: 'Students Roster', path: '/teacher/students', icon: Users },
     { name: 'Class Analytics', path: '/teacher/analytics', icon: BarChart3 },
+  ];
+
+  const parentNav: NavGroupItem[] = [
+    { name: 'Dashboard', path: '/parent/dashboard', icon: LayoutDashboard },
+    { name: 'My Students', path: '/parent/dashboard', icon: Users },
+    { name: 'Progress Overview', path: '/parent/dashboard', icon: LineChart },
+    { name: 'Scholarships', path: '/scholarships', icon: Award },
+    { name: 'Link Student', path: '/parent-link', icon: Key },
   ];
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -152,6 +162,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
               </p>
               <nav className="space-y-1">
                 {teacherNav.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={linkClass}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span>{item.name}</span>
+                    </NavLink>
+                  );
+                })}
+              </nav>
+            </div>
+          )}
+
+          {/* Parent Navigation */}
+          {user && user.role === 'parent' && (
+            <div>
+              <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                Parent Portal
+              </p>
+              <nav className="space-y-1">
+                {parentNav.map((item) => {
                   const Icon = item.icon;
                   return (
                     <NavLink

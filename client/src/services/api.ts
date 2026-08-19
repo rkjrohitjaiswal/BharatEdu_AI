@@ -808,3 +808,106 @@ export const fetchTodayLearningCoach = async (): Promise<{
     return { success: false, message: 'Failed to fetch AI Learning Coach plan' };
   }
 };
+
+// --- PARENT / GUARDIAN PROGRESS & LINKING ---
+export const fetchParentStudents = async (): Promise<{
+  success: boolean;
+  data?: any[];
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/students`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch linked students' };
+  }
+};
+
+export const fetchParentStudentOverview = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/students/${studentId}/overview`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student progress overview' };
+  }
+};
+
+export const acceptParentInvitation = async (
+  code: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/link-student`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ code }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to accept parent invitation code' };
+  }
+};
+
+export const generateParentInvitation = async (
+  relationship: string = 'guardian'
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/parent-link/invite`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ relationship }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate invitation code' };
+  }
+};
+
+export const fetchStudentInvitations = async (): Promise<{
+  success: boolean;
+  data?: any[];
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/parent-link/invitations`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student invitations' };
+  }
+};
+
+export const revokeParentInvitation = async (
+  code: string
+): Promise<{
+  success: boolean;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/parent-link/invitations/${code}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to revoke invitation code' };
+  }
+};

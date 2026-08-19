@@ -13,11 +13,14 @@ import mistakeReviewRoutes from './mistake-review.routes.js';
 import practiceHistoryRoutes from './practice-history.routes.js';
 import { teacherInterventionRouter, studentInterventionRouter } from './intervention.routes.js';
 import learningCoachRoutes from './learning-coach.routes.js';
+import { parentRouter, studentParentLinkRouter } from './parent.routes.js';
 
 const router = Router();
 
 router.use('/', healthRoutes);
 router.use('/auth', authRoutes);
+router.use('/parent', parentRouter);
+router.use('/student/parent-link', studentParentLinkRouter);
 router.use('/student/learning-coach', learningCoachRoutes);
 router.use('/student/study-plan', studyPlanRoutes);
 router.use('/student/practice/history', practiceHistoryRoutes);

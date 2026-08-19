@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'teacher';
+export type UserRole = 'student' | 'teacher' | 'parent';
 export type PreferredLanguage = 'english' | 'hindi' | 'gujarati';
 
 export interface User {

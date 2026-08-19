@@ -25,6 +25,10 @@ import { TeacherStudentsPage } from './pages/TeacherStudentsPage';
 import { TeacherAnalyticsPage } from './pages/TeacherAnalyticsPage';
 import { TeacherInterventionsPage } from './pages/TeacherInterventionsPage';
 
+import { ParentDashboardPage } from './pages/ParentDashboardPage';
+import { ParentStudentOverviewPage } from './pages/ParentStudentOverviewPage';
+import { ParentLinkPage } from './pages/ParentLinkPage';
+
 export const App: React.FC = () => {
   return (
     <AuthProvider>
@@ -156,6 +160,32 @@ export const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['teacher']}>
                   <TeacherAnalyticsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Parent Protected Routes */}
+            <Route
+              path="parent/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['parent']}>
+                  <ParentDashboardPage user={null} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="parent/overview/:studentId"
+              element={
+                <ProtectedRoute allowedRoles={['parent']}>
+                  <ParentStudentOverviewPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="parent-link"
+              element={
+                <ProtectedRoute allowedRoles={['student', 'parent']}>
+                  <ParentLinkPage user={null} />
                 </ProtectedRoute>
               }
             />
