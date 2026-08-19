@@ -1435,7 +1435,10 @@ export const dataRepository = {
       return !!link;
     }
     return inMemParentStudentLinks.some(
-      (l) => String(l.parentId) === String(parentId) && String(l.studentId?._id || l.studentId) === String(studentId) && l.status === 'active'
+      (l) =>
+        String(l.parentId) === String(parentId) &&
+        String(l.studentId?.id || l.studentId?._id || l.studentId) === String(studentId) &&
+        l.status === 'active'
     );
   },
 

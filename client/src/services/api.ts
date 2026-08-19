@@ -1490,3 +1490,71 @@ export const fetchTeacherCopilotParentMessage = async (
     return { success: false, message: 'Failed to generate parent message draft' };
   }
 };
+
+// --- FEATURE 15: PARENT COPILOT API HELPERS ---
+export const fetchParentCopilotStudents = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/copilot/students`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent copilot students' };
+  }
+};
+
+export const fetchParentCopilotStudentSnapshot = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/copilot/student/${studentId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent student snapshot' };
+  }
+};
+
+export const fetchParentCopilotAdvice = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/copilot/student/${studentId}/advice`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate parent copilot advice' };
+  }
+};
+
+export const fetchParentCopilotWeeklyPlan = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/copilot/student/${studentId}/weekly-plan`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch weekly parent support plan' };
+  }
+};

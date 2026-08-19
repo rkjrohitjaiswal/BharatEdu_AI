@@ -72,6 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
 
   const parentNav: NavGroupItem[] = [
     { name: 'Dashboard', path: '/parent/dashboard', icon: LayoutDashboard },
+    { name: 'AI Parent Copilot', path: '/parent/copilot', icon: Bot, badge: 'Copilot' },
     { name: 'My Students', path: '/parent/dashboard', icon: Users },
     { name: 'Progress Overview', path: '/parent/dashboard', icon: LineChart },
     { name: 'Scholarships', path: '/scholarships', icon: Award },
