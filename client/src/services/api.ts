@@ -1373,3 +1373,51 @@ export const fetchParentStudentAnalytics = async (
     return { success: false, message: 'Failed to fetch parent student analytics' };
   }
 };
+
+// --- FEATURE 13: RISK PREDICTION API HELPERS ---
+export const fetchStudentRiskProfile = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/risk/student`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student risk profile' };
+  }
+};
+
+export const fetchTeacherRiskAnalytics = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/risk/teacher`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher class risk analytics' };
+  }
+};
+
+export const fetchParentStudentRiskSummary = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/risk/parent/${studentId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent student risk summary' };
+  }
+};

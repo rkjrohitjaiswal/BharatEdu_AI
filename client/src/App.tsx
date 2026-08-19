@@ -32,6 +32,7 @@ import { ParentStudentOverviewPage } from './pages/ParentStudentOverviewPage';
 import { ParentLinkPage } from './pages/ParentLinkPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { AnalyticsDashboardPage } from './pages/AnalyticsDashboardPage';
+import { RiskPredictionDashboardPage } from './pages/RiskPredictionDashboardPage';
 
 export const App: React.FC = () => (
   <AuthProvider>
@@ -41,6 +42,8 @@ export const App: React.FC = () => (
           <Route index element={<LandingPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+          <Route path="risk" element={<ProtectedRoute allowedRoles={['student', 'teacher']}><RiskPredictionDashboardPage /></ProtectedRoute>} />
+          <Route path="parent/risk/:studentId" element={<ProtectedRoute allowedRoles={['parent']}><RiskPredictionDashboardPage /></ProtectedRoute>} />
           <Route path="analytics" element={<ProtectedRoute allowedRoles={['student', 'teacher']}><AnalyticsDashboardPage /></ProtectedRoute>} />
           <Route path="parent/analytics/:studentId" element={<ProtectedRoute allowedRoles={['parent']}><AnalyticsDashboardPage /></ProtectedRoute>} />
           <Route path="notifications" element={<ProtectedRoute allowedRoles={['student', 'teacher', 'parent']}><NotificationsPage /></ProtectedRoute>} />
