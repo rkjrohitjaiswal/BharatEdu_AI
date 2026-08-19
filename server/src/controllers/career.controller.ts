@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { CareerGoal } from '../models/career-goal.model.js';
 import { buildCareerRoadmap, careerCatalog } from '../ai/career/engine.js';
+import { generateCareerAdvice } from '../ai/career/ai-coach.js';
 import { findCareer } from '../ai/career/catalog.js';
 
 const ok = (res: Response, data: unknown) => res.json({ success: true, data });
@@ -22,12 +23,13 @@ export async function listGoals(req: Request, res: Response) {
 }
 
 export async function getRoadmap(req: Request, res: Response) {
-  try {
-    const roadmap = await buildCareerRoadmap(req.user!.id, req.params.id);
-    return ok(res, roadmap);
-  } catch (error: any) {
-    return fail(res, 404, error?.message || 'Career roadmap unavailable');
-  }
+  try { return ok(res, await buildCareerRoadmap(req.user!.id, req.params.id)); }
+  catch (error: any) { return fail(res, 404, error?.message || 'Career roadmap unavailable'); }
+}
+
+export async function getAdvice(req: Request, res: Response) {
+  try { return ok(res, await generateCareerAdvice(req.user!.id, req.params.id)); }
+  catch (error: any) { return fail(res, 404, error?.message || 'Career advice unavailable'); }
 }
 
 export async function deleteGoal(req: Request, res: Response) {
