@@ -1,5 +1,6 @@
 import { CareerGoal } from '../../models/career-goal.model.js';
-import { Topic, TopicMastery } from '../../models/index.js';
+import { Topic } from '../../models/topic.model.js';
+import { TopicMastery } from '../../models/topic-mastery.model.js';
 import { CAREER_CATALOG, findCareer } from './catalog.js';
 import { CareerDefinition, SkillAssessment } from './types.js';
 
