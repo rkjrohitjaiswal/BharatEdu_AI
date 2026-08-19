@@ -9,11 +9,12 @@ import { LearningTrendCard } from '../components/parent/LearningTrendCard';
 import { ParentAttentionCard } from '../components/parent/ParentAttentionCard';
 import { StudyActivityCard } from '../components/parent/StudyActivityCard';
 import { ParentScholarshipCard } from '../components/parent/ParentScholarshipCard';
-import { Users, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ParentInterventionAlerts } from '../components/parent/ParentInterventionAlerts';
+import { Users, ShieldCheck, RefreshCw } from 'lucide-react';
 
 export const ParentDashboardPage: React.FC<{ user: any }> = ({ user }) => {
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
   const [linkedStudents, setLinkedStudents] = useState<any[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
   const [overviewData, setOverviewData] = useState<any>(null);
@@ -24,6 +25,7 @@ export const ParentDashboardPage: React.FC<{ user: any }> = ({ user }) => {
 
   const loadParentDashboard = async () => {
     setLoading(true);
+    setError('');
     const res = await fetchParentStudents();
     if (res.success && res.data && res.data.length > 0) {
       setLinkedStudents(res.data);
@@ -31,7 +33,11 @@ export const ParentDashboardPage: React.FC<{ user: any }> = ({ user }) => {
       const firstId = String(firstStudent?._id || firstStudent?.id || firstStudent);
       setSelectedStudentId(firstId);
       await loadOverview(firstId);
+    } else if (res.success && res.data && res.data.length === 0) {
+      setLinkedStudents([]);
+      setLoading(false);
     } else {
+      setError(res.message || 'Failed to load parent dashboard data.');
       setLoading(false);
     }
   };
@@ -40,6 +46,8 @@ export const ParentDashboardPage: React.FC<{ user: any }> = ({ user }) => {
     const res = await fetchParentStudentOverview(studentId);
     if (res.success && res.data) {
       setOverviewData(res.data);
+    } else {
+      setError(res.message || 'Failed to load student overview data.');
     }
     setLoading(false);
   };
@@ -54,9 +62,30 @@ export const ParentDashboardPage: React.FC<{ user: any }> = ({ user }) => {
     return <SkeletonLoader />;
   }
 
+  if (error) {
+    return (
+      <div className="space-y-6 text-xs max-w-4xl mx-auto py-8">
+        <Card title="Parent Learning Dashboard Error">
+          <div className="py-8 text-center space-y-4">
+            <p className="text-amber-800 font-semibold">{error}</p>
+            <Button onClick={loadParentDashboard} icon={<RefreshCw className="w-4 h-4" />}>
+              Retry Loading Dashboard
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   if (linkedStudents.length === 0) {
     return (
       <div className="space-y-6 text-xs max-w-4xl mx-auto py-8">
+        {/* Privacy Message Banner */}
+        <div className="p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center gap-2.5 text-indigo-950 font-medium">
+          <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
+          <span>This dashboard shows learning progress for students linked to your account.</span>
+        </div>
+
         <Card title="Parent Learning Dashboard" subtitle="Connect to your child's student account">
           <div className="py-12 text-center space-y-4">
             <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto">
@@ -77,6 +106,12 @@ export const ParentDashboardPage: React.FC<{ user: any }> = ({ user }) => {
 
   return (
     <div className="space-y-6 text-xs max-w-6xl mx-auto">
+      {/* Privacy Notice Banner */}
+      <div className="p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center gap-2.5 text-indigo-950 font-medium">
+        <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
+        <span>This dashboard shows learning progress for students linked to your account.</span>
+      </div>
+
       {/* Welcome Banner & Student Selector */}
       <ParentWelcome
         parentUser={user}
@@ -108,6 +143,11 @@ export const ParentDashboardPage: React.FC<{ user: any }> = ({ user }) => {
 
         {/* Right 1 Column */}
         <div className="space-y-6">
+          {/* Active Teacher Interventions Card */}
+          <ParentInterventionAlerts
+            activeTeacherInterventions={overviewData?.activeTeacherInterventions}
+          />
+
           {/* Needs Attention Card */}
           <ParentAttentionCard activeGapsSummary={overviewData?.activeGapsSummary} />
 

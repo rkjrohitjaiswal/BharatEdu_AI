@@ -64,6 +64,7 @@ export const getStudentOverview = async (
       practiceSessions,
       studyPlan,
       scholarshipMatches,
+      interventions,
     ] = await Promise.all([
       dataRepository.getUserById(studentId),
       dataRepository.getStudentScholarshipProfile(studentId),
@@ -73,6 +74,7 @@ export const getStudentOverview = async (
       dataRepository.getPracticeSessions(studentId),
       dataRepository.getStudentStudyPlan(studentId),
       dataRepository.getScholarshipMatches(studentId),
+      dataRepository.getStudentInterventions(studentId),
     ]);
 
     const studentName = studentUser?.name || 'Student';
@@ -149,19 +151,36 @@ export const getStudentOverview = async (
       strongestSubject,
     });
 
-    // 4. Construct Privacy-Preserving Overview (Excludes tutor chats, answer keys, secrets)
+    // Recommended topics extraction
+    const recommendedTopics = (learningProfile?.recommendedTopics || ['Algebra Fundamentals', 'Cell Biology', 'Grammar Essentials']);
+
+    // Active Teacher Interventions (Filter out private notes, retain title, priority, status, dueDate, actionGuidance)
+    const activeTeacherInterventions = (interventions || []).map((i: any) => ({
+      id: i._id || i.id,
+      title: i.title || 'Targeted Practice Assignment',
+      priority: i.priority || 'medium',
+      status: i.status || 'assigned',
+      dueDate: i.dueDate ? new Date(i.dueDate).toLocaleDateString('en-IN') : 'Upcoming',
+      actionGuidance: i.actionGuidance || i.instructions || 'Complete the assigned remediation practice session.',
+      subjectName: typeof i.subjectId === 'object' && i.subjectId !== null ? i.subjectId.name : 'Core Subject',
+    }));
+
+    // 4. Construct Privacy-Preserving Overview
     const overview = {
       student: {
         id: studentId,
         name: studentName,
         classLevel: profile?.classLevel || 8,
+        board: profile?.board || 'CBSE',
         preferredLanguage,
       },
       overallMastery,
       progressTrend,
+      practiceAccuracy: recentAccuracy,
       practiceStreak,
       totalPracticeTimeMinutes,
       subjectPerformance,
+      recommendedTopics,
       recentActivity: (practiceSessions || []).slice(0, 3).map((s: any) => ({
         title: `Completed ${s.subjectName || 'Practice'} session`,
         timestamp: new Date(s.createdAt || Date.now()).toLocaleDateString('en-IN'),
@@ -172,6 +191,7 @@ export const getStudentOverview = async (
         gapCount: 1,
         description: `Needs additional practice in ${typeof g.topicId === 'object' && g.topicId !== null ? g.topicId.name : 'Concept'}.`,
       })),
+      activeTeacherInterventions,
       studyPlanProgress: {
         totalTasks,
         completedTasks,
