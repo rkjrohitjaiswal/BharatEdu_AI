@@ -28,9 +28,11 @@ import { StudentGoal, IStudentGoal } from '../models/student-goal.model.js';
 import { Achievement, IAchievement } from '../models/achievement.model.js';
 import { ExamPreparationModel } from '../models/exam-preparation.model.js';
 import { ExamTopicProgressModel } from '../models/exam-topic-progress.model.js';
+import { CareerGoal, ICareerGoal } from '../models/career-goal.model.js';
 import { User } from '../models/user.model.js';
 
 // In-Memory Storage Containers for Offline Mode
+const inMemCareerGoals: any[] = [];
 const inMemExamPreparations: any[] = [];
 const inMemExamTopicProgresses: any[] = [];
 const inMemExamPlans: Map<string, any> = new Map();
@@ -1724,5 +1726,69 @@ export const dataRepository = {
       plan.completionPercentage = Math.round((completedCount / plan.tasks.length) * 100);
     }
     return plan;
+  },
+
+  // --- FEATURE 10: CAREER & SKILL ROADMAP ---
+  async createCareerGoal(studentId: string, input: any): Promise<any> {
+    const goalData = {
+      studentId,
+      targetRole: input.targetRole,
+      targetDate: input.targetDate ? new Date(input.targetDate) : undefined,
+      status: input.status || 'active',
+      notes: input.notes || '',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    if (isDBConnected()) {
+      return await CareerGoal.create(goalData);
+    }
+
+    const doc = {
+      ...goalData,
+      _id: `cg_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    };
+    inMemCareerGoals.push(doc);
+    return doc;
+  },
+
+  async getCareerGoals(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await CareerGoal.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+
+    return inMemCareerGoals.filter(
+      (g) => String(g.studentId) === String(studentId)
+    );
+  },
+
+  async getCareerGoalById(studentId: string, goalId: string): Promise<any | null> {
+    if (isDBConnected()) {
+      if (!mongoose.Types.ObjectId.isValid(goalId)) return null;
+      return await CareerGoal.findOne({ _id: goalId, studentId }).lean();
+    }
+
+    return (
+      inMemCareerGoals.find(
+        (g) => String(g._id || g.id) === String(goalId) && String(g.studentId) === String(studentId)
+      ) || null
+    );
+  },
+
+  async deleteCareerGoal(studentId: string, goalId: string): Promise<boolean> {
+    if (isDBConnected()) {
+      if (!mongoose.Types.ObjectId.isValid(goalId)) return false;
+      const res = await CareerGoal.deleteOne({ _id: goalId, studentId });
+      return res.deletedCount > 0;
+    }
+
+    const idx = inMemCareerGoals.findIndex(
+      (g) => String(g._id || g.id) === String(goalId) && String(g.studentId) === String(studentId)
+    );
+    if (idx !== -1) {
+      inMemCareerGoals.splice(idx, 1);
+      return true;
+    }
+    return false;
   },
 };

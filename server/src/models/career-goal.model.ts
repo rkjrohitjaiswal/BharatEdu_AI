@@ -13,7 +13,7 @@ export interface ICareerGoal extends Document {
 }
 
 const careerGoalSchema = new Schema<ICareerGoal>({
-  studentId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  studentId: { type: Schema.Types.Mixed, ref: 'User', required: true, index: true },
   targetRole: { type: String, required: true, trim: true, maxlength: 120 },
   targetDate: { type: Date },
   status: { type: String, enum: ['active', 'completed', 'paused'], default: 'active', index: true },

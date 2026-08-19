@@ -37,4 +37,4 @@ node scratch/test_full_regression.js
 npm run git:push
 ```
 
-For the feature test, set `STUDENT_TOKEN` to a valid student JWT and ensure the local API is running.
+For the feature test, `scratch/test_career_roadmap.js` automatically spawns the local server and registers test users without requiring manual token setup.

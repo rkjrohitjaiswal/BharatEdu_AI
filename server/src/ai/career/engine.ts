@@ -1,6 +1,4 @@
-import { CareerGoal } from '../../models/career-goal.model.js';
-import { Topic } from '../../models/topic.model.js';
-import { TopicMastery } from '../../models/topic-mastery.model.js';
+import { dataRepository } from '../../repositories/data.repository.js';
 import { CAREER_CATALOG, findCareer } from './catalog.js';
 import { CareerDefinition, SkillAssessment } from './types.js';
 
@@ -21,22 +19,25 @@ function priority(score: number): SkillAssessment['priority'] {
 }
 
 export async function buildCareerRoadmap(studentId: string, goalId?: string) {
-  const goal = goalId ? await CareerGoal.findOne({ _id: goalId, studentId }).lean() : await CareerGoal.findOne({ studentId, status: 'active' }).sort({ createdAt: -1 }).lean();
+  const goals = await dataRepository.getCareerGoals(studentId);
+  const goal = goalId
+    ? goals.find((g: any) => String(g._id || g.id) === String(goalId))
+    : goals[0];
   if (!goal) throw new Error('Career goal not found');
   const career = findCareer(goal.targetRole);
   if (!career) throw new Error('Unsupported career role');
 
-  const mastery = await TopicMastery.find({ studentId }).lean();
-  const topicIds = mastery.map((m: any) => m.topicId).filter(Boolean);
-  const topics = topicIds.length ? await Topic.find({ _id: { $in: topicIds } }).lean() : [];
-  const byTopic = new Map(topics.map((t: any) => [String(t._id), String(t.name).toLowerCase()]));
+  const mastery = await dataRepository.getTopicMastery(studentId);
 
-  const assessments: SkillAssessment[] = career.skills.map(skill => {
+  const assessments: SkillAssessment[] = career.skills.map((skill) => {
     const matches = mastery.filter((m: any) => {
-      const name = byTopic.get(String(m.topicId)) || '';
-      return skill.keywords.some(k => name.includes(k.toLowerCase()));
+      const topicObjName = typeof m.topicId === 'object' ? (m.topicId?.name || '') : String(m.topicId || '');
+      const topicStr = `${topicObjName} ${m.topicName || ''}`.toLowerCase();
+      return skill.keywords.some((k) => topicStr.includes(k.toLowerCase()));
     });
-    const score = matches.length ? clamp(Math.max(...matches.map((m: any) => Number(m.masteryScore ?? 0)))) : 0;
+    const score = matches.length
+      ? clamp(Math.max(...matches.map((m: any) => Number(m.masteryScore ?? 0))))
+      : 0;
     return { ...skill, score, level: level(score), priority: priority(score) };
   });
 
