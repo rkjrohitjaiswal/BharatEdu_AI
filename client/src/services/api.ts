@@ -1558,3 +1558,64 @@ export const fetchParentCopilotWeeklyPlan = async (
     return { success: false, message: 'Failed to fetch weekly parent support plan' };
   }
 };
+
+// --- FEATURE 16: STUDENT MENTOR API HELPERS ---
+export const fetchStudentMentorToday = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mentor/today`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch today\'s student mentor snapshot' };
+  }
+};
+
+export const fetchStudentMentorPlan = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mentor/plan`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student mentor plan' };
+  }
+};
+
+export const fetchStudentMentorAdvice = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mentor/advice`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student mentor advice' };
+  }
+};
+
+export const fetchStudentMentorSummary = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mentor/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student mentor summary' };
+  }
+};

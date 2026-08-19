@@ -22,6 +22,7 @@ import { AchievementSummaryCard } from '../components/dashboard/AchievementSumma
 import { ExamPreparationCard } from '../components/dashboard/ExamPreparationCard';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '../components/Button';
+import { StudentMentorCard } from '../components/dashboard/StudentMentorCard';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -89,6 +90,9 @@ export const DashboardPage: React.FC = () => {
     <div className="space-y-6">
       {/* 1. Welcome Header */}
       <StudentWelcome user={user} profile={studentProfile} />
+
+      {/* AI Success Mentor Compact Card */}
+      <StudentMentorCard />
 
       {/* 2. Key Metrics Stats Overview */}
       <LearningOverview

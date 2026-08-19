@@ -22,6 +22,7 @@ import analyticsRoutes from './analytics.routes.js';
 import riskRoutes from './risk.routes.js';
 import teacherCopilotRoutes from './teacher-copilot.routes.js';
 import parentCopilotRoutes from './parent-copilot.routes.js';
+import studentMentorRoutes from './student-mentor.routes.js';
 
 const router = Router();
 
@@ -29,6 +30,7 @@ router.use('/', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/teacher/copilot', teacherCopilotRoutes);
 router.use('/parent/copilot', parentCopilotRoutes);
+router.use('/student/mentor', studentMentorRoutes);
 router.use('/risk', riskRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/notifications', notificationRoutes);
