@@ -1,0 +1,21 @@
+{
+  "name": "bharatedu-ai",
+  "version": "1.0.0",
+  "description": "AI-powered personalized and equitable education platform for OOSC 4.0 Hackathon",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build:server": "npm --prefix server run build",
+    "build:client": "npm --prefix client run build",
+    "build": "npm run build:server && npm run build:client",
+    "demo:seed": "node server/dist/seed.js",
+    "demo:reset": "node server/dist/scripts/reset-demo.js",
+    "health:check": "node scratch/final_health_check.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
