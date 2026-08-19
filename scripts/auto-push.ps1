@@ -14,6 +14,16 @@ if (-not (Test-Path ".git")) {
     exit 1
 }
 
+# Verify git conflict state
+if (Test-Path ".git/MERGE_HEAD") {
+    Write-Error "ERROR: Repository is in a merge conflict state! Push aborted."
+    exit 1
+}
+if (Test-Path ".git/rebase-merge") {
+    Write-Error "ERROR: Repository is in a rebase conflict state! Push aborted."
+    exit 1
+}
+
 $currentBranch = (git branch --show-current).Trim()
 $remote = (git remote get-url origin).Trim()
 
@@ -47,7 +57,7 @@ foreach ($f in $forbiddenFiles) {
     if (Test-Path $f) {
         $staged = git status --porcelain | Select-String $f
         if ($staged) {
-            Write-Error "SECURITY ERROR: Forbidden environment file '$f' is staged for commit!"
+            Write-Error "SECURITY ERROR: Forbidden environment file '$f' is staged or present for commit!"
             exit 1
         }
     }
@@ -63,12 +73,44 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "Production Build Succeeded! ✅" -ForegroundColor Green
 Write-Host ""
 
-# 6. Generate Meaningful Commit Message based on changed files
+# 6. Test Discovery & Execution
+Write-Host "Running Test Discovery & Execution..." -ForegroundColor Cyan
+$testFiles = @()
+
+if (Test-Path "scratch/test_parent_insights.js") {
+    $testFiles += "scratch/test_parent_insights.js"
+}
+if (Test-Path "scratch/test_learning_coach.js") {
+    $testFiles += "scratch/test_learning_coach.js"
+}
+if (Test-Path "scratch/test_full_regression.js") {
+    $testFiles += "scratch/test_full_regression.js"
+}
+
+if ($testFiles.Count -gt 0) {
+    foreach ($test in $testFiles) {
+        Write-Host "Executing Test: $test ..." -ForegroundColor Yellow
+        node $test
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "TEST FAILED ($test)! Auto-push aborted."
+            exit 1
+        }
+        Write-Host "Test Passed ($test)! ✅" -ForegroundColor Green
+    }
+} else {
+    Write-Host "No automated test scripts found. Proceeding with build verification." -ForegroundColor Gray
+}
+Write-Host ""
+
+# 7. Generate Meaningful Commit Message based on changed files
 $changedFilesList = git status --porcelain
 $commitType = "chore"
 $commitSummary = "update project files"
 
-if ($changedFilesList -match "server/src/ai/learning-coach" -or $changedFilesList -match "LearningCoach") {
+if ($changedFilesList -match "parent" -or $changedFilesList -match "Parent") {
+    $commitType = "feat"
+    $commitSummary = "add parent learning insights and progress report"
+} elseif ($changedFilesList -match "learning-coach" -or $changedFilesList -match "LearningCoach") {
     $commitType = "feat"
     $commitSummary = "upgrade AI Learning Coach and daily recommendations"
 } elseif ($changedFilesList -match "scholarship" -or $changedFilesList -match "Scholarship") {
@@ -83,6 +125,9 @@ if ($changedFilesList -match "server/src/ai/learning-coach" -or $changedFilesLis
 } elseif ($changedFilesList -match "auth" -or $changedFilesList -match "security") {
     $commitType = "fix"
     $commitSummary = "update auth and security configuration"
+} elseif ($changedFilesList -match "docs/") {
+    $commitType = "docs"
+    $commitSummary = "update project documentation"
 } elseif ($changedFilesList -match "scripts/" -or $changedFilesList -match "package.json" -or $changedFilesList -match "\.gitignore") {
     $commitType = "chore"
     $commitSummary = "update GitHub automation scripts and configuration"
@@ -91,11 +136,11 @@ if ($changedFilesList -match "server/src/ai/learning-coach" -or $changedFilesLis
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $commitMessage = "${commitType}: ${commitSummary} (${timestamp})"
 
-# 7. Stage Changes
+# 8. Stage Changes
 Write-Host "Staging Changes (git add .)..." -ForegroundColor Cyan
 git add .
 
-# 8. Verify Staged Files Safety
+# 9. Verify Staged Files Safety
 $stagedFiles = (git diff --cached --name-only)
 $safetyViolations = @()
 
@@ -120,7 +165,7 @@ Write-Host "Staged Files Verified Safe: ✅" -ForegroundColor Green
 $stagedFiles | ForEach-Object { Write-Host "  + $_" -ForegroundColor Gray }
 Write-Host ""
 
-# 9. Commit & Push
+# 10. Commit & Push
 Write-Host "Creating Commit: '$commitMessage'..." -ForegroundColor Cyan
 git commit -m $commitMessage
 
