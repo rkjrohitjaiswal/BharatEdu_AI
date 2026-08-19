@@ -13,7 +13,9 @@
     "build": "npm run build:server && npm run build:client",
     "demo:seed": "node server/dist/seed.js",
     "demo:reset": "node server/dist/scripts/reset-demo.js",
-    "health:check": "node scratch/final_health_check.js"
+    "health:check": "node scratch/final_health_check.js",
+    "git:push": "powershell -ExecutionPolicy Bypass -File scripts/auto-push.ps1",
+    "git:verify": "powershell -ExecutionPolicy Bypass -File scripts/verify-and-push.ps1"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
