@@ -12,4 +12,5 @@ export const fetchCareerCatalog = () => request('/student/career/catalog');
 export const fetchCareerGoals = () => request('/student/career/goals');
 export const createCareerGoal = (targetRole: string, targetDate?: string, notes?: string) => request('/student/career/goals', { method: 'POST', body: JSON.stringify({ targetRole, targetDate, notes }) });
 export const fetchCareerRoadmap = (goalId: string) => request(`/student/career/goals/${goalId}/roadmap`);
+export const fetchCareerAdvice = (goalId: string) => request(`/student/career/goals/${goalId}/advice`);
 export const deleteCareerGoal = (goalId: string) => request(`/student/career/goals/${goalId}`, { method: 'DELETE' });
