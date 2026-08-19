@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, BookOpen, Search, Bell, Server, LogOut, User as UserIcon } from 'lucide-react';
+import { Menu, X, BookOpen, Search, Server, LogOut, User as UserIcon } from 'lucide-react';
 import { fetchHealthCheck } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Badge } from './Badge';
 import { Button } from './Button';
+import { NotificationBell } from './notifications/NotificationBell';
 
 interface HeaderProps {
   mobileOpen: boolean;
@@ -98,13 +99,7 @@ export const Header: React.FC<HeaderProps> = ({ mobileOpen, setMobileOpen }) => 
 
           {user ? (
             <div className="flex items-center gap-3 pl-2">
-              <button
-                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg relative hidden sm:block"
-                title="Notifications"
-              >
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full"></span>
-              </button>
+              <NotificationBell />
 
               <div className="h-6 w-px bg-slate-200 hidden sm:block"></div>
 

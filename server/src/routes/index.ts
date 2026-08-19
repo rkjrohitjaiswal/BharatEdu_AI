@@ -17,11 +17,13 @@ import { parentRouter, studentParentLinkRouter } from './parent.routes.js';
 import { studentGoalRouter, achievementRouter } from './student-goal.routes.js';
 import examPreparationRoutes from './exam-preparation.routes.js';
 import careerRoutes from './career.routes.js';
+import notificationRoutes from './notification.routes.js';
 
 const router = Router();
 
 router.use('/', healthRoutes);
 router.use('/auth', authRoutes);
+router.use('/notifications', notificationRoutes);
 router.use('/parent', parentRouter);
 router.use('/student/parent-link', studentParentLinkRouter);
 router.use('/student/learning-coach', learningCoachRoutes);

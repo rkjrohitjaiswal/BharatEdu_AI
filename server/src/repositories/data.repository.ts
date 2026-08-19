@@ -29,9 +29,11 @@ import { Achievement, IAchievement } from '../models/achievement.model.js';
 import { ExamPreparationModel } from '../models/exam-preparation.model.js';
 import { ExamTopicProgressModel } from '../models/exam-topic-progress.model.js';
 import { CareerGoal, ICareerGoal } from '../models/career-goal.model.js';
+import { NotificationModel, INotification } from '../models/notification.model.js';
 import { User } from '../models/user.model.js';
 
 // In-Memory Storage Containers for Offline Mode
+const inMemNotifications: any[] = [];
 const inMemCareerGoals: any[] = [];
 const inMemExamPreparations: any[] = [];
 const inMemExamTopicProgresses: any[] = [];
@@ -1790,5 +1792,189 @@ export const dataRepository = {
       return true;
     }
     return false;
+  },
+
+  // --- FEATURE 11: SMART NOTIFICATIONS & ALERTS ---
+  async createNotification(notificationData: any): Promise<any> {
+    const docData = {
+      recipientUserId: notificationData.recipientUserId,
+      recipientRole: notificationData.recipientRole,
+      type: notificationData.type,
+      title: notificationData.title,
+      message: notificationData.message,
+      priority: notificationData.priority || 'normal',
+      sourceType: notificationData.sourceType,
+      sourceId: notificationData.sourceId,
+      actionUrl: notificationData.actionUrl,
+      isRead: false,
+      dedupeKey: notificationData.dedupeKey,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    if (isDBConnected()) {
+      return await NotificationModel.create(docData);
+    }
+
+    const doc = {
+      ...docData,
+      _id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    };
+    inMemNotifications.unshift(doc);
+    return doc;
+  },
+
+  async getNotifications(options: { recipientUserId: string; isRead?: boolean; priority?: string; sourceType?: string; limit?: number }): Promise<any[]> {
+    const { recipientUserId, isRead, priority, sourceType, limit = 50 } = options;
+
+    if (isDBConnected()) {
+      const query: any = { recipientUserId };
+      if (typeof isRead === 'boolean') query.isRead = isRead;
+      if (priority) query.priority = priority;
+      if (sourceType) query.sourceType = sourceType;
+      return await NotificationModel.find(query).sort({ createdAt: -1 }).limit(limit).lean();
+    }
+
+    return inMemNotifications
+      .filter((n) => {
+        if (String(n.recipientUserId) !== String(recipientUserId)) return false;
+        if (typeof isRead === 'boolean' && n.isRead !== isRead) return false;
+        if (priority && n.priority !== priority) return false;
+        if (sourceType && n.sourceType !== sourceType) return false;
+        return true;
+      })
+      .slice(0, limit);
+  },
+
+  async getNotificationById(recipientUserId: string, notificationId: string): Promise<any | null> {
+    if (isDBConnected()) {
+      if (!mongoose.Types.ObjectId.isValid(notificationId)) return null;
+      return await NotificationModel.findOne({ _id: notificationId, recipientUserId }).lean();
+    }
+
+    return (
+      inMemNotifications.find(
+        (n) => String(n._id || n.id) === String(notificationId) && String(n.recipientUserId) === String(recipientUserId)
+      ) || null
+    );
+  },
+
+  async getNotificationByDedupeKey(recipientUserId: string, dedupeKey: string): Promise<any | null> {
+    if (isDBConnected()) {
+      return await NotificationModel.findOne({ recipientUserId, dedupeKey }).lean();
+    }
+
+    return (
+      inMemNotifications.find(
+        (n) => String(n.recipientUserId) === String(recipientUserId) && n.dedupeKey === dedupeKey
+      ) || null
+    );
+  },
+
+  async getUnreadNotificationCount(recipientUserId: string): Promise<number> {
+    if (isDBConnected()) {
+      return await NotificationModel.countDocuments({ recipientUserId, isRead: false });
+    }
+
+    return inMemNotifications.filter(
+      (n) => String(n.recipientUserId) === String(recipientUserId) && !n.isRead
+    ).length;
+  },
+
+  async markNotificationRead(recipientUserId: string, notificationId: string): Promise<any | null> {
+    if (isDBConnected()) {
+      if (!mongoose.Types.ObjectId.isValid(notificationId)) return null;
+      return await NotificationModel.findOneAndUpdate(
+        { _id: notificationId, recipientUserId },
+        { $set: { isRead: true, readAt: new Date() } },
+        { new: true }
+      ).lean();
+    }
+
+    const n = inMemNotifications.find(
+      (item) => String(item._id || item.id) === String(notificationId) && String(item.recipientUserId) === String(recipientUserId)
+    );
+    if (n) {
+      n.isRead = true;
+      n.readAt = new Date();
+      return n;
+    }
+    return null;
+  },
+
+  async markAllNotificationsRead(recipientUserId: string): Promise<number> {
+    if (isDBConnected()) {
+      const res = await NotificationModel.updateMany(
+        { recipientUserId, isRead: false },
+        { $set: { isRead: true, readAt: new Date() } }
+      );
+      return res.modifiedCount;
+    }
+
+    let count = 0;
+    inMemNotifications.forEach((n) => {
+      if (String(n.recipientUserId) === String(recipientUserId) && !n.isRead) {
+        n.isRead = true;
+        n.readAt = new Date();
+        count++;
+      }
+    });
+    return count;
+  },
+
+  async deleteNotification(recipientUserId: string, notificationId: string): Promise<boolean> {
+    if (isDBConnected()) {
+      if (!mongoose.Types.ObjectId.isValid(notificationId)) return false;
+      const res = await NotificationModel.deleteOne({ _id: notificationId, recipientUserId });
+      return res.deletedCount > 0;
+    }
+
+    const idx = inMemNotifications.findIndex(
+      (n) => String(n._id || n.id) === String(notificationId) && String(n.recipientUserId) === String(recipientUserId)
+    );
+    if (idx !== -1) {
+      inMemNotifications.splice(idx, 1);
+      return true;
+    }
+    return false;
+  },
+
+  async getMistakesByStudentId(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await PracticeSessionModel.aggregate([
+        { $match: { studentId: new mongoose.Types.ObjectId(studentId) } },
+        { $unwind: '$answers' },
+        { $match: { 'answers.isCorrect': false } },
+        { $project: { topicId: 1, questionId: '$answers.questionId', givenAnswer: '$answers.answer', reviewed: '$answers.reviewed' } },
+      ]);
+    }
+    const mistakes: any[] = [];
+    inMemPracticeSessions.forEach((s) => {
+      if (String(s.studentId) === String(studentId) && Array.isArray(s.answers)) {
+        s.answers.forEach((a: any) => {
+          if (a.isCorrect === false) {
+            mistakes.push({ ...a, topicId: s.topicId });
+          }
+        });
+      }
+    });
+    return mistakes;
+  },
+
+  async getScholarships(): Promise<any[]> {
+    if (isDBConnected()) {
+      return await Scholarship.find({ status: 'active' }).lean();
+    }
+    return inMemScholarships;
+  },
+
+  async getParentStudentLinksByParentId(parentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ParentStudentLink.find({ parentId, status: 'active' }).lean();
+    }
+    return inMemParentStudentLinks.filter(
+      (l) => String(l.parentId) === String(parentId) && l.status === 'active'
+    );
   },
 };

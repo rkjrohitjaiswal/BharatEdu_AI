@@ -1231,3 +1231,97 @@ export const createMockExam = async (
     return { success: false, message: 'Failed to create mock exam' };
   }
 };
+
+// --- FEATURE 11: SMART NOTIFICATIONS API HELPERS ---
+export const fetchNotifications = async (
+  filters?: { isRead?: boolean; priority?: string; sourceType?: string; limit?: number }
+): Promise<{ success: boolean; data?: { notifications: any[]; unreadCount: number }; message?: string }> => {
+  try {
+    const params = new URLSearchParams();
+    if (typeof filters?.isRead === 'boolean') params.append('isRead', String(filters.isRead));
+    if (filters?.priority) params.append('priority', filters.priority);
+    if (filters?.sourceType) params.append('sourceType', filters.sourceType);
+    if (filters?.limit) params.append('limit', String(filters.limit));
+
+    const url = `${API_BASE_URL}/notifications${params.toString() ? `?${params.toString()}` : ''}`;
+    const response = await fetch(url, { headers: getAuthHeaders() });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch notifications' };
+  }
+};
+
+export const fetchUnreadNotificationCount = async (): Promise<{
+  success: boolean;
+  data?: { unreadCount: number };
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/unread-count`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch unread count' };
+  }
+};
+
+export const markNotificationRead = async (
+  id: string
+): Promise<{ success: boolean; data?: any; message?: string }> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to mark notification as read' };
+  }
+};
+
+export const markAllNotificationsRead = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to mark all notifications as read' };
+  }
+};
+
+export const syncNotifications = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/sync`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to sync notifications' };
+  }
+};
+
+export const deleteNotification = async (
+  id: string
+): Promise<{ success: boolean; data?: any; message?: string }> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to delete notification' };
+  }
+};

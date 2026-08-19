@@ -30,6 +30,7 @@ import { TeacherInterventionsPage } from './pages/TeacherInterventionsPage';
 import { ParentDashboardPage } from './pages/ParentDashboardPage';
 import { ParentStudentOverviewPage } from './pages/ParentStudentOverviewPage';
 import { ParentLinkPage } from './pages/ParentLinkPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 
 export const App: React.FC = () => (
   <AuthProvider>
@@ -39,6 +40,7 @@ export const App: React.FC = () => (
           <Route index element={<LandingPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+          <Route path="notifications" element={<ProtectedRoute allowedRoles={['student', 'teacher', 'parent']}><NotificationsPage /></ProtectedRoute>} />
           <Route path="dashboard" element={<ProtectedRoute allowedRoles={['student']}><DashboardPage /></ProtectedRoute>} />
           <Route path="learning-coach" element={<ProtectedRoute allowedRoles={['student']}><LearningCoachPage /></ProtectedRoute>} />
           <Route path="career" element={<ProtectedRoute allowedRoles={['student']}><CareerRoadmapPage /></ProtectedRoute>} />
