@@ -19,6 +19,8 @@ import { SavedScholarshipsPage } from './pages/SavedScholarshipsPage';
 import { MistakeReviewPage } from './pages/MistakeReviewPage';
 import { PracticeHistoryPage } from './pages/PracticeHistoryPage';
 import { StudentInterventionsPage } from './pages/StudentInterventionsPage';
+import { StudentGoalsPage } from './pages/StudentGoalsPage';
+import { AchievementsPage } from './pages/AchievementsPage';
 
 import { TeacherDashboardPage } from './pages/TeacherDashboardPage';
 import { TeacherStudentsPage } from './pages/TeacherStudentsPage';
@@ -126,6 +128,22 @@ export const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['student']}>
                   <StudentInterventionsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="goals"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentGoalsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="achievements"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <AchievementsPage />
                 </ProtectedRoute>
               }
             />

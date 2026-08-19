@@ -911,3 +911,141 @@ export const revokeParentInvitation = async (
     return { success: false, message: 'Failed to revoke invitation code' };
   }
 };
+
+// --- STUDENT GOALS & ACHIEVEMENTS ---
+export const fetchStudentGoals = async (): Promise<{
+  success: boolean;
+  data?: any[];
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/goals`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student goals' };
+  }
+};
+
+export const createStudentGoal = async (
+  goalInput: any
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/goals`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(goalInput),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to create student goal' };
+  }
+};
+
+export const updateStudentGoal = async (
+  id: string,
+  updates: any
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/goals/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(updates),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to update student goal' };
+  }
+};
+
+export const pauseStudentGoal = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/goals/${id}/pause`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to pause student goal' };
+  }
+};
+
+export const resumeStudentGoal = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/goals/${id}/resume`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to resume student goal' };
+  }
+};
+
+export const deleteStudentGoal = async (
+  id: string
+): Promise<{
+  success: boolean;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/goals/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to delete student goal' };
+  }
+};
+
+export const fetchStudentAchievements = async (): Promise<{
+  success: boolean;
+  data?: any[];
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/achievements`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student achievements' };
+  }
+};
+
+export const fetchAchievementSummary = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/achievements/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch achievement summary' };
+  }
+};

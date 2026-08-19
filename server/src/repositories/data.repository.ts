@@ -24,9 +24,13 @@ import { Intervention, IIntervention } from '../models/intervention.model.js';
 import { StudentSavedScholarship, IStudentSavedScholarship } from '../models/student-saved-scholarship.model.js';
 import { ParentProfile, IParentProfile } from '../models/parent-profile.model.js';
 import { ParentStudentLink, IParentStudentLink } from '../models/parent-student-link.model.js';
+import { StudentGoal, IStudentGoal } from '../models/student-goal.model.js';
+import { Achievement, IAchievement } from '../models/achievement.model.js';
 import { User } from '../models/user.model.js';
 
 // In-Memory Storage Containers for Offline Mode
+const inMemStudentGoals: any[] = [];
+const inMemAchievements: any[] = [];
 const inMemParentProfiles = new Map<string, any>();
 const inMemParentStudentLinks: any[] = [];
 const inMemParentInvitations: any[] = [];
@@ -1398,5 +1402,198 @@ export const dataRepository = {
     return inMemParentStudentLinks.some(
       (l) => String(l.parentId) === String(parentId) && String(l.studentId?._id || l.studentId) === String(studentId) && l.status === 'active'
     );
+  },
+
+  // --- STUDENT GOALS & ACHIEVEMENTS ---
+  async createStudentGoal(data: any): Promise<any> {
+    if (isDBConnected()) {
+      const goal = new StudentGoal(data);
+      return await goal.save();
+    }
+
+    const newGoal = {
+      _id: `goal_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: `goal_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      ...data,
+      currentValue: data.currentValue || 0,
+      progressPercent: data.progressPercent || 0,
+      status: data.status || 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    inMemStudentGoals.push(newGoal);
+    return newGoal;
+  },
+
+  async getStudentGoals(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await StudentGoal.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+
+    return inMemStudentGoals
+      .filter((g) => String(g.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  async getStudentGoalById(studentId: string, goalId: string): Promise<any> {
+    if (isDBConnected()) {
+      if (!mongoose.Types.ObjectId.isValid(goalId)) return null;
+      return await StudentGoal.findOne({ _id: goalId, studentId }).lean();
+    }
+
+    return (
+      inMemStudentGoals.find(
+        (g) => (String(g._id || g.id) === String(goalId)) && String(g.studentId) === String(studentId)
+      ) || null
+    );
+  },
+
+  async updateStudentGoal(studentId: string, goalId: string, updates: any): Promise<any> {
+    // Prevent client overriding studentId
+    delete updates.studentId;
+
+    if (isDBConnected()) {
+      if (!mongoose.Types.ObjectId.isValid(goalId)) return null;
+      return await StudentGoal.findOneAndUpdate(
+        { _id: goalId, studentId },
+        { $set: updates },
+        { new: true }
+      ).lean();
+    }
+
+    const item = inMemStudentGoals.find(
+      (g) => (String(g._id || g.id) === String(goalId)) && String(g.studentId) === String(studentId)
+    );
+    if (item) {
+      Object.assign(item, updates, { updatedAt: new Date() });
+    }
+    return item || null;
+  },
+
+  async deleteStudentGoal(studentId: string, goalId: string): Promise<boolean> {
+    if (isDBConnected()) {
+      if (!mongoose.Types.ObjectId.isValid(goalId)) return false;
+      const res = await StudentGoal.deleteOne({ _id: goalId, studentId });
+      return res.deletedCount > 0;
+    }
+
+    const idx = inMemStudentGoals.findIndex(
+      (g) => (String(g._id || g.id) === String(goalId)) && String(g.studentId) === String(studentId)
+    );
+    if (idx !== -1) {
+      inMemStudentGoals.splice(idx, 1);
+      return true;
+    }
+    return false;
+  },
+
+  async grantAchievementIdempotent(data: {
+    studentId: string;
+    achievementType: string;
+    title: string;
+    description: string;
+    icon: string;
+    evidenceType?: string;
+    evidenceId?: string;
+    metadata?: any;
+  }): Promise<any> {
+    const evidenceId = data.evidenceId || `${data.studentId}_${data.achievementType}`;
+
+    if (isDBConnected()) {
+      try {
+        const doc = await Achievement.findOneAndUpdate(
+          { studentId: data.studentId, achievementType: data.achievementType, evidenceId },
+          {
+            $setOnInsert: {
+              ...data,
+              evidenceId,
+              earnedAt: new Date(),
+            },
+          },
+          { upsert: true, new: true }
+        ).lean();
+        return doc;
+      } catch (err: any) {
+        if (err.code === 11000) {
+          return await Achievement.findOne({
+            studentId: data.studentId,
+            achievementType: data.achievementType,
+            evidenceId,
+          }).lean();
+        }
+        throw err;
+      }
+    }
+
+    let existing = inMemAchievements.find(
+      (a) =>
+        String(a.studentId) === String(data.studentId) &&
+        a.achievementType === data.achievementType &&
+        a.evidenceId === evidenceId
+    );
+
+    if (!existing) {
+      existing = {
+        _id: `ach_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        id: `ach_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        ...data,
+        evidenceId,
+        earnedAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      inMemAchievements.push(existing);
+    }
+    return existing;
+  },
+
+  async getStudentAchievements(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await Achievement.find({ studentId }).sort({ earnedAt: -1 }).lean();
+    }
+
+    return inMemAchievements
+      .filter((a) => String(a.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.earnedAt).getTime() - new Date(a.earnedAt).getTime());
+  },
+
+  async getAchievementSummary(studentId: string): Promise<any> {
+    const achievements = await this.getStudentAchievements(studentId);
+    const goals = await this.getStudentGoals(studentId);
+    const practiceSessions = await this.getPracticeSessions(studentId);
+
+    const completedGoals = (goals || []).filter((g) => g.status === 'completed').length;
+    const practiceStreak = Math.min(30, practiceSessions?.length || 0);
+
+    const categoriesCount: Record<string, number> = {
+      practice: 0,
+      streak: 0,
+      mastery: 0,
+      goals: 0,
+      accuracy: 0,
+    };
+
+    (achievements || []).forEach((a) => {
+      if (a.achievementType.includes('questions') || a.achievementType.includes('practice')) categoriesCount.practice++;
+      else if (a.achievementType.includes('streak')) categoriesCount.streak++;
+      else if (a.achievementType.includes('mastery') || a.achievementType.includes('topic')) categoriesCount.mastery++;
+      else if (a.achievementType.includes('goal')) categoriesCount.goals++;
+      else if (a.achievementType.includes('accuracy')) categoriesCount.accuracy++;
+    });
+
+    const nextMilestones = [
+      { title: '10 Questions Solved', goalType: 'practice_questions', target: 10, current: (practiceSessions || []).reduce((s: number, p: any) => s + (p.completedQuestions || 0), 0) },
+      { title: '7 Day Practice Streak', goalType: 'study_streak', target: 7, current: practiceStreak },
+      { title: '5 Topics Mastered', goalType: 'topic_completion', target: 5, current: 0 },
+    ];
+
+    return {
+      totalAchievements: achievements.length,
+      recentAchievements: achievements.slice(0, 3),
+      categoriesCount,
+      nextMilestones,
+      currentStreak: practiceStreak,
+      goalsCompleted: completedGoals,
+    };
   },
 };

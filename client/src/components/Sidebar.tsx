@@ -19,6 +19,7 @@ import {
   UserPlus,
   LogOut,
   Key,
+  Target,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -40,6 +41,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
   const studentNav: NavGroupItem[] = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'AI Learning Coach', path: '/learning-coach', icon: Bot, badge: 'Coach' },
+    { name: 'Learning Goals', path: '/goals', icon: Target, badge: 'New' },
+    { name: 'Achievements', path: '/achievements', icon: Award, badge: 'Badges' },
     { name: 'AI Tutor', path: '/tutor', icon: Bot, badge: 'AI' },
     { name: 'Adaptive Practice', path: '/practice', icon: BrainCircuit },
     { name: 'Teacher Tasks', path: '/interventions', icon: Sparkles },

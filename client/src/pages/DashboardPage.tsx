@@ -17,6 +17,8 @@ import { PracticeActivityCard } from '../components/dashboard/PracticeActivityCa
 import { ScholarshipPreview } from '../components/dashboard/ScholarshipPreview';
 import { ScholarshipAlertsCard } from '../components/dashboard/ScholarshipAlertsCard';
 import { RecentMistakesCard } from '../components/dashboard/RecentMistakesCard';
+import { StudentGoalsCard } from '../components/dashboard/StudentGoalsCard';
+import { AchievementSummaryCard } from '../components/dashboard/AchievementSummaryCard';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '../components/Button';
 
@@ -121,6 +123,12 @@ export const DashboardPage: React.FC = () => {
 
           {/* Today's Interactive Study Plan */}
           <StudyPlanCard studyPlan={studyPlan} />
+
+          {/* Student Goals Progress Card */}
+          <StudentGoalsCard goals={dashboardData?.goals || []} />
+
+          {/* Achievements Summary Card */}
+          <AchievementSummaryCard summary={dashboardData?.achievementSummary || { totalAchievements: 1, currentStreak: stats?.currentStreak || 1, goalsCompleted: 0 }} />
 
           {/* Practice Activity & History Card */}
           <PracticeActivityCard />

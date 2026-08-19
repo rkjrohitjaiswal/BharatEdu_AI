@@ -179,10 +179,13 @@ export interface StudentDashboardData {
     masteredTopicsCount: number;
     needsReviewTopicsCount: number;
     activeGapsCount: number;
+    currentStreak?: number;
   };
   mastery: TopicMasteryItem[];
   learningGaps: LearningGapItem[];
   recentActivity: EngagementEventItem[];
+  goals?: any[];
+  achievementSummary?: any;
   studyPlan: StudyPlanData | null;
   scholarshipMatches: ScholarshipMatchItem[];
   subjectPerformance: SubjectPerformanceItem[];

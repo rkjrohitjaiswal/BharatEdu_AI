@@ -5,6 +5,7 @@ import { PracticeTopicSelector } from '../ai/practice/selector.js';
 import { PracticeDifficultyEngine } from '../ai/practice/difficulty.js';
 import { GroundedQuestionGenerator } from '../ai/practice/generator.js';
 import { LearningIntelligenceEngine } from '../ai/learning/analyzer.js';
+import { GoalService } from '../learning-goals/service.js';
 
 // Utility helper to strip correctAnswer from question objects before sending to frontend
 const sanitizeQuestionForClient = (q: any) => {
@@ -317,6 +318,14 @@ export const completePracticeSession = async (
       res.status(404).json({ success: false, message: 'Practice session not found or access denied' });
       return;
     }
+
+    const updated = await dataRepository.updatePracticeSession(req.user.id, id, {
+      status: 'completed',
+      completedAt: new Date(),
+    });
+
+    // Trigger goal progress recalculation and achievement evaluation
+    await GoalService.recalculateAllStudentGoals(req.user.id);
 
     const updatedSession = await dataRepository.updatePracticeSession(req.user.id, id, {
       status: 'completed',
