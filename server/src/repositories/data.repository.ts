@@ -26,9 +26,14 @@ import { ParentProfile, IParentProfile } from '../models/parent-profile.model.js
 import { ParentStudentLink, IParentStudentLink } from '../models/parent-student-link.model.js';
 import { StudentGoal, IStudentGoal } from '../models/student-goal.model.js';
 import { Achievement, IAchievement } from '../models/achievement.model.js';
+import { ExamPreparationModel } from '../models/exam-preparation.model.js';
+import { ExamTopicProgressModel } from '../models/exam-topic-progress.model.js';
 import { User } from '../models/user.model.js';
 
 // In-Memory Storage Containers for Offline Mode
+const inMemExamPreparations: any[] = [];
+const inMemExamTopicProgresses: any[] = [];
+const inMemExamPlans: Map<string, any> = new Map();
 const inMemStudentGoals: any[] = [];
 const inMemAchievements: any[] = [];
 const inMemParentProfiles = new Map<string, any>();
@@ -309,6 +314,13 @@ export const dataRepository = {
     return inMemLearningGaps.find(
       (g) => String(g._id || g.id) === String(gapId) && String(g.studentId) === String(studentId)
     ) || null;
+  },
+
+  async getStudentGaps(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await LearningGap.find({ studentId }).populate('topicId').lean();
+    }
+    return inMemLearningGaps.filter((g) => String(g.studentId) === String(studentId));
   },
 
   async resolveLearningGap(studentId: string, gapIdOrTopicId: string): Promise<boolean> {
@@ -1595,5 +1607,122 @@ export const dataRepository = {
       currentStreak: practiceStreak,
       goalsCompleted: completedGoals,
     };
+  },
+
+  // --- FEATURE 9: EXAM PREPARATION & READINESS ---
+  async createExamPreparation(studentId: string, examInput: any): Promise<any> {
+    const examData = {
+      ...examInput,
+      studentId,
+      examDate: new Date(examInput.examDate),
+      status: examInput.status || 'upcoming',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    if (isDBConnected()) {
+      const created = new ExamPreparationModel(examData);
+      return await created.save();
+    }
+
+    const doc = {
+      ...examData,
+      _id: `ex_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+    };
+    inMemExamPreparations.push(doc);
+    return doc;
+  },
+
+  async getExamPreparations(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ExamPreparationModel.find({ studentId }).sort({ examDate: 1 }).lean();
+    }
+
+    return inMemExamPreparations.filter(
+      (e) => String(e.studentId) === String(studentId) && e.status !== 'cancelled'
+    );
+  },
+
+  async getExamPreparationById(studentId: string, examId: string): Promise<any | null> {
+    if (isDBConnected()) {
+      if (!mongoose.Types.ObjectId.isValid(examId)) return null;
+      return await ExamPreparationModel.findOne({ _id: examId, studentId }).lean();
+    }
+
+    return (
+      inMemExamPreparations.find(
+        (e) => String(e._id || e.id) === String(examId) && String(e.studentId) === String(studentId)
+      ) || null
+    );
+  },
+
+  async updateExamPreparation(studentId: string, examId: string, updates: any): Promise<any> {
+    delete updates.studentId;
+
+    if (isDBConnected()) {
+      if (!mongoose.Types.ObjectId.isValid(examId)) return null;
+      return await ExamPreparationModel.findOneAndUpdate(
+        { _id: examId, studentId },
+        { $set: updates },
+        { new: true }
+      ).lean();
+    }
+
+    const item = inMemExamPreparations.find(
+      (e) => String(e._id || e.id) === String(examId) && String(e.studentId) === String(studentId)
+    );
+    if (!item) return null;
+
+    Object.assign(item, updates, { updatedAt: new Date() });
+    return item;
+  },
+
+  async deleteExamPreparation(studentId: string, examId: string): Promise<boolean> {
+    if (isDBConnected()) {
+      if (!mongoose.Types.ObjectId.isValid(examId)) return false;
+      const res = await ExamPreparationModel.deleteOne({ _id: examId, studentId });
+      return res.deletedCount > 0;
+    }
+
+    const idx = inMemExamPreparations.findIndex(
+      (e) => String(e._id || e.id) === String(examId) && String(e.studentId) === String(studentId)
+    );
+    if (idx !== -1) {
+      inMemExamPreparations.splice(idx, 1);
+      return true;
+    }
+    return false;
+  },
+
+  async saveExamPlan(studentId: string, examId: string, plan: any): Promise<any> {
+    const key = `${studentId}_${examId}`;
+    inMemExamPlans.set(key, plan);
+    return plan;
+  },
+
+  async getExamPlan(studentId: string, examId: string): Promise<any | null> {
+    const key = `${studentId}_${examId}`;
+    return inMemExamPlans.get(key) || null;
+  },
+
+  async updateExamPlanTask(
+    studentId: string,
+    examId: string,
+    taskId: string,
+    completed: boolean
+  ): Promise<any | null> {
+    const key = `${studentId}_${examId}`;
+    const plan = inMemExamPlans.get(key);
+    if (!plan || !plan.tasks) return null;
+
+    const task = plan.tasks.find((t: any) => String(t.taskId) === String(taskId));
+    if (task) {
+      task.completed = completed;
+      task.completedAt = completed ? new Date().toISOString() : undefined;
+
+      const completedCount = plan.tasks.filter((t: any) => t.completed).length;
+      plan.completionPercentage = Math.round((completedCount / plan.tasks.length) * 100);
+    }
+    return plan;
   },
 };

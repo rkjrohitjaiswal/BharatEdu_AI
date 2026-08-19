@@ -15,6 +15,7 @@ import { teacherInterventionRouter, studentInterventionRouter } from './interven
 import learningCoachRoutes from './learning-coach.routes.js';
 import { parentRouter, studentParentLinkRouter } from './parent.routes.js';
 import { studentGoalRouter, achievementRouter } from './student-goal.routes.js';
+import examPreparationRoutes from './exam-preparation.routes.js';
 
 const router = Router();
 
@@ -25,6 +26,7 @@ router.use('/student/parent-link', studentParentLinkRouter);
 router.use('/student/learning-coach', learningCoachRoutes);
 router.use('/student/goals', studentGoalRouter);
 router.use('/student/achievements', achievementRouter);
+router.use('/student/exams', examPreparationRoutes);
 router.use('/student/study-plan', studyPlanRoutes);
 router.use('/student/practice/history', practiceHistoryRoutes);
 router.use('/student/practice', mistakeReviewRoutes);

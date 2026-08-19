@@ -21,6 +21,8 @@ import { PracticeHistoryPage } from './pages/PracticeHistoryPage';
 import { StudentInterventionsPage } from './pages/StudentInterventionsPage';
 import { StudentGoalsPage } from './pages/StudentGoalsPage';
 import { AchievementsPage } from './pages/AchievementsPage';
+import { ExamPreparationPage } from './pages/ExamPreparationPage';
+import { ExamReadinessPage } from './pages/ExamReadinessPage';
 
 import { TeacherDashboardPage } from './pages/TeacherDashboardPage';
 import { TeacherStudentsPage } from './pages/TeacherStudentsPage';
@@ -144,6 +146,22 @@ export const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['student']}>
                   <AchievementsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="exam-prep"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <ExamPreparationPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="exam-prep/:id/readiness"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <ExamReadinessPage />
                 </ProtectedRoute>
               }
             />

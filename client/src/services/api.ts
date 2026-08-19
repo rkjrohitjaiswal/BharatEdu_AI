@@ -1049,3 +1049,185 @@ export const fetchAchievementSummary = async (): Promise<{
     return { success: false, message: 'Failed to fetch achievement summary' };
   }
 };
+
+// --- FEATURE 9: EXAM PREPARATION & READINESS ---
+export const createExam = async (
+  input: any
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exams`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(input),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to create exam preparation' };
+  }
+};
+
+export const fetchStudentExams = async (): Promise<{
+  success: boolean;
+  data?: any[];
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exams`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam preparations' };
+  }
+};
+
+export const fetchExam = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exams/${id}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam preparation' };
+  }
+};
+
+export const updateExam = async (
+  id: string,
+  updates: any
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exams/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(updates),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to update exam preparation' };
+  }
+};
+
+export const deleteExam = async (
+  id: string
+): Promise<{
+  success: boolean;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exams/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to delete exam preparation' };
+  }
+};
+
+export const fetchExamReadiness = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exams/${id}/readiness`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam readiness' };
+  }
+};
+
+export const generateExamPlan = async (
+  id: string,
+  availableDailyMinutes: number = 60
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exams/${id}/generate-plan`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ availableDailyMinutes }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate exam plan' };
+  }
+};
+
+export const fetchExamPlan = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exams/${id}/plan`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam plan' };
+  }
+};
+
+export const updateExamPlanTask = async (
+  id: string,
+  taskId: string,
+  completed: boolean
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exams/${id}/plan/tasks/${taskId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ completed }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to update exam task' };
+  }
+};
+
+export const createMockExam = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exams/${id}/mock`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to create mock exam' };
+  }
+};

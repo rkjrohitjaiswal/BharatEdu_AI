@@ -41,6 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
   const studentNav: NavGroupItem[] = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'AI Learning Coach', path: '/learning-coach', icon: Bot, badge: 'Coach' },
+    { name: 'Exam Prep', path: '/exam-prep', icon: GraduationCap, badge: 'Exams' },
     { name: 'Learning Goals', path: '/goals', icon: Target, badge: 'New' },
     { name: 'Achievements', path: '/achievements', icon: Award, badge: 'Badges' },
     { name: 'AI Tutor', path: '/tutor', icon: Bot, badge: 'AI' },

@@ -186,6 +186,7 @@ export interface StudentDashboardData {
   recentActivity: EngagementEventItem[];
   goals?: any[];
   achievementSummary?: any;
+  exams?: any[];
   studyPlan: StudyPlanData | null;
   scholarshipMatches: ScholarshipMatchItem[];
   subjectPerformance: SubjectPerformanceItem[];
