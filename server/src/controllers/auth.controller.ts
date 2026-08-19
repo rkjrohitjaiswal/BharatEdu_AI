@@ -22,6 +22,10 @@ interface InMemUser {
 const inMemUsersById = new Map<string, InMemUser>();
 const inMemUsersByEmail = new Map<string, InMemUser>();
 
+export const getInMemUserById = (id: string): InMemUser | null => inMemUsersById.get(id) || null;
+export const getInMemStudents = (): InMemUser[] =>
+  Array.from(inMemUsersById.values()).filter((u) => u.role === 'student');
+
 const getJwtSecret = (): string => process.env.JWT_SECRET || 'bharatedu_jwt_secret_dev_key';
 
 const toSafeUser = (u: any): SafeUser => ({

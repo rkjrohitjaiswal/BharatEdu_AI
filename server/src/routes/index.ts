@@ -20,11 +20,13 @@ import careerRoutes from './career.routes.js';
 import notificationRoutes from './notification.routes.js';
 import analyticsRoutes from './analytics.routes.js';
 import riskRoutes from './risk.routes.js';
+import teacherCopilotRoutes from './teacher-copilot.routes.js';
 
 const router = Router();
 
 router.use('/', healthRoutes);
 router.use('/auth', authRoutes);
+router.use('/teacher/copilot', teacherCopilotRoutes);
 router.use('/risk', riskRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/notifications', notificationRoutes);

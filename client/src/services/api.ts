@@ -1421,3 +1421,72 @@ export const fetchParentStudentRiskSummary = async (
     return { success: false, message: 'Failed to fetch parent student risk summary' };
   }
 };
+
+// --- FEATURE 14: TEACHER COPILOT API HELPERS ---
+export const fetchTeacherCopilotStudents = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/copilot/students`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher copilot students' };
+  }
+};
+
+export const fetchTeacherCopilotStudentSnapshot = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/copilot/student/${studentId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student copilot snapshot' };
+  }
+};
+
+export const fetchTeacherCopilotAdvice = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/copilot/student/${studentId}/advice`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate teacher copilot advice' };
+  }
+};
+
+export const fetchTeacherCopilotParentMessage = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/copilot/student/${studentId}/parent-message`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate parent message draft' };
+  }
+};

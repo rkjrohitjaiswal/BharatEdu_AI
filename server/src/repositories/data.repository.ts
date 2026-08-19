@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { isDBConnected } from '../services/db.js';
+import { getInMemStudents, getInMemUserById } from '../controllers/auth.controller.js';
 
 import { Subject, ISubject } from '../models/subject.model.js';
 import { Topic, ITopic } from '../models/topic.model.js';
@@ -906,9 +907,27 @@ export const dataRepository = {
           });
         }
       });
-      return Array.from(studentSet.values());
+      const dbStudents = Array.from(studentSet.values());
+      if (dbStudents.length > 0) return dbStudents;
+      return await this.getStudents();
     }
-    return [];
+    const studentSet = new Map<string, any>();
+    inMemClasses.forEach((cls) => {
+      if (String(cls.teacherId) === String(teacherId) && Array.isArray(cls.studentIds)) {
+        cls.studentIds.forEach((std: any) => {
+          const stdId = typeof std === 'string' ? std : std?._id || std?.id;
+          if (stdId) studentSet.set(String(stdId), std);
+        });
+      }
+    });
+    const result = Array.from(studentSet.values());
+    if (result.length > 0) return result;
+    return await this.getStudents();
+  },
+
+  async validateTeacherStudentOwnership(teacherId: string, studentId: string): Promise<boolean> {
+    const students = await this.getTeacherStudents(teacherId);
+    return (students || []).some((s: any) => String(s._id || s.id) === String(studentId));
   },
 
   async getTeacherAnalyticsOverview(teacherId: string): Promise<any> {
@@ -1256,7 +1275,7 @@ export const dataRepository = {
       if (!mongoose.Types.ObjectId.isValid(userId)) return null;
       return await User.findById(userId).select('-passwordHash').lean();
     }
-    return null;
+    return getInMemUserById(userId);
   },
 
   async getStudentStudyPlan(studentId: string): Promise<any> {
@@ -1982,10 +2001,6 @@ export const dataRepository = {
     if (isDBConnected()) {
       return await User.find({ role: 'student' }).select('_id name email preferredLanguage').lean();
     }
-    try {
-      return await User.find({ role: 'student' }).select('_id name email preferredLanguage').lean();
-    } catch (e) {
-      return [];
-    }
+    return getInMemStudents();
   },
 };
