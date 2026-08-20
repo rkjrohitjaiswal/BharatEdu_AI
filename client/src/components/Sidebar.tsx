@@ -58,6 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'AI Resource Recommendations', path: '/resources', icon: BookOpen, badge: 'Resources' },
     { name: 'AI Personalized Practice', path: '/personalized-practice', icon: Zap, badge: 'Adaptive' },
     { name: 'AI Exam Simulator', path: '/exam-simulator', icon: Flame, badge: 'Simulator' },
+    { name: 'Teacher Assignments', path: '/student/assessments-portal', icon: Award, badge: 'Assess' },
     { name: 'AI Study Material', path: '/study-material', icon: BookOpen, badge: 'Notes' },
     { name: 'AI Doubt Solver', path: '/doubts', icon: HelpCircle, badge: 'Solver' },
     { name: 'Risk Assessment', path: '/risk', icon: AlertTriangle, badge: 'Early Warning' },
@@ -83,6 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
   const teacherNav: NavGroupItem[] = [
     { name: 'Teacher Dashboard', path: '/teacher', icon: GraduationCap },
     { name: 'AI Teacher Copilot', path: '/teacher/copilot', icon: Bot, badge: 'Copilot' },
+    { name: 'AI Teacher Assessments', path: '/teacher/assessments', icon: Award, badge: 'Rubric' },
     { name: 'Remediation Portal', path: '/teacher/interventions', icon: Sparkles },
     { name: 'Students Roster', path: '/teacher/students', icon: Users },
     { name: 'Class Analytics', path: '/teacher/analytics', icon: BarChart3 },

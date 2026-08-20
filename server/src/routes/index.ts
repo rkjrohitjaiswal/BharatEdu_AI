@@ -45,12 +45,21 @@ import {
   parentMockExamRouter,
 } from './mock-exam.routes.js';
 
+import {
+  teacherTeacherAssessmentRouter,
+  teacherSubmissionsRouter,
+  studentTeacherAssessmentRouter,
+  studentSubmissionsRouter,
+  parentTeacherAssessmentRouter,
+} from './assessment.routes.js';
+
 const router = Router();
 
 router.use('/', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/teacher/copilot', teacherCopilotRoutes);
-router.use('/teacher/assessments', teacherAssessmentRouter);
+router.use('/teacher/assessments', teacherTeacherAssessmentRouter);
+router.use('/teacher/submissions', teacherSubmissionsRouter);
 router.use('/teacher/exam-papers', teacherExamPaperRouter);
 router.use('/teacher/exam-evaluations', teacherEvaluationRouter);
 router.use('/teacher/doubts', teacherDoubtRouter);
@@ -58,7 +67,7 @@ router.use('/teacher/resources', teacherResourceRouter);
 router.use('/teacher/personalized-practice', teacherPersonalizedPracticeRouter);
 router.use('/teacher/mock-exams', teacherMockExamRouter);
 router.use('/parent/copilot', parentCopilotRoutes);
-router.use('/parent/assessments', parentAssessmentRouter);
+router.use('/parent/assessments', parentTeacherAssessmentRouter);
 router.use('/parent/exam-papers', parentExamPaperRouter);
 router.use('/parent/exam-evaluations', parentEvaluationRouter);
 router.use('/parent/doubts', parentDoubtRouter);
@@ -73,6 +82,9 @@ router.use('/student/personalized-practice', studentPersonalizedPracticeRouter);
 router.use('/student/mock-exams', studentMockExamRouter);
 router.use('/student/revision', revisionRoutes);
 router.use('/student/assessments', adaptiveAssessmentRouter);
+router.use('/student/teacher-assessments', studentTeacherAssessmentRouter);
+router.use('/student/assignments', studentTeacherAssessmentRouter);
+router.use('/student/submissions', studentSubmissionsRouter);
 router.use('/student/exam-papers', examPaperRouter);
 router.use('/student/exam-evaluations', examEvaluationRouter);
 router.use('/student/learning-path', learningPathRoutes);

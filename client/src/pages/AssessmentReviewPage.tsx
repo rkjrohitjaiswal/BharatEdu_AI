@@ -1,76 +1,151 @@
 import React, { useEffect, useState } from 'react';
+import { Award, CheckCircle2, Sparkles, ArrowRight, RotateCcw, FileText } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchAssessmentReview } from '../services/api';
-import { IAssessmentQuestionReview } from '../types/adaptive-assessment';
+import { approveAIEvaluation, fetchSubmissionAIEvaluation, modifyAndFinalizeGrade } from '../services/api';
+import { IAIEvaluationClient } from '../types/assessment';
 
 export const AssessmentReviewPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { submissionId } = useParams<{ submissionId: string }>();
   const navigate = useNavigate();
-
-  const [questions, setQuestions] = useState<IAssessmentQuestionReview[]>([]);
+  const [evaluations, setEvaluations] = useState<IAIEvaluationClient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [teacherFeedback, setTeacherFeedback] = useState('Excellent work! Good conceptual clarity.');
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
-    fetchAssessmentReview(id).then((res) => {
-      if (res.success && res.data) {
-        setQuestions(res.data);
-      }
-      setLoading(false);
-    });
-  }, [id]);
+    if (submissionId) {
+      loadData();
+    }
+  }, [submissionId]);
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Loading post-test answer review...</div>;
+  const loadData = async () => {
+    if (!submissionId) return;
+    setLoading(true);
+    const res = await fetchSubmissionAIEvaluation(submissionId);
+    if (res.success && res.data) {
+      setEvaluations(res.data);
+    }
+    setLoading(false);
+  };
+
+  const handleApproveAll = async () => {
+    if (!submissionId) return;
+    setProcessing(true);
+    const res = await approveAIEvaluation(submissionId);
+    if (res.success) {
+      navigate('/teacher/assessments');
+    }
+    setProcessing(false);
+  };
+
+  const handleFinalizeGrade = async () => {
+    if (!submissionId) return;
+    setProcessing(true);
+    const questionGrades = evaluations.map((ev) => ({
+      questionId: ev.questionId,
+      score: ev.proposedScore,
+      maxScore: ev.maxScore,
+      isObjective: false,
+      aiApproved: true,
+      teacherComment: ev.feedback,
+    }));
+
+    const res = await modifyAndFinalizeGrade(submissionId, {
+      questionGrades,
+      teacherFeedback,
+    });
+
+    if (res.success) {
+      navigate('/teacher/assessments');
+    }
+    setProcessing(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-slate-400">Loading AI proposed evaluations...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Post-Assessment Answer Review</h1>
-          <p className="text-xs text-gray-500">Compare your submitted answers with authoritative correct solutions</p>
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-8">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-purple-400" />
+              Teacher Review & AI Evaluation Assist
+            </h1>
+            <p className="text-slate-400 text-sm mt-1">Review evidence, proposed rubric scores, and finalize student grade.</p>
+          </div>
         </div>
-        <button
-          onClick={() => navigate('/assessments')}
-          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-xs rounded-lg"
-        >
-          Back to Hub
-        </button>
-      </div>
 
-      <div className="space-y-4">
-        {questions.map((q, idx) => (
-          <div
-            key={q.id}
-            className={`p-6 rounded-xl border ${q.isCorrect ? 'bg-green-50/50 border-green-200' : 'bg-red-50/50 border-red-200'}`}
-          >
-            <div className="flex justify-between items-start mb-3">
-              <span className="text-xs font-semibold text-gray-500 uppercase">Question #{idx + 1} ({q.difficulty})</span>
-              <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full ${q.isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                {q.isCorrect ? 'Correct (+1)' : 'Incorrect (0)'}
+        {evaluations.map((ev, i) => (
+          <div key={i} className="p-6 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">
+                Question Evaluation #{i + 1}
               </span>
-            </div>
-
-            <div className="font-semibold text-gray-900 mb-4">{q.question}</div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-3 bg-white rounded border border-gray-200">
-                <span className="font-semibold text-gray-500 block mb-1">Your Answer:</span>
-                <span className={q.isCorrect ? 'text-green-700 font-bold' : 'text-red-700 font-bold'}>
-                  {q.submittedAnswer || '(Skipped)'}
-                </span>
-              </div>
-              <div className="p-3 bg-white rounded border border-gray-200">
-                <span className="font-semibold text-gray-500 block mb-1">Correct Answer:</span>
-                <span className="text-green-700 font-bold">{q.correctAnswer}</span>
+              <div className="text-right">
+                <span className="text-lg font-bold text-emerald-400">{ev.proposedScore} / {ev.maxScore} Marks</span>
+                <div className="text-[10px] text-slate-400">AI Confidence: {Math.round(ev.confidence * 100)}%</div>
               </div>
             </div>
 
-            {q.feedback && (
-              <p className="text-xs text-gray-600 italic mt-3 pt-2 border-t border-gray-200">{q.feedback}</p>
-            )}
+            <div className="p-4 bg-slate-950/50 border border-slate-800 rounded-xl space-y-2 text-xs">
+              <div className="font-bold text-slate-300">AI Feedback & Evidence:</div>
+              <p className="text-slate-400">{ev.feedback}</p>
+              {ev.strengths?.length > 0 && (
+                <div className="text-emerald-400">
+                  <span className="font-semibold">Strengths:</span> {ev.strengths.join(', ')}
+                </div>
+              )}
+              {ev.weaknesses?.length > 0 && (
+                <div className="text-rose-400">
+                  <span className="font-semibold">Weaknesses:</span> {ev.weaknesses.join(', ')}
+                </div>
+              )}
+            </div>
           </div>
         ))}
+
+        <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-4">
+          <label className="text-xs font-bold text-slate-300 block">Teacher General Feedback</label>
+          <textarea
+            value={teacherFeedback}
+            onChange={(e) => setTeacherFeedback(e.target.value)}
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-purple-500"
+            rows={3}
+          />
+        </div>
+
+        <div className="flex items-center justify-between pt-4">
+          <button
+            onClick={handleApproveAll}
+            disabled={processing}
+            className="py-3 px-6 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs flex items-center gap-2"
+          >
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span>Approve AI Evaluation</span>
+          </button>
+
+          <button
+            onClick={handleFinalizeGrade}
+            disabled={processing}
+            className="py-3 px-6 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-purple-600/30"
+          >
+            <span>Finalize & Return to Student</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
 };
+
+export default AssessmentReviewPage;

@@ -41,8 +41,15 @@ import { MockExam } from '../models/mock-exam.model.js';
 import { MockExamSection } from '../models/mock-exam-section.model.js';
 import { MockExamQuestion } from '../models/mock-exam-question.model.js';
 import { MockExamAttempt } from '../models/mock-exam-attempt.model.js';
-import { MockExamAnswer } from '../models/mock-exam-answer.model.js';
 import { MockExamResult } from '../models/mock-exam-result.model.js';
+import { Assessment } from '../models/assessment.model.js';
+import { AssessmentQuestion } from '../models/assessment-question.model.js';
+import { AssessmentRubric } from '../models/assessment-rubric.model.js';
+import { AssessmentSubmission } from '../models/assessment-submission.model.js';
+import { AssessmentAnswer } from '../models/assessment-answer.model.js';
+import { AIEvaluation } from '../models/ai-evaluation.model.js';
+import { AssessmentGrade } from '../models/assessment-grade.model.js';
+import { AssessmentAudit } from '../models/assessment-audit.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -201,6 +208,14 @@ const inMemPracticeSessions: any[] = [];
 const inMemQuestions: any[] = [];
 const inMemScholarshipSources: any[] = [];
 const inMemStudentScholarshipProfiles = new Map<string, any>();
+const inMemAssessments: any[] = [];
+const inMemTeacherAssessmentQuestions: any[] = [];
+const inMemAssessmentRubrics: any[] = [];
+const inMemAssessmentSubmissions: any[] = [];
+const inMemAssessmentAnswers: any[] = [];
+const inMemAIEvaluations: any[] = [];
+const inMemAssessmentGrades: any[] = [];
+const inMemAssessmentAudits: any[] = [];
 
 export const dataRepository = {
   // --- SCHOLARSHIP INTELLIGENCE ---
@@ -3639,5 +3654,241 @@ export const dataRepository = {
     return inMemMockExamResults.find(
       (r) => r.examId === examId && String(r.studentId) === String(studentId)
     );
+  },
+
+  // --- FEATURE 36 TEACHER ASSESSMENT METHODS ---
+  async createAssessment(data: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new Assessment(data);
+      return await doc.save();
+    }
+    const item = { _id: `asm_${Date.now()}_${Math.random()}`, ...data, createdAt: new Date(), updatedAt: new Date() };
+    inMemAssessments.push(item);
+    return item;
+  },
+
+  async getAssessmentById(assessmentId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await Assessment.findOne({ assessmentId }).lean();
+    }
+    return inMemAssessments.find((a) => a.assessmentId === assessmentId);
+  },
+
+  async getAssessmentsByTeacher(teacherId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await Assessment.find({ teacherId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemAssessments
+      .filter((a) => String(a.teacherId) === String(teacherId))
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  async getPublishedAssessmentsForStudent(): Promise<any[]> {
+    if (isDBConnected()) {
+      return await Assessment.find({ status: 'published' }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemAssessments
+      .filter((a) => a.status === 'published')
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  async updateAssessment(assessmentId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await Assessment.findOneAndUpdate(
+        { assessmentId },
+        { $set: { ...updates, updatedAt: new Date() } },
+        { new: true }
+      ).lean();
+    }
+    const idx = inMemAssessments.findIndex((a) => a.assessmentId === assessmentId);
+    if (idx >= 0) {
+      inMemAssessments[idx] = { ...inMemAssessments[idx], ...updates, updatedAt: new Date() };
+      return inMemAssessments[idx];
+    }
+    return null;
+  },
+
+  async createTeacherAssessmentQuestion(qData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AssessmentQuestion(qData);
+      return await doc.save();
+    }
+    const item = { _id: `q_${Date.now()}_${Math.random()}`, ...qData, createdAt: new Date() };
+    inMemTeacherAssessmentQuestions.push(item);
+    return item;
+  },
+
+  async getTeacherAssessmentQuestions(assessmentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AssessmentQuestion.find({ assessmentId }).sort({ order: 1 }).lean();
+    }
+    return inMemTeacherAssessmentQuestions
+      .filter((q) => q.assessmentId === assessmentId)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  },
+
+  async createAssessmentRubric(rubricData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AssessmentRubric(rubricData);
+      return await doc.save();
+    }
+    const item = { _id: `rub_${Date.now()}_${Math.random()}`, ...rubricData, createdAt: new Date() };
+    inMemAssessmentRubrics.push(item);
+    return item;
+  },
+
+  async getAssessmentRubricById(rubricId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentRubric.findOne({ rubricId }).lean();
+    }
+    return inMemAssessmentRubrics.find((r) => r.rubricId === rubricId);
+  },
+
+  async createAssessmentSubmission(subData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AssessmentSubmission(subData);
+      return await doc.save();
+    }
+    const item = { _id: `sub_${Date.now()}_${Math.random()}`, ...subData, createdAt: new Date(), updatedAt: new Date() };
+    inMemAssessmentSubmissions.push(item);
+    return item;
+  },
+
+  async updateAssessmentSubmission(submissionId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentSubmission.findOneAndUpdate(
+        { submissionId },
+        { $set: { ...updates, updatedAt: new Date() } },
+        { new: true }
+      ).lean();
+    }
+    const idx = inMemAssessmentSubmissions.findIndex((s) => s.submissionId === submissionId);
+    if (idx >= 0) {
+      inMemAssessmentSubmissions[idx] = { ...inMemAssessmentSubmissions[idx], ...updates, updatedAt: new Date() };
+      return inMemAssessmentSubmissions[idx];
+    }
+    return null;
+  },
+
+  async getAssessmentSubmissionById(submissionId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentSubmission.findOne({ submissionId }).lean();
+    }
+    return inMemAssessmentSubmissions.find((s) => s.submissionId === submissionId);
+  },
+
+  async getStudentSubmissionForAssessment(assessmentId: string, studentId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentSubmission.findOne({ assessmentId, studentId }).lean();
+    }
+    return inMemAssessmentSubmissions.find(
+      (s) => s.assessmentId === assessmentId && String(s.studentId) === String(studentId)
+    );
+  },
+
+  async getSubmissionsByAssessment(assessmentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AssessmentSubmission.find({ assessmentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemAssessmentSubmissions
+      .filter((s) => s.assessmentId === assessmentId)
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  async getSubmissionsByStudent(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AssessmentSubmission.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemAssessmentSubmissions
+      .filter((s) => String(s.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  async saveAssessmentAnswer(ansData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentAnswer.findOneAndUpdate(
+        { submissionId: ansData.submissionId, questionId: ansData.questionId },
+        { $set: { ...ansData, updatedAt: new Date() } },
+        { upsert: true, new: true }
+      );
+    }
+    const idx = inMemAssessmentAnswers.findIndex(
+      (a) => a.submissionId === ansData.submissionId && a.questionId === ansData.questionId
+    );
+    if (idx >= 0) {
+      inMemAssessmentAnswers[idx] = { ...inMemAssessmentAnswers[idx], ...ansData, updatedAt: new Date() };
+      return inMemAssessmentAnswers[idx];
+    }
+    const item = { _id: `ans_${Date.now()}_${Math.random()}`, ...ansData, createdAt: new Date() };
+    inMemAssessmentAnswers.push(item);
+    return item;
+  },
+
+  async getAssessmentAnswers(submissionId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AssessmentAnswer.find({ submissionId }).lean();
+    }
+    return inMemAssessmentAnswers.filter((a) => a.submissionId === submissionId);
+  },
+
+  async saveAIEvaluation(evalData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AIEvaluation(evalData);
+      return await doc.save();
+    }
+    const item = { _id: `eval_${Date.now()}_${Math.random()}`, ...evalData, createdAt: new Date() };
+    inMemAIEvaluations.push(item);
+    return item;
+  },
+
+  async getAIEvaluationsBySubmission(submissionId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AIEvaluation.find({ submissionId }).lean();
+    }
+    return inMemAIEvaluations.filter((e) => e.submissionId === submissionId);
+  },
+
+  async saveAssessmentGrade(gradeData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentGrade.findOneAndUpdate(
+        { submissionId: gradeData.submissionId },
+        { $set: { ...gradeData, updatedAt: new Date() } },
+        { upsert: true, new: true }
+      ).lean();
+    }
+    const idx = inMemAssessmentGrades.findIndex((g) => g.submissionId === gradeData.submissionId);
+    if (idx >= 0) {
+      inMemAssessmentGrades[idx] = { ...inMemAssessmentGrades[idx], ...gradeData, updatedAt: new Date() };
+      return inMemAssessmentGrades[idx];
+    }
+    const item = { _id: `grd_${Date.now()}_${Math.random()}`, ...gradeData, createdAt: new Date() };
+    inMemAssessmentGrades.push(item);
+    return item;
+  },
+
+  async getAssessmentGradeBySubmission(submissionId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentGrade.findOne({ submissionId }).lean();
+    }
+    return inMemAssessmentGrades.find((g) => g.submissionId === submissionId);
+  },
+
+  async createAssessmentAudit(auditData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AssessmentAudit(auditData);
+      return await doc.save();
+    }
+    const item = { _id: `aud_${Date.now()}_${Math.random()}`, ...auditData, createdAt: new Date() };
+    inMemAssessmentAudits.push(item);
+    return item;
+  },
+
+  async getAssessmentAuditsBySubmission(submissionId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AssessmentAudit.find({ submissionId }).sort({ timestamp: -1 }).lean();
+    }
+    return inMemAssessmentAudits
+      .filter((a) => a.submissionId === submissionId)
+      .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
   },
 };
