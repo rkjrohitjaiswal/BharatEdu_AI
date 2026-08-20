@@ -1,35 +1,57 @@
 import { Router } from 'express';
-import {
-  completeAssessmentController,
-  createAssessmentController,
-  getAssessmentSummaryController,
-  getNextQuestionController,
-  getParentStudentAssessmentSummaryController,
-  getRecommendedQuestionsController,
-  getStudentAssessmentsController,
-  getTeacherStudentAssessmentSummaryController,
-  submitAnswerController,
-} from '../controllers/adaptive-assessment.controller.js';
 import { authenticateJWT } from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
+import {
+  handleCreateAssessment,
+  handleCreateDiagnostic,
+  handleCreateExamSimulation,
+  handleCreateFromDoubt,
+  handleCreateMasteryCheck,
+  handleCreateRevisionTest,
+  handleDeleteAssessment,
+  handleFinishAssessment,
+  handleGetAssessmentById,
+  handleGetAssessments,
+  handleGetCurrentQuestion,
+  handleGetParentStudentSummary,
+  handleGetRecommendations,
+  handleGetResults,
+  handleGetReview,
+  handleGetTeacherStudentSummary,
+  handleSkipQuestion,
+  handleStartAssessment,
+  handleSubmitAnswer,
+} from '../controllers/adaptive-assessment.controller.js';
 
-const router = Router();
+export const adaptiveAssessmentRouter = Router();
 
-router.use(authenticateJWT);
+// Student Endpoints
+adaptiveAssessmentRouter.post('/', authenticateJWT, requireRole('student'), handleCreateAssessment);
+adaptiveAssessmentRouter.get('/', authenticateJWT, requireRole('student'), handleGetAssessments);
 
-// Student endpoints
-router.post('/', requireRole('student'), createAssessmentController);
-router.get('/', requireRole('student'), getStudentAssessmentsController);
-router.get('/questions/recommended', requireRole('student'), getRecommendedQuestionsController);
-router.post('/:id/questions/next', requireRole('student'), getNextQuestionController);
-router.post('/:id/questions/:questionId/answer', requireRole('student'), submitAnswerController);
-router.post('/:id/complete', requireRole('student'), completeAssessmentController);
-router.get('/:id/summary', requireRole('student'), getAssessmentSummaryController);
+adaptiveAssessmentRouter.post('/from-doubt', authenticateJWT, requireRole('student'), handleCreateFromDoubt);
+adaptiveAssessmentRouter.post('/diagnostic', authenticateJWT, requireRole('student'), handleCreateDiagnostic);
+adaptiveAssessmentRouter.post('/exam-simulation', authenticateJWT, requireRole('student'), handleCreateExamSimulation);
+adaptiveAssessmentRouter.post('/mastery-check', authenticateJWT, requireRole('student'), handleCreateMasteryCheck);
+adaptiveAssessmentRouter.post('/revision-test', authenticateJWT, requireRole('student'), handleCreateRevisionTest);
 
-// Teacher analytics endpoints
-router.get('/teacher/student/:studentId/summary', requireRole('teacher'), getTeacherStudentAssessmentSummaryController);
+adaptiveAssessmentRouter.get('/:id', authenticateJWT, requireRole('student'), handleGetAssessmentById);
+adaptiveAssessmentRouter.delete('/:id', authenticateJWT, requireRole('student'), handleDeleteAssessment);
 
-// Parent progress endpoints
-router.get('/parent/student/:studentId/summary', requireRole('parent'), getParentStudentAssessmentSummaryController);
+adaptiveAssessmentRouter.post('/:id/start', authenticateJWT, requireRole('student'), handleStartAssessment);
+adaptiveAssessmentRouter.get('/:id/current-question', authenticateJWT, requireRole('student'), handleGetCurrentQuestion);
+adaptiveAssessmentRouter.post('/:id/questions/:questionId/answer', authenticateJWT, requireRole('student'), handleSubmitAnswer);
+adaptiveAssessmentRouter.post('/:id/questions/:questionId/skip', authenticateJWT, requireRole('student'), handleSkipQuestion);
+adaptiveAssessmentRouter.post('/:id/finish', authenticateJWT, requireRole('student'), handleFinishAssessment);
 
-export default router;
+adaptiveAssessmentRouter.get('/:id/results', authenticateJWT, requireRole('student'), handleGetResults);
+adaptiveAssessmentRouter.get('/:id/review', authenticateJWT, requireRole('student'), handleGetReview);
+adaptiveAssessmentRouter.get('/:id/recommendations', authenticateJWT, requireRole('student'), handleGetRecommendations);
+
+// Teacher Summary Endpoint
+export const teacherAssessmentRouter = Router();
+teacherAssessmentRouter.get('/student/:studentId/summary', authenticateJWT, requireRole('teacher'), handleGetTeacherStudentSummary);
+
+// Parent Summary Endpoint
+export const parentAssessmentRouter = Router();
+parentAssessmentRouter.get('/student/:studentId/summary', authenticateJWT, requireRole('parent'), handleGetParentStudentSummary);

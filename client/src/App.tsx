@@ -43,22 +43,29 @@ import { DoubtSolverPage } from './pages/DoubtSolverPage';
 import { RevisionPage } from './pages/RevisionPage';
 import { KnowledgeGraphPage } from './pages/KnowledgeGraphPage';
 import { AdaptiveAssessmentPage } from './pages/AdaptiveAssessmentPage';
+import { AssessmentRunnerPage } from './pages/AssessmentRunnerPage';
+import { AssessmentResultsPage } from './pages/AssessmentResultsPage';
+import { AssessmentReviewPage } from './pages/AssessmentReviewPage';
 
 export const App: React.FC = () => (
   <AuthProvider>
     <Router>
       <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="/" element={<MainLayout />}>
           <Route index element={<LandingPage />} />
-          <Route path="login" element={<LoginPage />} />
-          <Route path="register" element={<RegisterPage />} />
-          <Route path="mentor" element={<ProtectedRoute allowedRoles={['student']}><StudentMentorPage /></ProtectedRoute>} />
+          <Route path="student/mentor" element={<ProtectedRoute allowedRoles={['student']}><StudentMentorPage /></ProtectedRoute>} />
           <Route path="study-planner" element={<ProtectedRoute allowedRoles={['student']}><StudyPlannerPage /></ProtectedRoute>} />
           <Route path="resources" element={<ProtectedRoute allowedRoles={['student']}><ResourceRecommendationsPage /></ProtectedRoute>} />
           <Route path="study-material" element={<ProtectedRoute allowedRoles={['student']}><StudyMaterialPage /></ProtectedRoute>} />
           <Route path="doubts" element={<ProtectedRoute allowedRoles={['student']}><DoubtSolverPage /></ProtectedRoute>} />
           <Route path="revision" element={<ProtectedRoute allowedRoles={['student']}><RevisionPage /></ProtectedRoute>} />
           <Route path="knowledge-graph" element={<ProtectedRoute allowedRoles={['student']}><KnowledgeGraphPage /></ProtectedRoute>} />
+          <Route path="assessments" element={<ProtectedRoute allowedRoles={['student']}><AdaptiveAssessmentPage /></ProtectedRoute>} />
+          <Route path="assessments/:id/run" element={<ProtectedRoute allowedRoles={['student']}><AssessmentRunnerPage /></ProtectedRoute>} />
+          <Route path="assessments/:id/results" element={<ProtectedRoute allowedRoles={['student']}><AssessmentResultsPage /></ProtectedRoute>} />
+          <Route path="assessments/:id/review" element={<ProtectedRoute allowedRoles={['student']}><AssessmentReviewPage /></ProtectedRoute>} />
           <Route path="adaptive-assessment" element={<ProtectedRoute allowedRoles={['student']}><AdaptiveAssessmentPage /></ProtectedRoute>} />
           <Route path="teacher/copilot" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherCopilotPage /></ProtectedRoute>} />
           <Route path="parent/copilot" element={<ProtectedRoute allowedRoles={['parent']}><ParentCopilotPage /></ProtectedRoute>} />

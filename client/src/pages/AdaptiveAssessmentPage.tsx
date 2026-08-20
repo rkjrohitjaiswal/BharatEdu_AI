@@ -1,179 +1,114 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import {
-  completeAdaptiveAssessment,
-  createAdaptiveAssessment,
-  fetchAssessmentSummary,
-  fetchNextAssessmentQuestion,
-  submitAssessmentAnswer,
+  fetchAdaptiveAssessments,
+  createDiagnosticAssessment,
+  createExamSimulation,
+  createMasteryCheck,
+  createRevisionTest,
 } from '../services/api';
-import { AdaptiveDifficultyIndicator } from '../components/assessment/AdaptiveDifficultyIndicator';
-import { AnswerFeedback } from '../components/assessment/AnswerFeedback';
-import { AssessmentEmptyState } from '../components/assessment/AssessmentEmptyState';
-import { AssessmentHeader } from '../components/assessment/AssessmentHeader';
-import { AssessmentSummary } from '../components/assessment/AssessmentSummary';
-import { HintPanel } from '../components/assessment/HintPanel';
-import { PrerequisiteNotice } from '../components/assessment/PrerequisiteNotice';
-import { QuestionCard } from '../components/assessment/QuestionCard';
-import { QuestionProgress } from '../components/assessment/QuestionProgress';
+import { IAdaptiveAssessment } from '../types/adaptive-assessment';
 
 export const AdaptiveAssessmentPage: React.FC = () => {
-  const { user } = useAuth();
-  const location = useLocation();
+  const [assessments, setAssessments] = useState<IAdaptiveAssessment[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const [assessment, setAssessment] = useState<any | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState<any | null>(null);
-  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
-  const [feedback, setFeedback] = useState<any | null>(null);
-  const [summary, setSummary] = useState<any | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [submitting, setSubmitting] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-
-  const initAssessment = async (targetId?: string) => {
-    setLoading(true);
-    setError('');
-    setFeedback(null);
-    setSummary(null);
-    setSelectedAnswer('');
-
-    try {
-      const res = await createAdaptiveAssessment(targetId, 'adaptive_practice', 5);
-      if (res.success && res.data) {
-        setAssessment(res.data);
-        await loadNextQuestion(res.data.assessmentId);
-      } else {
-        setError(res.message || 'Failed to create assessment');
-      }
-    } catch (err: any) {
-      setError(err?.message || 'Error initializing assessment');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadNextQuestion = async (assessmentId: string) => {
-    setFeedback(null);
-    setSelectedAnswer('');
-    try {
-      const res = await fetchNextAssessmentQuestion(assessmentId);
-      if (res.success && res.data) {
-        if (res.data.isCompleted) {
-          await loadSummary(assessmentId);
-        } else {
-          setCurrentQuestion(res.data.question);
-          if (res.data.assessment) setAssessment(res.data.assessment);
-        }
-      }
-    } catch (err: any) {
-      setError(err?.message || 'Error fetching question');
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!selectedAnswer || !assessment || !currentQuestion) return;
-    setSubmitting(true);
-    try {
-      const res = await submitAssessmentAnswer(
-        assessment.assessmentId,
-        currentQuestion.questionId,
-        selectedAnswer
-      );
-      if (res.success && res.data) {
-        setFeedback(res.data);
-      } else {
-        setError(res.message || 'Failed to submit answer');
-      }
-    } catch (err: any) {
-      setError(err?.message || 'Error submitting answer');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleNext = async () => {
-    if (feedback?.isAssessmentCompleted && assessment) {
-      await loadSummary(assessment.assessmentId);
-    } else if (assessment) {
-      await loadNextQuestion(assessment.assessmentId);
-    }
-  };
-
-  const loadSummary = async (assessmentId: string) => {
-    try {
-      const res = await fetchAssessmentSummary(assessmentId);
-      if (res.success && res.data) {
-        setSummary(res.data);
-        setCurrentQuestion(null);
-      }
-    } catch (err: any) {
-      setError(err?.message || 'Error loading assessment summary');
-    }
-  };
-
   useEffect(() => {
-    const stateAssessmentId = (location.state as any)?.assessmentId;
-    if (stateAssessmentId) {
-      loadNextQuestion(stateAssessmentId).finally(() => setLoading(false));
-    } else {
-      initAssessment();
+    fetchAdaptiveAssessments()
+      .then((res) => {
+        if (res.success && res.data) {
+          setAssessments(res.data);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleStartType = async (type: 'diagnostic' | 'exam' | 'mastery' | 'revision') => {
+    let res;
+    if (type === 'diagnostic') res = await createDiagnosticAssessment();
+    else if (type === 'exam') res = await createExamSimulation();
+    else if (type === 'mastery') res = await createMasteryCheck();
+    else res = await createRevisionTest();
+
+    if (res.success && res.data) {
+      navigate(`/assessments/${res.data.id}/run`);
     }
-  }, [user?.id]);
+  };
 
   return (
-    <div className="p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
-      {error && <div className="rounded-2xl bg-red-50 border border-red-200 p-4 text-red-700 text-xs font-semibold">{error}</div>}
-
-      {loading ? (
-        <div className="p-12 text-center text-slate-500 text-sm font-medium">Initializing adaptive assessment engine...</div>
-      ) : summary ? (
-        <AssessmentSummary summary={summary} onRestart={() => initAssessment()} />
-      ) : assessment && currentQuestion ? (
-        <div className="space-y-6">
-          <AssessmentHeader
-            conceptName={assessment.targetConceptName || assessment.targetConceptId}
-            subject={assessment.subject || 'Mathematics'}
-            assessmentType={assessment.assessmentType || 'adaptive_practice'}
-          />
-
-          <QuestionProgress
-            current={assessment.completedQuestions + 1}
-            total={assessment.questionCount}
-          />
-
-          <PrerequisiteNotice notice={assessment.prerequisiteNotice} />
-
-          <QuestionCard
-            question={currentQuestion}
-            selectedAnswer={selectedAnswer}
-            onSelectAnswer={setSelectedAnswer}
-            disabled={Boolean(feedback)}
-          />
-
-          {!feedback && (
-            <div className="flex items-center justify-between gap-3">
-              <HintPanel hint={currentQuestion.hint} />
-
-              <button
-                type="button"
-                disabled={!selectedAnswer || submitting}
-                onClick={handleSubmit}
-                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50"
-              >
-                {submitting ? 'Submitting...' : 'Submit Answer'}
-              </button>
-            </div>
-          )}
-
-          {feedback && <AnswerFeedback feedback={feedback} onNext={handleNext} />}
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">AI Adaptive Assessment Hub</h1>
+          <p className="text-sm text-gray-600">Dynamic testing, prerequisite checks & performance evaluation</p>
         </div>
-      ) : (
-        <AssessmentEmptyState onStart={() => initAssessment()} />
-      )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div onClick={() => handleStartType('diagnostic')} className="bg-gradient-to-br from-purple-500 to-indigo-600 p-6 rounded-xl text-white cursor-pointer hover:shadow-lg transition-transform hover:-translate-y-1">
+          <h3 className="font-bold text-lg">Diagnostic Test</h3>
+          <p className="text-xs text-purple-100 mt-1">Baseline evaluation across all subject concepts.</p>
+          <button className="mt-4 px-4 py-2 bg-white text-purple-700 font-semibold text-xs rounded-lg shadow">Start Test</button>
+        </div>
+
+        <div onClick={() => handleStartType('mastery')} className="bg-gradient-to-br from-blue-500 to-cyan-600 p-6 rounded-xl text-white cursor-pointer hover:shadow-lg transition-transform hover:-translate-y-1">
+          <h3 className="font-bold text-lg">Mastery Check</h3>
+          <p className="text-xs text-blue-100 mt-1">Targeted test on active curriculum concepts.</p>
+          <button className="mt-4 px-4 py-2 bg-white text-blue-700 font-semibold text-xs rounded-lg shadow">Start Test</button>
+        </div>
+
+        <div onClick={() => handleStartType('revision')} className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-xl text-white cursor-pointer hover:shadow-lg transition-transform hover:-translate-y-1">
+          <h3 className="font-bold text-lg">Smart Revision Test</h3>
+          <p className="text-xs text-emerald-100 mt-1">Focused test on spaced revision concepts.</p>
+          <button className="mt-4 px-4 py-2 bg-white text-emerald-700 font-semibold text-xs rounded-lg shadow">Start Test</button>
+        </div>
+
+        <div onClick={() => handleStartType('exam')} className="bg-gradient-to-br from-rose-500 to-orange-600 p-6 rounded-xl text-white cursor-pointer hover:shadow-lg transition-transform hover:-translate-y-1">
+          <h3 className="font-bold text-lg">Exam Simulation</h3>
+          <p className="text-xs text-rose-100 mt-1">Full-length timed exam simulation test.</p>
+          <button className="mt-4 px-4 py-2 bg-white text-rose-700 font-semibold text-xs rounded-lg shadow">Start Test</button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow border border-gray-100 p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Assessment History</h2>
+        {loading ? (
+          <p className="text-sm text-gray-500 py-4">Loading assessment history...</p>
+        ) : assessments.length === 0 ? (
+          <p className="text-sm text-gray-500 py-4">No assessment history recorded yet.</p>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {assessments.map((a) => (
+              <div key={a.id} className="py-4 flex justify-between items-center">
+                <div>
+                  <h4 className="font-semibold text-gray-900">{a.title}</h4>
+                  <p className="text-xs text-gray-500">
+                    {a.subject} • {a.questionCount} Questions • Difficulty: {a.difficulty} • Status: {a.status}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  {a.status === 'completed' ? (
+                    <button
+                      onClick={() => navigate(`/assessments/${a.id}/results`)}
+                      className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-xs rounded-lg"
+                    >
+                      View Results
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate(`/assessments/${a.id}/run`)}
+                      className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-medium text-xs rounded-lg"
+                    >
+                      Resume
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
-
-export default AdaptiveAssessmentPage;

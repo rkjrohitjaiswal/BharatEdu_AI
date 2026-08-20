@@ -147,6 +147,9 @@ export const DashboardPage: React.FC = () => {
           {/* AI Resource Recommendations Card */}
           <ResourceRecommendationCard />
 
+          {/* AI Adaptive Assessment Card */}
+          <AdaptiveAssessmentCard />
+
           {/* AI Personalized Study Material Card */}
           <StudyMaterialCard />
 

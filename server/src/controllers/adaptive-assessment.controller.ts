@@ -1,182 +1,322 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
 import {
-  createStudentAssessment,
-  getAssessmentSummary,
-  getNextQuestion,
+  createAdaptiveAssessment,
+  createAssessmentFromDoubt,
+  createDiagnosticAssessment,
+  createExamSimulation,
+  createMasteryCheck,
+  createRevisionTest,
+  deleteAdaptiveAssessment,
+  finishAdaptiveAssessment,
+  getAdaptiveAssessmentById,
+  getAdaptiveAssessments,
+  getAssessmentRecommendations,
+  getAssessmentResults,
+  getAssessmentReview,
+  getCurrentAssessmentQuestion,
   getParentStudentAssessmentSummary,
-  getStudentAssessments,
   getTeacherStudentAssessmentSummary,
-  submitAnswer,
-} from '../ai/question-generator/service.js';
+  skipAssessmentQuestion,
+  startAdaptiveAssessment,
+  submitAssessmentAnswer,
+} from '../ai/adaptive-assessment/service.js';
 
-export const createAssessmentController = async (req: Request, res: Response): Promise<void> => {
+export const handleCreateAssessment = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const { targetConceptId, assessmentType = 'adaptive_practice', questionCount = 5 } = req.body;
-    const assessment = await createStudentAssessment(user.id, targetConceptId, assessmentType, questionCount);
-
-    res.status(201).json({ success: true, data: assessment });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to create assessment' });
+    const asst = await createAdaptiveAssessment(studentId, req.body);
+    res.status(201).json({ success: true, data: asst });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to create assessment' });
   }
 };
 
-export const getNextQuestionController = async (req: Request, res: Response): Promise<void> => {
+export const handleGetAssessments = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    const { id } = req.params;
-
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const result = await getNextQuestion(id, user.id);
-    res.status(200).json({ success: true, data: result });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch next question' });
+    const list = await getAdaptiveAssessments(studentId);
+    res.status(200).json({ success: true, data: list });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch assessments' });
   }
 };
 
-export const submitAnswerController = async (req: Request, res: Response): Promise<void> => {
+export const handleGetAssessmentById = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    const { id, questionId } = req.params;
-    const { selectedAnswer, responseTimeSeconds = 10, hintsUsed = 0 } = req.body;
-
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (!selectedAnswer) {
-      res.status(400).json({ success: false, message: 'Selected answer is required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const result = await submitAnswer(
-      id,
-      questionId,
-      selectedAnswer,
-      user.id,
-      responseTimeSeconds,
-      hintsUsed
+    const asst = await getAdaptiveAssessmentById(studentId, req.params.id);
+    if (!asst) {
+      res.status(404).json({ error: 'Assessment not found' });
+      return;
+    }
+
+    res.status(200).json({ success: true, data: asst });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch assessment details' });
+  }
+};
+
+export const handleDeleteAssessment = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const deleted = await deleteAdaptiveAssessment(studentId, req.params.id);
+    res.status(200).json({ success: true, data: { deleted } });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to delete assessment' });
+  }
+};
+
+export const handleStartAssessment = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const question = await startAdaptiveAssessment(studentId, req.params.id);
+    res.status(200).json({ success: true, data: { currentQuestion: question } });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to start assessment' });
+  }
+};
+
+export const handleGetCurrentQuestion = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const question = await getCurrentAssessmentQuestion(studentId, req.params.id);
+    res.status(200).json({ success: true, data: question });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch current question' });
+  }
+};
+
+export const handleSubmitAnswer = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { submittedAnswer, responseTimeSeconds } = req.body;
+    const result = await submitAssessmentAnswer(
+      studentId,
+      req.params.id,
+      req.params.questionId,
+      submittedAnswer || '',
+      responseTimeSeconds || 30
     );
-
     res.status(200).json({ success: true, data: result });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to submit answer' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to submit answer' });
   }
 };
 
-export const completeAssessmentController = async (req: Request, res: Response): Promise<void> => {
+export const handleSkipQuestion = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    const { id } = req.params;
-
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const summary = await getAssessmentSummary(id, user.id);
-    res.status(200).json({ success: true, data: summary });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to complete assessment' });
+    const nextQ = await skipAssessmentQuestion(studentId, req.params.id, req.params.questionId);
+    res.status(200).json({ success: true, data: { nextQuestion: nextQ } });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to skip question' });
   }
 };
 
-export const getStudentAssessmentsController = async (req: Request, res: Response): Promise<void> => {
+export const handleFinishAssessment = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const assessments = await getStudentAssessments(user.id);
-    res.status(200).json({ success: true, data: assessments });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch student assessments' });
+    const results = await finishAdaptiveAssessment(studentId, req.params.id);
+    res.status(200).json({ success: true, data: results });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to finish assessment' });
   }
 };
 
-export const getAssessmentSummaryController = async (req: Request, res: Response): Promise<void> => {
+export const handleGetResults = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    const { id } = req.params;
-
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const summary = await getAssessmentSummary(id, user.id);
-    res.status(200).json({ success: true, data: summary });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch assessment summary' });
+    const results = await getAssessmentResults(studentId, req.params.id);
+    res.status(200).json({ success: true, data: results });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch assessment results' });
   }
 };
 
-export const getRecommendedQuestionsController = async (req: Request, res: Response): Promise<void> => {
+export const handleGetReview = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const assessment = await createStudentAssessment(user.id);
-    const nextQ = await getNextQuestion(assessment.assessmentId, user.id);
-
-    res.status(200).json({ success: true, data: { assessment, question: nextQ.question } });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch recommended questions' });
+    const review = await getAssessmentReview(studentId, req.params.id);
+    res.status(200).json({ success: true, data: review });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch assessment review' });
   }
 };
 
-export const getTeacherStudentAssessmentSummaryController = async (req: Request, res: Response): Promise<void> => {
+export const handleGetRecommendations = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const recs = await getAssessmentRecommendations(studentId, req.params.id);
+    res.status(200).json({ success: true, data: recs });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch assessment recommendations' });
+  }
+};
+
+export const handleCreateFromDoubt = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const asst = await createAssessmentFromDoubt(studentId, req.body.doubtId);
+    res.status(201).json({ success: true, data: asst });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to create assessment from doubt' });
+  }
+};
+
+export const handleCreateDiagnostic = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const asst = await createDiagnosticAssessment(studentId);
+    res.status(201).json({ success: true, data: asst });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to create diagnostic assessment' });
+  }
+};
+
+export const handleCreateExamSimulation = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const asst = await createExamSimulation(studentId);
+    res.status(201).json({ success: true, data: asst });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to create exam simulation' });
+  }
+};
+
+export const handleCreateMasteryCheck = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const asst = await createMasteryCheck(studentId, req.body.conceptId);
+    res.status(201).json({ success: true, data: asst });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to create mastery check' });
+  }
+};
+
+export const handleCreateRevisionTest = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const asst = await createRevisionTest(studentId);
+    res.status(201).json({ success: true, data: asst });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to create revision test' });
+  }
+};
+
+export const handleGetTeacherStudentSummary = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const teacherId = req.user?.id;
+    if (!teacherId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
     const { studentId } = req.params;
-
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (user.role !== 'teacher') {
-      res.status(403).json({ success: false, message: 'Only teachers can access student assessment analytics' });
-      return;
-    }
-
-    const summary = await getTeacherStudentAssessmentSummary(user.id, studentId);
+    const summary = await getTeacherStudentAssessmentSummary(teacherId, studentId);
     res.status(200).json({ success: true, data: summary });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch teacher assessment summary' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch teacher student assessment summary' });
   }
 };
 
-export const getParentStudentAssessmentSummaryController = async (req: Request, res: Response): Promise<void> => {
+export const handleGetParentStudentSummary = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
+    const parentId = req.user?.id;
+    if (!parentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
     const { studentId } = req.params;
-
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (user.role !== 'parent') {
-      res.status(403).json({ success: false, message: 'Only parents can access student assessment analytics' });
-      return;
-    }
-
-    const summary = await getParentStudentAssessmentSummary(user.id, studentId);
+    const summary = await getParentStudentAssessmentSummary(parentId, studentId);
     res.status(200).json({ success: true, data: summary });
-  } catch (error: any) {
-    res.status(403).json({ success: false, message: error?.message || 'Access denied for parent assessment summary' });
+  } catch (err: any) {
+    res.status(403).json({ error: err.message || 'Access denied' });
   }
 };

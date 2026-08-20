@@ -36,6 +36,9 @@ import { KnowledgeConcept } from '../models/knowledge-concept.model.js';
 import { ConceptDependency } from '../models/concept-dependency.model.js';
 import { StudentConceptMastery } from '../models/student-concept-mastery.model.js';
 import { AdaptiveAssessment } from '../models/adaptive-assessment.model.js';
+import { AdaptiveAssessmentQuestion } from '../models/adaptive-assessment-question.model.js';
+import { AdaptiveAssessmentAttempt } from '../models/adaptive-assessment-attempt.model.js';
+import { AdaptiveAssessmentContext } from '../models/adaptive-assessment-context.model.js';
 import { StudyMaterial } from '../models/study-material.model.js';
 import { StudyFlashcard } from '../models/study-flashcard.model.js';
 import { DoubtSession } from '../models/doubt-session.model.js';
@@ -73,6 +76,10 @@ const inMemStudyFlashcards: any[] = [];
 const inMemDoubtSessions: any[] = [];
 const inMemDoubtMessages: any[] = [];
 const inMemDoubtContexts: any[] = [];
+const inMemAssessmentQuestions: any[] = [];
+const inMemAssessmentAttempts: any[] = [];
+const inMemAssessmentContexts: any[] = [];
+const inMemAdaptiveAssessments: any[] = [];
 const inMemRevisionHistory: any[] = [];
 const inMemRevisionItems: any[] = [];
 const inMemLearningPaths: any[] = [];
@@ -2065,13 +2072,6 @@ export const dataRepository = {
     );
   },
 
-  async getStudentAdaptiveAssessments(studentId: string): Promise<any[]> {
-    if (isDBConnected()) {
-      return await AdaptiveAssessment.find({ studentId }).sort({ createdAt: -1 }).lean();
-    }
-    return [];
-  },
-
   async getStudentResourceProgressList(studentId: string): Promise<any[]> {
     if (isDBConnected()) {
       return await StudentResourceProgress.find({ studentId }).sort({ updatedAt: -1 }).lean();
@@ -2669,5 +2669,178 @@ export const dataRepository = {
 
   async getParentDoubtSummary(studentId: string): Promise<any> {
     return await this.getDoubtSummary(studentId);
+  },
+
+  async createAdaptiveAssessment(asstData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AdaptiveAssessment(asstData);
+      return await doc.save();
+    }
+    const item = { _id: `asst_${Date.now()}_${Math.random()}`, ...asstData, createdAt: new Date(), updatedAt: new Date() };
+    inMemAdaptiveAssessments.push(item);
+    return item;
+  },
+
+  async getAdaptiveAssessment(assessmentId: string, studentId?: string): Promise<any> {
+    if (isDBConnected()) {
+      const query: any = { _id: assessmentId };
+      if (studentId) query.studentId = studentId;
+      return await AdaptiveAssessment.findOne(query).lean();
+    }
+    return inMemAdaptiveAssessments.find(
+      (a) => (String(a._id || a.id) === String(assessmentId) || a.assessmentId === assessmentId) && (!studentId || String(a.studentId) === String(studentId))
+    );
+  },
+
+  async getStudentAdaptiveAssessments(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AdaptiveAssessment.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemAdaptiveAssessments
+      .filter((a) => String(a.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  async updateAdaptiveAssessment(assessmentId: string, studentId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await AdaptiveAssessment.findOneAndUpdate({ _id: assessmentId, studentId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemAdaptiveAssessments.findIndex(
+      (a) => (String(a._id || a.id) === String(assessmentId) || a.assessmentId === assessmentId) && String(a.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemAdaptiveAssessments[idx] = { ...inMemAdaptiveAssessments[idx], ...updateData, updatedAt: new Date() };
+      return inMemAdaptiveAssessments[idx];
+    }
+    return null;
+  },
+
+  async deleteAdaptiveAssessment(assessmentId: string, studentId: string): Promise<boolean> {
+    if (isDBConnected()) {
+      const res = await AdaptiveAssessment.deleteOne({ _id: assessmentId, studentId });
+      return res.deletedCount > 0;
+    }
+    const idx = inMemAdaptiveAssessments.findIndex(
+      (a) => (String(a._id || a.id) === String(assessmentId) || a.assessmentId === assessmentId) && String(a.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemAdaptiveAssessments.splice(idx, 1);
+      return true;
+    }
+    return false;
+  },
+
+  async createAssessmentQuestion(qData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AdaptiveAssessmentQuestion(qData);
+      return await doc.save();
+    }
+    const item = { _id: `q_${Date.now()}_${Math.random()}`, ...qData, createdAt: new Date() };
+    inMemAssessmentQuestions.push(item);
+    return item;
+  },
+
+  async getAssessmentQuestions(assessmentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AdaptiveAssessmentQuestion.find({ assessmentId }).sort({ sequence: 1 }).lean();
+    }
+    return inMemAssessmentQuestions
+      .filter((q) => String(q.assessmentId) === String(assessmentId))
+      .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+  },
+
+  async getAssessmentQuestion(questionId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await AdaptiveAssessmentQuestion.findOne({ _id: questionId }).lean();
+    }
+    return inMemAssessmentQuestions.find((q) => String(q._id || q.id) === String(questionId) || q.questionId === questionId);
+  },
+
+  async updateAssessmentQuestion(questionId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await AdaptiveAssessmentQuestion.findOneAndUpdate({ _id: questionId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemAssessmentQuestions.findIndex((q) => String(q._id || q.id) === String(questionId) || q.questionId === questionId);
+    if (idx >= 0) {
+      inMemAssessmentQuestions[idx] = { ...inMemAssessmentQuestions[idx], ...updateData, updatedAt: new Date() };
+      return inMemAssessmentQuestions[idx];
+    }
+    return null;
+  },
+
+  async createAssessmentAttempt(attData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AdaptiveAssessmentAttempt(attData);
+      return await doc.save();
+    }
+    const item = { _id: `att_${Date.now()}_${Math.random()}`, ...attData, createdAt: new Date() };
+    inMemAssessmentAttempts.push(item);
+    return item;
+  },
+
+  async getAssessmentAttempts(assessmentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AdaptiveAssessmentAttempt.find({ assessmentId }).lean();
+    }
+    return inMemAssessmentAttempts.filter((a) => String(a.assessmentId) === String(assessmentId));
+  },
+
+  async getAssessmentAttempt(assessmentId: string, questionId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await AdaptiveAssessmentAttempt.findOne({ assessmentId, questionId }).lean();
+    }
+    return inMemAssessmentAttempts.find((a) => String(a.assessmentId) === String(assessmentId) && String(a.questionId) === String(questionId));
+  },
+
+  async saveAssessmentContext(contextData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AdaptiveAssessmentContext(contextData);
+      return await doc.save();
+    }
+    const item = { _id: `ctx_${Date.now()}_${Math.random()}`, ...contextData, capturedAt: new Date() };
+    inMemAssessmentContexts.push(item);
+    return item;
+  },
+
+  async getAssessmentContext(assessmentId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await AdaptiveAssessmentContext.findOne({ assessmentId }).sort({ capturedAt: -1 }).lean();
+    }
+    return inMemAssessmentContexts.find((c) => String(c.assessmentId) === String(assessmentId)) || null;
+  },
+
+  async getAssessmentResults(assessmentId: string, studentId: string): Promise<any> {
+    const asst = await this.getAdaptiveAssessment(assessmentId, studentId);
+    const attempts = await this.getAssessmentAttempts(assessmentId);
+    return {
+      assessmentId,
+      studentId,
+      score: asst?.score || 0,
+      attemptsCount: attempts.length,
+      accuracy: asst?.accuracy || 0,
+    };
+  },
+
+  async getAssessmentReview(assessmentId: string, studentId: string): Promise<any> {
+    const questions = await this.getAssessmentQuestions(assessmentId);
+    const attempts = await this.getAssessmentAttempts(assessmentId);
+    return {
+      assessmentId,
+      questions,
+      attempts,
+    };
+  },
+
+  async getTeacherAssessmentSummary(studentId: string): Promise<any> {
+    const list = await this.getStudentAdaptiveAssessments(studentId);
+    return {
+      studentId,
+      totalAssessments: list.length,
+      completedCount: list.filter((a) => a.status === 'completed').length,
+    };
+  },
+
+  async getParentAssessmentSummary(studentId: string): Promise<any> {
+    return await this.getTeacherAssessmentSummary(studentId);
   },
 };
