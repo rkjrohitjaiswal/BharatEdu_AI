@@ -25,6 +25,7 @@ import parentCopilotRoutes from './parent-copilot.routes.js';
 import studentMentorRoutes from './student-mentor.routes.js';
 import learningAnalyticsRoutes from './learning-analytics.routes.js';
 import studyPlannerRoutes from './study-planner.routes.js';
+import resourceRecommendationRoutes from './resource-recommendation.routes.js';
 
 const router = Router();
 
@@ -35,6 +36,7 @@ router.use('/parent/copilot', parentCopilotRoutes);
 router.use('/student/mentor', studentMentorRoutes);
 router.use('/student/analytics', learningAnalyticsRoutes);
 router.use('/student/study-planner', studyPlannerRoutes);
+router.use('/student/resources', resourceRecommendationRoutes);
 router.use('/risk', riskRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/notifications', notificationRoutes);

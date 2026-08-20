@@ -37,6 +37,7 @@ import { TeacherCopilotPage } from './pages/TeacherCopilotPage';
 import { ParentCopilotPage } from './pages/ParentCopilotPage';
 import { StudentMentorPage } from './pages/StudentMentorPage';
 import { StudyPlannerPage } from './pages/StudyPlannerPage';
+import { LearningResourcesPage } from './pages/LearningResourcesPage';
 
 export const App: React.FC = () => (
   <AuthProvider>
@@ -48,6 +49,7 @@ export const App: React.FC = () => (
           <Route path="register" element={<RegisterPage />} />
           <Route path="mentor" element={<ProtectedRoute allowedRoles={['student']}><StudentMentorPage /></ProtectedRoute>} />
           <Route path="study-planner" element={<ProtectedRoute allowedRoles={['student']}><StudyPlannerPage /></ProtectedRoute>} />
+          <Route path="resources" element={<ProtectedRoute allowedRoles={['student']}><LearningResourcesPage /></ProtectedRoute>} />
           <Route path="teacher/copilot" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherCopilotPage /></ProtectedRoute>} />
           <Route path="parent/copilot" element={<ProtectedRoute allowedRoles={['parent']}><ParentCopilotPage /></ProtectedRoute>} />
           <Route path="risk" element={<ProtectedRoute allowedRoles={['student', 'teacher']}><RiskPredictionDashboardPage /></ProtectedRoute>} />

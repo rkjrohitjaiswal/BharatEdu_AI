@@ -28,6 +28,7 @@ import { ParentStudentLink, IParentStudentLink } from '../models/parent-student-
 import { StudentGoal, IStudentGoal } from '../models/student-goal.model.js';
 import { Achievement, IAchievement } from '../models/achievement.model.js';
 import { ExamPreparationModel } from '../models/exam-preparation.model.js';
+import { LearningResource } from '../models/learning-resource.model.js';
 import { ExamTopicProgressModel } from '../models/exam-topic-progress.model.js';
 import { CareerGoal, ICareerGoal } from '../models/career-goal.model.js';
 import { NotificationModel, INotification } from '../models/notification.model.js';
@@ -2005,5 +2006,12 @@ export const dataRepository = {
       return await User.find({ role: 'student' }).select('_id name email preferredLanguage').lean();
     }
     return getInMemStudents();
+  },
+
+  async getLearningResources(): Promise<any[]> {
+    if (isDBConnected()) {
+      return await LearningResource.find({ active: true }).lean();
+    }
+    return [];
   },
 };
