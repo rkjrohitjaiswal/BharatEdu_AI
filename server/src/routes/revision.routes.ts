@@ -1,14 +1,11 @@
 import { Router } from 'express';
 import {
-  completeRevisionSessionController,
-  generateRevisionController,
-  getDueRevisionController,
-  getOverdueRevisionController,
-  getRevisionItemByIdController,
-  getRevisionSummaryController,
-  getTodayRevisionController,
-  getWeeklyRevisionController,
-  refreshRevisionController,
+  completeRevisionOutcomeController,
+  getDailyRevisionQueueController,
+  getParentStudentRevisionSummaryController,
+  getRevisionScheduleController,
+  getTeacherStudentRevisionSummaryController,
+  refreshStudentRevisionQueueController,
   startRevisionSessionController,
 } from '../controllers/revision.controller.js';
 import { authenticateJWT } from '../middleware/auth.middleware.js';
@@ -17,17 +14,18 @@ import { requireRole } from '../middleware/role.middleware.js';
 const router = Router();
 
 router.use(authenticateJWT);
-router.use(requireRole('student'));
 
-router.get('/today', getTodayRevisionController);
-router.get('/week', getWeeklyRevisionController);
-router.get('/summary', getRevisionSummaryController);
-router.get('/due', getDueRevisionController);
-router.get('/overdue', getOverdueRevisionController);
-router.get('/:id', getRevisionItemByIdController);
-router.post('/generate', generateRevisionController);
-router.post('/refresh', refreshRevisionController);
-router.post('/:id/start', startRevisionSessionController);
-router.post('/:id/complete', completeRevisionSessionController);
+// Student endpoints
+router.get('/today', requireRole('student'), getDailyRevisionQueueController);
+router.get('/schedule', requireRole('student'), getRevisionScheduleController);
+router.post('/refresh', requireRole('student'), refreshStudentRevisionQueueController);
+router.post('/:id/start', requireRole('student'), startRevisionSessionController);
+router.post('/:id/complete', requireRole('student'), completeRevisionOutcomeController);
+
+// Teacher analytics summary
+router.get('/teacher/student/:studentId/summary', requireRole('teacher'), getTeacherStudentRevisionSummaryController);
+
+// Parent progress summary
+router.get('/parent/student/:studentId/summary', requireRole('parent'), getParentStudentRevisionSummaryController);
 
 export default router;

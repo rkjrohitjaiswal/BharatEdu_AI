@@ -1,172 +1,48 @@
 import { Request, Response } from 'express';
 import {
-  completeReviewSession,
-  generateRevisionPlan,
-  getDueRevisionItems,
-  getOverdueRevisionItems,
-  getRevisionItemById,
-  getRevisionSummary,
-  getTodayRevisionPlan,
-  getWeeklyRevisionPlanService,
-  refreshRevisionPlan,
-  startReviewSession,
-} from '../ai/revision/service.js';
+  completeRevisionOutcome,
+  getDailyRevisionQueue,
+  getParentStudentRevisionSummary,
+  getRevisionSchedule,
+  getTeacherStudentRevisionSummary,
+  refreshStudentRevisionQueue,
+  startRevisionSession,
+} from '../ai/smart-revision/service.js';
 
-export const getTodayRevisionController = async (req: Request, res: Response): Promise<void> => {
+export const getDailyRevisionQueueController = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = (req as any).user;
     if (!user || !user.id) {
       res.status(401).json({ success: false, message: 'Authentication required' });
       return;
     }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can access daily revision plan' });
-      return;
-    }
 
-    const plan = await getTodayRevisionPlan(user.id);
-    res.status(200).json({ success: true, data: plan });
+    const queue = await getDailyRevisionQueue(user.id);
+    res.status(200).json({ success: true, data: queue });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch daily revision plan' });
+    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch daily revision queue' });
   }
 };
 
-export const getWeeklyRevisionController = async (req: Request, res: Response): Promise<void> => {
+export const getRevisionScheduleController = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = (req as any).user;
+    const { days = '7', subject, priority } = req.query;
+
     if (!user || !user.id) {
       res.status(401).json({ success: false, message: 'Authentication required' });
       return;
     }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can access weekly revision plan' });
-      return;
-    }
 
-    const plan = await getWeeklyRevisionPlanService(user.id);
-    res.status(200).json({ success: true, data: plan });
+    const schedule = await getRevisionSchedule(
+      user.id,
+      Number(days),
+      subject ? String(subject) : undefined,
+      priority ? String(priority) : undefined
+    );
+    res.status(200).json({ success: true, data: schedule });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch weekly revision plan' });
-  }
-};
-
-export const getRevisionSummaryController = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can access revision summary' });
-      return;
-    }
-
-    const summary = await getRevisionSummary(user.id);
-    res.status(200).json({ success: true, data: summary });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch revision summary' });
-  }
-};
-
-export const getDueRevisionController = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can access due revision items' });
-      return;
-    }
-
-    const items = await getDueRevisionItems(user.id);
-    res.status(200).json({ success: true, data: items });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch due revision items' });
-  }
-};
-
-export const getOverdueRevisionController = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can access overdue revision items' });
-      return;
-    }
-
-    const items = await getOverdueRevisionItems(user.id);
-    res.status(200).json({ success: true, data: items });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch overdue revision items' });
-  }
-};
-
-export const getRevisionItemByIdController = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = (req as any).user;
-    const { id } = req.params;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can access revision item details' });
-      return;
-    }
-
-    const item = await getRevisionItemById(user.id, id);
-    if (!item) {
-      res.status(404).json({ success: false, message: 'Revision item not found' });
-      return;
-    }
-
-    res.status(200).json({ success: true, data: item });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch revision item details' });
-  }
-};
-
-export const generateRevisionController = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can generate revision items' });
-      return;
-    }
-
-    const items = await generateRevisionPlan(user.id);
-    res.status(200).json({ success: true, data: items });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to generate revision items' });
-  }
-};
-
-export const refreshRevisionController = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can refresh revision plan' });
-      return;
-    }
-
-    const plan = await refreshRevisionPlan(user.id);
-    res.status(200).json({ success: true, data: plan });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to refresh revision plan' });
+    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch revision schedule' });
   }
 };
 
@@ -174,45 +50,94 @@ export const startRevisionSessionController = async (req: Request, res: Response
   try {
     const user = (req as any).user;
     const { id } = req.params;
+
     if (!user || !user.id) {
       res.status(401).json({ success: false, message: 'Authentication required' });
       return;
     }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can start revision sessions' });
-      return;
-    }
 
-    const session = await startReviewSession(user.id, id);
-    res.status(200).json({ success: true, data: session });
+    const result = await startRevisionSession(user.id, id);
+    res.status(200).json({ success: true, data: result });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error?.message || 'Failed to start revision session' });
   }
 };
 
-export const completeRevisionSessionController = async (req: Request, res: Response): Promise<void> => {
+export const completeRevisionOutcomeController = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = (req as any).user;
     const { id } = req.params;
-    const { questionsAttempted = 5, questionsCorrect = 4 } = req.body;
+    const { outcome } = req.body;
 
     if (!user || !user.id) {
       res.status(401).json({ success: false, message: 'Authentication required' });
       return;
     }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can complete revision sessions' });
+    if (!outcome || !['again', 'hard', 'good', 'easy'].includes(outcome)) {
+      res.status(400).json({ success: false, message: 'Valid outcome is required (again, hard, good, easy)' });
       return;
     }
 
-    const result = await completeReviewSession(
-      user.id,
-      id,
-      Number(questionsAttempted),
-      Number(questionsCorrect)
-    );
+    const result = await completeRevisionOutcome(user.id, id, outcome);
     res.status(200).json({ success: true, data: result });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to complete revision session' });
+    res.status(500).json({ success: false, message: error?.message || 'Failed to submit revision outcome' });
+  }
+};
+
+export const refreshStudentRevisionQueueController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = (req as any).user;
+    if (!user || !user.id) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
+
+    const refreshed = await refreshStudentRevisionQueue(user.id);
+    res.status(200).json({ success: true, data: refreshed });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error?.message || 'Failed to refresh revision queue' });
+  }
+};
+
+export const getTeacherStudentRevisionSummaryController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = (req as any).user;
+    const { studentId } = req.params;
+
+    if (!user || !user.id) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
+    if (user.role !== 'teacher') {
+      res.status(403).json({ success: false, message: 'Only teachers can access student revision analytics' });
+      return;
+    }
+
+    const summary = await getTeacherStudentRevisionSummary(user.id, studentId);
+    res.status(200).json({ success: true, data: summary });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch teacher revision summary' });
+  }
+};
+
+export const getParentStudentRevisionSummaryController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = (req as any).user;
+    const { studentId } = req.params;
+
+    if (!user || !user.id) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
+    if (user.role !== 'parent') {
+      res.status(403).json({ success: false, message: 'Only parents can access student revision analytics' });
+      return;
+    }
+
+    const summary = await getParentStudentRevisionSummary(user.id, studentId);
+    res.status(200).json({ success: true, data: summary });
+  } catch (error: any) {
+    res.status(403).json({ success: false, message: error?.message || 'Access denied for parent revision summary' });
   }
 };

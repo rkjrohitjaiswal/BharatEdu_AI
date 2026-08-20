@@ -7,9 +7,13 @@ export type RevisionSourceType =
   | 'exam'
   | 'goal'
   | 'resource'
-  | 'manual';
+  | 'manual'
+  | 'prerequisite'
+  | 'risk';
 
-export type RevisionStatus = 'active' | 'due' | 'overdue' | 'mastered' | 'paused' | 'archived';
+export type RevisionStatus = 'due' | 'upcoming' | 'completed' | 'paused' | 'active' | 'overdue' | 'archived' | 'mastered';
+
+export type RevisionPriority = 'critical' | 'high' | 'medium' | 'low';
 
 export type ReviewLevel = 'new' | 'learning' | 'reinforcing' | 'retained' | 'mastered';
 
@@ -17,25 +21,36 @@ export type ReviewResultType = 'failed' | 'weak' | 'passed' | 'strong';
 
 export interface IRevisionItem extends Document {
   studentId: mongoose.Types.ObjectId;
-  subject: string;
+  topicId: string;
   topic: string;
-  subtopic: string;
+  conceptId: string;
+  subject: string;
   sourceType: RevisionSourceType;
   sourceId?: string;
-  masteryScore: number;
-  retentionScore: number;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-  reviewLevel: ReviewLevel;
-  intervalDays: number;
-  repetitionCount: number;
   lastReviewedAt?: Date;
   nextReviewAt: Date;
-  lastResult?: ReviewResultType;
-  consecutiveCorrect: number;
-  consecutiveIncorrect: number;
-  overdue: boolean;
+  reviewCount: number;
+  successfulReviews: number;
+  failedReviews: number;
+  currentIntervalDays: number;
+  easeFactor: number;
+  difficulty: 'foundational' | 'easy' | 'medium' | 'hard' | 'advanced' | 'beginner' | 'intermediate';
+  masteryScore: number;
+  confidenceScore: number;
+  priority: RevisionPriority;
   status: RevisionStatus;
+
+  // Backward compatibility
+  subtopic?: string;
+  retentionScore?: number;
+  reviewLevel?: ReviewLevel;
+  intervalDays?: number;
+  repetitionCount?: number;
+  lastResult?: ReviewResultType;
+  consecutiveCorrect?: number;
+  consecutiveIncorrect?: number;
+  overdue?: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,47 +63,58 @@ const RevisionItemSchema = new Schema<IRevisionItem>(
       required: true,
       index: true,
     },
-    subject: { type: String, required: true, index: true },
+    topicId: { type: String, required: true, index: true },
     topic: { type: String, required: true, index: true },
-    subtopic: { type: String, default: '' },
+    conceptId: { type: String, required: true, index: true },
+    subject: { type: String, required: true, index: true },
     sourceType: {
       type: String,
-      enum: ['mistake', 'practice', 'learning_gap', 'exam', 'goal', 'resource', 'manual'],
+      enum: ['mistake', 'practice', 'learning_gap', 'exam', 'goal', 'resource', 'manual', 'prerequisite', 'risk'],
       default: 'practice',
     },
     sourceId: { type: String, default: '' },
-    masteryScore: { type: Number, min: 0, max: 100, default: 50 },
-    retentionScore: { type: Number, min: 0, max: 100, default: 50 },
-    difficulty: {
-      type: String,
-      enum: ['beginner', 'intermediate', 'advanced'],
-      default: 'intermediate',
-    },
-    priority: { type: String, enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'], default: 'MEDIUM' },
-    reviewLevel: {
-      type: String,
-      enum: ['new', 'learning', 'reinforcing', 'retained', 'mastered'],
-      default: 'new',
-    },
-    intervalDays: { type: Number, default: 1, min: 1 },
-    repetitionCount: { type: Number, default: 0, min: 0 },
     lastReviewedAt: { type: Date },
     nextReviewAt: { type: Date, required: true, index: true },
-    lastResult: { type: String, enum: ['failed', 'weak', 'passed', 'strong'] },
-    consecutiveCorrect: { type: Number, default: 0, min: 0 },
-    consecutiveIncorrect: { type: Number, default: 0, min: 0 },
-    overdue: { type: Boolean, default: false, index: true },
-    status: {
+    reviewCount: { type: Number, default: 0, min: 0 },
+    successfulReviews: { type: Number, default: 0, min: 0 },
+    failedReviews: { type: Number, default: 0, min: 0 },
+    currentIntervalDays: { type: Number, default: 1, min: 1 },
+    easeFactor: { type: Number, default: 2.5, min: 1.3, max: 3.5 },
+    difficulty: {
       type: String,
-      enum: ['active', 'due', 'overdue', 'mastered', 'paused', 'archived'],
-      default: 'active',
+      enum: ['foundational', 'easy', 'medium', 'hard', 'advanced', 'beginner', 'intermediate'],
+      default: 'medium',
+    },
+    masteryScore: { type: Number, min: 0, max: 100, default: 50 },
+    confidenceScore: { type: Number, min: 0, max: 100, default: 50 },
+    priority: {
+      type: String,
+      enum: ['critical', 'high', 'medium', 'low', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
+      default: 'medium',
       index: true,
     },
+    status: {
+      type: String,
+      enum: ['due', 'upcoming', 'completed', 'paused', 'active', 'overdue', 'archived', 'mastered'],
+      default: 'due',
+      index: true,
+    },
+
+    // Backward compatibility fields
+    subtopic: { type: String, default: '' },
+    retentionScore: { type: Number, default: 50 },
+    reviewLevel: { type: String, default: 'new' },
+    intervalDays: { type: Number, default: 1 },
+    repetitionCount: { type: Number, default: 0 },
+    lastResult: { type: String },
+    consecutiveCorrect: { type: Number, default: 0 },
+    consecutiveIncorrect: { type: Number, default: 0 },
+    overdue: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-RevisionItemSchema.index({ studentId: 1, topic: 1 }, { unique: true });
+RevisionItemSchema.index({ studentId: 1, conceptId: 1 }, { unique: true });
 
 export const RevisionItem =
   mongoose.models.RevisionItem || mongoose.model<IRevisionItem>('RevisionItem', RevisionItemSchema);

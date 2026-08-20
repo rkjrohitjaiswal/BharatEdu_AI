@@ -2586,6 +2586,135 @@ export const fetchParentResourceSummary = async (
   }
 };
 
+// --- FEATURE 24: SMART REVISION API HELPERS ---
+export const fetchDailyRevisionQueue = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/today`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch daily revision queue' };
+  }
+};
+
+export const fetchRevisionSchedule = async (
+  days: number = 7,
+  subject?: string,
+  priority?: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const params = new URLSearchParams();
+    params.append('days', String(days));
+    if (subject) params.append('subject', subject);
+    if (priority) params.append('priority', priority);
+
+    const response = await fetch(`${API_BASE_URL}/student/revision/schedule?${params.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch revision schedule' };
+  }
+};
+
+export const startRevisionSessionTracking = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/${id}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to start revision session' };
+  }
+};
+
+export const submitRevisionOutcome = async (
+  id: string,
+  outcome: 'again' | 'hard' | 'good' | 'easy'
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/${id}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ outcome }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to submit revision outcome' };
+  }
+};
+
+export const refreshStudentRevisionQueue = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/refresh`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to refresh revision queue' };
+  }
+};
+
+export const fetchTeacherRevisionSummary = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/teacher/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher revision summary' };
+  }
+};
+
+export const fetchParentRevisionSummary = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/parent/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent revision summary' };
+  }
+};
+
+
 
 
 

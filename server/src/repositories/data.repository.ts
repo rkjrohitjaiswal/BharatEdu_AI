@@ -30,6 +30,7 @@ import { Achievement, IAchievement } from '../models/achievement.model.js';
 import { ExamPreparationModel } from '../models/exam-preparation.model.js';
 import { LearningResource } from '../models/learning-resource.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
+import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
 import { KnowledgeConcept } from '../models/knowledge-concept.model.js';
 import { ConceptDependency } from '../models/concept-dependency.model.js';
@@ -56,6 +57,8 @@ const inMemParentInvitations: any[] = [];
 const inMemSavedScholarships: any[] = [];
 const inMemInterventions: any[] = [];
 const inMemResourceProgress: any[] = [];
+const inMemRevisionHistory: any[] = [];
+const inMemRevisionItems: any[] = [];
 const inMemSubjects: any[] = [];
 const inMemTopics: any[] = [];
 const inMemScholarships: any[] = [
@@ -2083,5 +2086,53 @@ export const dataRepository = {
       inMemResourceProgress.push(item);
     }
     return item;
+  },
+
+  async getStudentRevisionItems(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await RevisionItem.find({ studentId }).sort({ nextReviewAt: 1 }).lean();
+    }
+    return inMemRevisionItems
+      .filter((ri) => String(ri.studentId) === String(studentId))
+      .sort((a, b) => new Date(a.nextReviewAt || 0).getTime() - new Date(b.nextReviewAt || 0).getTime());
+  },
+
+  async upsertRevisionItem(studentId: string, conceptId: string, itemData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await RevisionItem.findOneAndUpdate(
+        { studentId, conceptId },
+        { $set: itemData },
+        { upsert: true, new: true }
+      );
+    }
+    const idx = inMemRevisionItems.findIndex(
+      (ri) => String(ri.studentId) === String(studentId) && ri.conceptId === conceptId
+    );
+    const item = { studentId, conceptId, ...itemData, updatedAt: new Date() };
+    if (idx >= 0) {
+      inMemRevisionItems[idx] = { ...inMemRevisionItems[idx], ...item };
+    } else {
+      inMemRevisionItems.push(item);
+    }
+    return item;
+  },
+
+  async addRevisionHistory(historyData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new RevisionHistory(historyData);
+      return await doc.save();
+    }
+    const item = { _id: `rev_hist_${Date.now()}`, ...historyData, createdAt: new Date() };
+    inMemRevisionHistory.push(item);
+    return item;
+  },
+
+  async getStudentRevisionHistoryList(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await RevisionHistory.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemRevisionHistory
+      .filter((rh) => String(rh.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   },
 };
