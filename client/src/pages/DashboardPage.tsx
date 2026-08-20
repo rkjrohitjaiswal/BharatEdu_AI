@@ -29,6 +29,7 @@ import { RecommendedResourcesCard } from '../components/dashboard/RecommendedRes
 import { RevisionCard } from '../components/dashboard/RevisionCard';
 import { KnowledgeGraphCard } from '../components/dashboard/KnowledgeGraphCard';
 import { AdaptiveAssessmentCard } from '../components/dashboard/AdaptiveAssessmentCard';
+import { MockExamCard } from '../components/dashboard/MockExamCard';
 import { ResourceHubCard } from '../components/dashboard/ResourceHubCard';
 import { ResourceRecommendationCard } from '../components/dashboard/ResourceRecommendationCard';
 import { StudyMaterialCard } from '../components/dashboard/StudyMaterialCard';
@@ -149,6 +150,9 @@ export const DashboardPage: React.FC = () => {
 
           {/* AI Adaptive Assessment Card */}
           <AdaptiveAssessmentCard />
+
+          {/* AI Realistic Mock Exam Card */}
+          <MockExamCard />
 
           {/* AI Personalized Study Material Card */}
           <StudyMaterialCard />

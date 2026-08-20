@@ -39,6 +39,11 @@ import { AdaptiveAssessment } from '../models/adaptive-assessment.model.js';
 import { AdaptiveAssessmentQuestion } from '../models/adaptive-assessment-question.model.js';
 import { AdaptiveAssessmentAttempt } from '../models/adaptive-assessment-attempt.model.js';
 import { AdaptiveAssessmentContext } from '../models/adaptive-assessment-context.model.js';
+import { ExamPaper } from '../models/exam-paper.model.js';
+import { ExamPaperSection } from '../models/exam-paper-section.model.js';
+import { ExamPaperQuestion } from '../models/exam-paper-question.model.js';
+import { ExamPaperAttempt } from '../models/exam-paper-attempt.model.js';
+import { ExamPaperBlueprint } from '../models/exam-paper-blueprint.model.js';
 import { StudyMaterial } from '../models/study-material.model.js';
 import { StudyFlashcard } from '../models/study-flashcard.model.js';
 import { DoubtSession } from '../models/doubt-session.model.js';
@@ -80,6 +85,11 @@ const inMemAssessmentQuestions: any[] = [];
 const inMemAssessmentAttempts: any[] = [];
 const inMemAssessmentContexts: any[] = [];
 const inMemAdaptiveAssessments: any[] = [];
+const inMemExamPapers: any[] = [];
+const inMemExamPaperSections: any[] = [];
+const inMemExamPaperQuestions: any[] = [];
+const inMemExamPaperAttempts: any[] = [];
+const inMemExamPaperBlueprints: any[] = [];
 const inMemRevisionHistory: any[] = [];
 const inMemRevisionItems: any[] = [];
 const inMemLearningPaths: any[] = [];
@@ -2842,5 +2852,190 @@ export const dataRepository = {
 
   async getParentAssessmentSummary(studentId: string): Promise<any> {
     return await this.getTeacherAssessmentSummary(studentId);
+  },
+
+  async createExamPaper(paperData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ExamPaper(paperData);
+      return await doc.save();
+    }
+    const item = { _id: `ep_${Date.now()}_${Math.random()}`, ...paperData, createdAt: new Date(), updatedAt: new Date() };
+    inMemExamPapers.push(item);
+    return item;
+  },
+
+  async getExamPaper(paperId: string, studentId?: string): Promise<any> {
+    if (isDBConnected()) {
+      const query: any = { _id: paperId };
+      if (studentId) query.studentId = studentId;
+      return await ExamPaper.findOne(query).lean();
+    }
+    return inMemExamPapers.find(
+      (p) => (String(p._id || p.id) === String(paperId) || p.paperId === paperId) && (!studentId || String(p.studentId) === String(studentId))
+    );
+  },
+
+  async getStudentExamPapers(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ExamPaper.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemExamPapers
+      .filter((p) => String(p.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  async updateExamPaper(paperId: string, studentId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await ExamPaper.findOneAndUpdate({ _id: paperId, studentId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemExamPapers.findIndex(
+      (p) => (String(p._id || p.id) === String(paperId) || p.paperId === paperId) && String(p.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemExamPapers[idx] = { ...inMemExamPapers[idx], ...updateData, updatedAt: new Date() };
+      return inMemExamPapers[idx];
+    }
+    return null;
+  },
+
+  async deleteExamPaper(paperId: string, studentId: string): Promise<boolean> {
+    if (isDBConnected()) {
+      const res = await ExamPaper.deleteOne({ _id: paperId, studentId });
+      return res.deletedCount > 0;
+    }
+    const idx = inMemExamPapers.findIndex(
+      (p) => (String(p._id || p.id) === String(paperId) || p.paperId === paperId) && String(p.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemExamPapers.splice(idx, 1);
+      return true;
+    }
+    return false;
+  },
+
+  async createExamPaperSection(secData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ExamPaperSection(secData);
+      return await doc.save();
+    }
+    const item = { _id: `sec_${Date.now()}_${Math.random()}`, ...secData, createdAt: new Date() };
+    inMemExamPaperSections.push(item);
+    return item;
+  },
+
+  async getExamPaperSections(paperId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ExamPaperSection.find({ paperId }).sort({ sequence: 1 }).lean();
+    }
+    return inMemExamPaperSections
+      .filter((s) => String(s.paperId) === String(paperId))
+      .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+  },
+
+  async createExamPaperQuestion(qData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ExamPaperQuestion(qData);
+      return await doc.save();
+    }
+    const item = { _id: `q_${Date.now()}_${Math.random()}`, ...qData, createdAt: new Date() };
+    inMemExamPaperQuestions.push(item);
+    return item;
+  },
+
+  async getExamPaperQuestions(paperId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ExamPaperQuestion.find({ paperId }).sort({ sequence: 1 }).lean();
+    }
+    return inMemExamPaperQuestions
+      .filter((q) => String(q.paperId) === String(paperId))
+      .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+  },
+
+  async getExamPaperQuestion(questionId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await ExamPaperQuestion.findOne({ _id: questionId }).lean();
+    }
+    return inMemExamPaperQuestions.find((q) => String(q._id || q.id) === String(questionId) || q.questionId === questionId);
+  },
+
+  async updateExamPaperQuestion(questionId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await ExamPaperQuestion.findOneAndUpdate({ _id: questionId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemExamPaperQuestions.findIndex((q) => String(q._id || q.id) === String(questionId) || q.questionId === questionId);
+    if (idx >= 0) {
+      inMemExamPaperQuestions[idx] = { ...inMemExamPaperQuestions[idx], ...updateData, updatedAt: new Date() };
+      return inMemExamPaperQuestions[idx];
+    }
+    return null;
+  },
+
+  async createExamPaperAttempt(attData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ExamPaperAttempt(attData);
+      return await doc.save();
+    }
+    const item = { _id: `att_${Date.now()}_${Math.random()}`, ...attData, createdAt: new Date() };
+    inMemExamPaperAttempts.push(item);
+    return item;
+  },
+
+  async getExamPaperAttempts(paperId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ExamPaperAttempt.find({ paperId }).lean();
+    }
+    return inMemExamPaperAttempts.filter((a) => String(a.paperId) === String(paperId));
+  },
+
+  async createExamPaperBlueprint(bpData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ExamPaperBlueprint(bpData);
+      return await doc.save();
+    }
+    const item = { _id: `bp_${Date.now()}_${Math.random()}`, ...bpData, generatedAt: new Date() };
+    inMemExamPaperBlueprints.push(item);
+    return item;
+  },
+
+  async getExamPaperBlueprint(paperId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await ExamPaperBlueprint.findOne({ paperId }).lean();
+    }
+    return inMemExamPaperBlueprints.find((b) => String(b.paperId) === String(paperId)) || null;
+  },
+
+  async getExamPaperResults(paperId: string, studentId: string): Promise<any> {
+    const paper = await this.getExamPaper(paperId, studentId);
+    const attempts = await this.getExamPaperAttempts(paperId);
+    return {
+      paperId,
+      studentId,
+      grossMarks: attempts.reduce((acc, a) => acc + (a.marksAwarded || 0), 0),
+      netMarks: attempts.reduce((acc, a) => acc + (a.marksAwarded || 0) - (a.negativeMarksApplied || 0), 0),
+      totalMarks: paper?.totalMarks || 50,
+    };
+  },
+
+  async getExamPaperReview(paperId: string, studentId: string): Promise<any> {
+    const questions = await this.getExamPaperQuestions(paperId);
+    const attempts = await this.getExamPaperAttempts(paperId);
+    return {
+      paperId,
+      questions,
+      attempts,
+    };
+  },
+
+  async getTeacherExamPaperSummary(studentId: string): Promise<any> {
+    const list = await this.getStudentExamPapers(studentId);
+    return {
+      studentId,
+      totalPapers: list.length,
+      completedCount: list.filter((p) => p.status === 'completed').length,
+    };
+  },
+
+  async getParentExamPaperSummary(studentId: string): Promise<any> {
+    return await this.getTeacherExamPaperSummary(studentId);
   },
 };

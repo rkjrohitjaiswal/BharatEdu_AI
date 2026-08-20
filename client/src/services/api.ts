@@ -3372,6 +3372,218 @@ export const fetchParentAssessmentSummary = async (studentId: string) => {
   }
 };
 
+// --- FEATURE 30: AI EXAM PAPER GENERATOR & MOCK EXAM ENGINE ---
+export const createExamPaper = async (options?: any) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(options || {}),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to create exam paper' };
+  }
+};
+
+export const fetchExamPapers = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam papers' };
+  }
+};
+
+export const fetchExamPaper = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/${id}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam paper details' };
+  }
+};
+
+export const startExamPaper = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/${id}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to start exam paper' };
+  }
+};
+
+export const fetchCurrentExamQuestion = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/${id}/current`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch current question' };
+  }
+};
+
+export const submitExamAnswer = async (id: string, questionId: string, submittedAnswer: string, responseTimeSeconds = 30) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/${id}/questions/${questionId}/answer`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ submittedAnswer, responseTimeSeconds }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to submit exam answer' };
+  }
+};
+
+export const skipExamQuestion = async (id: string, questionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/${id}/questions/${questionId}/skip`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to skip exam question' };
+  }
+};
+
+export const markExamQuestionForReview = async (id: string, questionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/${id}/questions/${questionId}/mark-review`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to mark question for review' };
+  }
+};
+
+export const finishExamPaper = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/${id}/finish`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to finish exam paper' };
+  }
+};
+
+export const fetchExamPaperResults = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/${id}/results`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam paper results' };
+  }
+};
+
+export const fetchExamPaperReview = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/${id}/review`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam paper review' };
+  }
+};
+
+export const fetchExamPaperRecommendations = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/${id}/recommendations`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam paper recommendations' };
+  }
+};
+
+export const generateMockExam = async (subject?: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/generate-mock`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ subject }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate mock exam' };
+  }
+};
+
+export const generatePracticePaper = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/generate-practice-paper`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate practice paper' };
+  }
+};
+
+export const generateWeakAreaPaper = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/generate-weak-area-paper`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate weak area paper' };
+  }
+};
+
+export const generateExamReadinessPaper = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-papers/generate-exam-readiness-paper`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate exam readiness paper' };
+  }
+};
+
+export const fetchTeacherExamSummary = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/exam-papers/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher exam summary' };
+  }
+};
+
+export const fetchParentExamSummary = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/exam-papers/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent exam summary' };
+  }
+};
+
 
 
 
