@@ -2,13 +2,16 @@ import { Router } from 'express';
 import { authenticateJWT } from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
 import {
+  handleCompleteItem,
   handleCompleteStage,
-  handleCompleteTask,
   handleCreateLearningPath,
+  handleGenerateLearningPath,
+  handleGetAdvice,
+  handleGetCurrentLearningPath,
   handleGetLearningPathDetails,
+  handleGetLearningPathItems,
   handleGetLearningPathStages,
   handleGetLearningPathSummary,
-  handleGetLearningPathTasks,
   handleGetNextLearningTask,
   handleGetParentStudentLearningPathSummary,
   handleGetStudentLearningPaths,
@@ -16,24 +19,35 @@ import {
   handlePauseLearningPath,
   handleRefreshLearningPath,
   handleResumeLearningPath,
-  handleStartTask,
+  handleSkipItem,
+  handleStartItem,
 } from '../controllers/learning-path.controller.js';
 
 const router = Router();
 
 // Student Routes
+router.get('/current', authenticateJWT, requireRole('student'), handleGetCurrentLearningPath);
+router.post('/generate', authenticateJWT, requireRole('student'), handleGenerateLearningPath);
 router.post('/', authenticateJWT, requireRole('student'), handleCreateLearningPath);
 router.get('/', authenticateJWT, requireRole('student'), handleGetStudentLearningPaths);
 router.get('/summary', authenticateJWT, requireRole('student'), handleGetLearningPathSummary);
 router.post('/refresh', authenticateJWT, requireRole('student'), handleRefreshLearningPath);
 
 router.get('/:id', authenticateJWT, requireRole('student'), handleGetLearningPathDetails);
+router.post('/:id/refresh', authenticateJWT, requireRole('student'), handleRefreshLearningPath);
 router.get('/:id/stages', authenticateJWT, requireRole('student'), handleGetLearningPathStages);
-router.get('/:id/tasks', authenticateJWT, requireRole('student'), handleGetLearningPathTasks);
+router.get('/:id/items', authenticateJWT, requireRole('student'), handleGetLearningPathItems);
+router.get('/:id/tasks', authenticateJWT, requireRole('student'), handleGetLearningPathItems);
 router.get('/:id/next', authenticateJWT, requireRole('student'), handleGetNextLearningTask);
+router.get('/:id/summary', authenticateJWT, requireRole('student'), handleGetLearningPathSummary);
+router.get('/:id/advice', authenticateJWT, requireRole('student'), handleGetAdvice);
 
-router.post('/:id/tasks/:taskId/start', authenticateJWT, requireRole('student'), handleStartTask);
-router.post('/:id/tasks/:taskId/complete', authenticateJWT, requireRole('student'), handleCompleteTask);
+router.post('/:id/items/:itemId/start', authenticateJWT, requireRole('student'), handleStartItem);
+router.post('/:id/items/:itemId/complete', authenticateJWT, requireRole('student'), handleCompleteItem);
+router.post('/:id/items/:itemId/skip', authenticateJWT, requireRole('student'), handleSkipItem);
+
+router.post('/:id/tasks/:taskId/start', authenticateJWT, requireRole('student'), handleStartItem);
+router.post('/:id/tasks/:taskId/complete', authenticateJWT, requireRole('student'), handleCompleteItem);
 router.post('/:id/stages/:stageId/complete', authenticateJWT, requireRole('student'), handleCompleteStage);
 
 router.post('/:id/pause', authenticateJWT, requireRole('student'), handlePauseLearningPath);

@@ -1,14 +1,7 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
 
-export type LearningPathTargetType =
-  | 'general_learning'
-  | 'exam'
-  | 'goal'
-  | 'career'
-  | 'subject'
-  | 'custom';
-
-export type LearningPathStatus = 'active' | 'paused' | 'completed' | 'archived';
+export type LearningPathTargetType = 'exam' | 'mastery' | 'career' | 'skill' | 'custom' | 'general_learning' | 'subject';
+export type LearningPathStatus = 'active' | 'completed' | 'paused' | 'archived';
 
 export interface ILearningPath extends Document {
   studentId: mongoose.Types.ObjectId;
@@ -16,17 +9,20 @@ export interface ILearningPath extends Document {
   description: string;
   board: string;
   classLevel: string;
+  target: string;
   targetType: LearningPathTargetType;
   targetId?: string;
   targetName?: string;
   startDate: Date;
   targetDate?: Date;
   status: LearningPathStatus;
-  progressPercent: number; // 0 to 100
+  overallProgress: number; // 0 to 100
+  progressPercent: number; // alias for overallProgress
   currentStage: number;
   totalStages: number;
   completedStages: number;
   estimatedTotalMinutes: number;
+  completedMinutes: number;
   dailyMinutes: number;
   weeklyMinutes: number;
   createdAt: Date;
@@ -45,10 +41,11 @@ const LearningPathSchema = new Schema<ILearningPath>(
     description: { type: String, default: '' },
     board: { type: String, default: 'CBSE' },
     classLevel: { type: String, default: 'Class 10' },
+    target: { type: String, default: 'Class 10 Board Excellence' },
     targetType: {
       type: String,
-      enum: ['general_learning', 'exam', 'goal', 'career', 'subject', 'custom'],
-      default: 'general_learning',
+      enum: ['exam', 'mastery', 'career', 'skill', 'custom', 'general_learning', 'subject'],
+      default: 'mastery',
       index: true,
     },
     targetId: { type: String, default: '' },
@@ -57,15 +54,17 @@ const LearningPathSchema = new Schema<ILearningPath>(
     targetDate: { type: Date },
     status: {
       type: String,
-      enum: ['active', 'paused', 'completed', 'archived'],
+      enum: ['active', 'completed', 'paused', 'archived'],
       default: 'active',
       index: true,
     },
+    overallProgress: { type: Number, default: 0, min: 0, max: 100 },
     progressPercent: { type: Number, default: 0, min: 0, max: 100 },
     currentStage: { type: Number, default: 1, min: 1 },
     totalStages: { type: Number, default: 6, min: 1 },
     completedStages: { type: Number, default: 0, min: 0 },
     estimatedTotalMinutes: { type: Number, default: 300 },
+    completedMinutes: { type: Number, default: 0, min: 0 },
     dailyMinutes: { type: Number, default: 60 },
     weeklyMinutes: { type: Number, default: 420 },
   },

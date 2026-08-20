@@ -2926,6 +2926,60 @@ export const fetchParentLearningPathSummary = async (
   }
 };
 
+export const fetchCurrentLearningPath = fetchLearningPathDetails;
+export const fetchLearningPath = fetchLearningPathDetails;
+export const generateLearningPath = async (options?: any) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/generate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(options || {}),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate learning path' };
+  }
+};
+
+export const fetchLearningPathItems = async (pathId: string = 'default') => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/${pathId}/items`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch learning path items' };
+  }
+};
+
+export const startLearningPathItem = startLearningTask;
+export const completeLearningPathItem = completeLearningTask;
+
+export const skipLearningPathItem = async (pathId: string, itemId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/${pathId}/items/${itemId}/skip`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to skip learning path item' };
+  }
+};
+
+export const fetchLearningPathNext = fetchNextLearningTask;
+
+export const fetchLearningPathAdvice = async (pathId: string = 'default') => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/${pathId}/advice`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch learning path advice' };
+  }
+};
+
 
 
 

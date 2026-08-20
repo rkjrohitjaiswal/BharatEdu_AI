@@ -1,20 +1,26 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
 import {
+  completeLearningPathItem,
   completeLearningStage,
-  completeLearningTask,
   createLearningPath,
-  getLearningPathDetails,
-  getNextLearningTask,
+  generateLearningPath,
+  getCurrentLearningPath,
+  getLearningPathAdvice,
+  getLearningPathById,
+  getLearningPathItems,
+  getLearningPathStages,
+  getLearningPathSummary,
+  getNextLearningItem,
   getParentStudentLearningPathSummary,
   getStudentLearningPaths,
   getTeacherStudentLearningPathSummary,
   pauseLearningPath,
-  refreshStudentLearningPath,
+  refreshLearningPath,
   resumeLearningPath,
-  startLearningTask,
+  skipLearningPathItem,
+  startLearningPathItem,
 } from '../ai/learning-path/service.js';
-import { getLearningPathSummaryEngine } from '../ai/learning-path/engine.js';
 
 export const handleCreateLearningPath = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -28,6 +34,36 @@ export const handleCreateLearningPath = async (req: AuthenticatedRequest, res: R
     res.status(201).json({ success: true, data: path });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to create learning path' });
+  }
+};
+
+export const handleGenerateLearningPath = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const path = await generateLearningPath(studentId, req.body);
+    res.status(201).json({ success: true, data: path });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to generate learning path' });
+  }
+};
+
+export const handleGetCurrentLearningPath = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const path = await getCurrentLearningPath(studentId);
+    res.status(200).json({ success: true, data: path });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch current learning path' });
   }
 };
 
@@ -54,7 +90,7 @@ export const handleGetLearningPathDetails = async (req: AuthenticatedRequest, re
       return;
     }
 
-    const pathDetails = await getLearningPathDetails(studentId, req.params.id);
+    const pathDetails = await getLearningPathById(studentId, req.params.id);
     res.status(200).json({ success: true, data: pathDetails });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to fetch learning path details' });
@@ -69,14 +105,14 @@ export const handleGetLearningPathStages = async (req: AuthenticatedRequest, res
       return;
     }
 
-    const pathDetails = await getLearningPathDetails(studentId, req.params.id);
-    res.status(200).json({ success: true, data: pathDetails.stages });
+    const stages = await getLearningPathStages(studentId, req.params.id);
+    res.status(200).json({ success: true, data: stages });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to fetch learning path stages' });
   }
 };
 
-export const handleGetLearningPathTasks = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const handleGetLearningPathItems = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const studentId = req.user?.id;
     if (!studentId) {
@@ -84,11 +120,10 @@ export const handleGetLearningPathTasks = async (req: AuthenticatedRequest, res:
       return;
     }
 
-    const pathDetails = await getLearningPathDetails(studentId, req.params.id);
-    const activeStage = pathDetails.stages.find((s) => s.stageIndex === pathDetails.currentStage) || pathDetails.stages[0];
-    res.status(200).json({ success: true, data: activeStage?.tasks || [] });
+    const items = await getLearningPathItems(studentId, req.params.id);
+    res.status(200).json({ success: true, data: items });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to fetch learning path tasks' });
+    res.status(500).json({ error: err.message || 'Failed to fetch learning path items' });
   }
 };
 
@@ -100,7 +135,7 @@ export const handleGetNextLearningTask = async (req: AuthenticatedRequest, res: 
       return;
     }
 
-    const nextData = await getNextLearningTask(studentId, req.params.id);
+    const nextData = await getNextLearningItem(studentId, req.params.id);
     res.status(200).json({ success: true, data: nextData });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to fetch next learning task' });
@@ -115,14 +150,14 @@ export const handleRefreshLearningPath = async (req: AuthenticatedRequest, res: 
       return;
     }
 
-    const path = await refreshStudentLearningPath(studentId);
+    const path = await refreshLearningPath(studentId, req.params.id);
     res.status(200).json({ success: true, data: path });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to refresh learning path' });
   }
 };
 
-export const handleStartTask = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const handleStartItem = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const studentId = req.user?.id;
     if (!studentId) {
@@ -130,14 +165,14 @@ export const handleStartTask = async (req: AuthenticatedRequest, res: Response):
       return;
     }
 
-    const task = await startLearningTask(studentId, req.params.id, req.params.taskId);
-    res.status(200).json({ success: true, data: task });
+    const item = await startLearningPathItem(studentId, req.params.id, req.params.itemId || req.params.taskId);
+    res.status(200).json({ success: true, data: item });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to start learning task' });
+    res.status(500).json({ error: err.message || 'Failed to start learning path item' });
   }
 };
 
-export const handleCompleteTask = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const handleCompleteItem = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const studentId = req.user?.id;
     if (!studentId) {
@@ -145,10 +180,25 @@ export const handleCompleteTask = async (req: AuthenticatedRequest, res: Respons
       return;
     }
 
-    const task = await completeLearningTask(studentId, req.params.id, req.params.taskId);
-    res.status(200).json({ success: true, data: task });
+    const item = await completeLearningPathItem(studentId, req.params.id, req.params.itemId || req.params.taskId);
+    res.status(200).json({ success: true, data: item });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to complete learning task' });
+    res.status(500).json({ error: err.message || 'Failed to complete learning path item' });
+  }
+};
+
+export const handleSkipItem = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const item = await skipLearningPathItem(studentId, req.params.id, req.params.itemId);
+    res.status(200).json({ success: true, data: item });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to skip learning path item' });
   }
 };
 
@@ -205,10 +255,25 @@ export const handleGetLearningPathSummary = async (req: AuthenticatedRequest, re
       return;
     }
 
-    const summary = await getLearningPathSummaryEngine(studentId);
+    const summary = await getLearningPathSummary(studentId, req.params.id);
     res.status(200).json({ success: true, data: summary });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Failed to fetch learning path summary' });
+  }
+};
+
+export const handleGetAdvice = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const advice = await getLearningPathAdvice(studentId, req.params.id);
+    res.status(200).json({ success: true, data: advice });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch learning path advice' });
   }
 };
 

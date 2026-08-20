@@ -41,6 +41,7 @@ import { StudentResourceProgress } from '../models/student-resource-progress.mod
 import { LearningPath } from '../models/learning-path.model.js';
 import { LearningPathStage } from '../models/learning-path-stage.model.js';
 import { LearningPathTask } from '../models/learning-path-task.model.js';
+import { LearningPathItem } from '../models/learning-path-item.model.js';
 import { ExamTopicProgressModel } from '../models/exam-topic-progress.model.js';
 import { CareerGoal, ICareerGoal } from '../models/career-goal.model.js';
 import { NotificationModel, INotification } from '../models/notification.model.js';
@@ -65,6 +66,7 @@ const inMemRevisionItems: any[] = [];
 const inMemLearningPaths: any[] = [];
 const inMemLearningPathStages: any[] = [];
 const inMemLearningPathTasks: any[] = [];
+const inMemLearningPathItems: any[] = [];
 const inMemSubjects: any[] = [];
 const inMemTopics: any[] = [];
 const inMemScholarships: any[] = [
@@ -2222,5 +2224,88 @@ export const dataRepository = {
       inMemLearningPathTasks.push(item);
     }
     return item;
+  },
+
+  async createLearningPath(studentId: string, pathData: any): Promise<any> {
+    return await this.upsertLearningPath(studentId, `path_${Date.now()}`, pathData);
+  },
+
+  async getLearningPath(pathId: string, studentId?: string): Promise<any> {
+    if (isDBConnected()) {
+      const query: any = { _id: pathId };
+      if (studentId) query.studentId = studentId;
+      return await LearningPath.findOne(query).lean();
+    }
+    return inMemLearningPaths.find(
+      (lp) => String(lp._id || lp.id) === String(pathId) && (!studentId || String(lp.studentId) === String(studentId))
+    );
+  },
+
+  async updateLearningPath(pathId: string, studentId: string, updateData: any): Promise<any> {
+    return await this.upsertLearningPath(studentId, pathId, updateData);
+  },
+
+  async createLearningPathStage(stageData: any): Promise<any> {
+    return await this.upsertLearningPathStage(
+      stageData.learningPathId,
+      stageData.stageOrder || stageData.stageIndex || 1,
+      stageData
+    );
+  },
+
+  async updateLearningPathStage(stageId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningPathStage.findOneAndUpdate({ _id: stageId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemLearningPathStages.findIndex((s) => String(s._id || s.id) === String(stageId));
+    if (idx >= 0) {
+      inMemLearningPathStages[idx] = { ...inMemLearningPathStages[idx], ...updateData, updatedAt: new Date() };
+      return inMemLearningPathStages[idx];
+    }
+    return null;
+  },
+
+  async createLearningPathItem(itemData: any): Promise<any> {
+    if (isDBConnected()) {
+      const item = new LearningPathItem(itemData);
+      return await item.save();
+    }
+    const item = { _id: `item_${Date.now()}_${Math.random()}`, ...itemData, createdAt: new Date() };
+    inMemLearningPathItems.push(item);
+    return item;
+  },
+
+  async getLearningPathItems(learningPathId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await LearningPathItem.find({ learningPathId }).sort({ order: 1 }).lean();
+    }
+    return inMemLearningPathItems
+      .filter((i) => String(i.learningPathId) === String(learningPathId))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  },
+
+  async updateLearningPathItem(itemId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningPathItem.findOneAndUpdate({ _id: itemId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemLearningPathItems.findIndex((i) => String(i._id || i.id) === String(itemId));
+    if (idx >= 0) {
+      inMemLearningPathItems[idx] = { ...inMemLearningPathItems[idx], ...updateData, updatedAt: new Date() };
+      return inMemLearningPathItems[idx];
+    }
+    return null;
+  },
+
+  async completeLearningPathItem(itemId: string, studentId: string): Promise<any> {
+    return await this.updateLearningPathItem(itemId, {
+      status: 'completed',
+      completedAt: new Date(),
+    });
+  },
+
+  async skipLearningPathItem(itemId: string, studentId: string): Promise<any> {
+    return await this.updateLearningPathItem(itemId, {
+      status: 'skipped',
+    });
   },
 };
