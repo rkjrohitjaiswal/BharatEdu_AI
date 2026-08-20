@@ -42,6 +42,11 @@ import { ResourceDetailsPage } from './pages/ResourceDetailsPage';
 import { PersonalizedPracticePage } from './pages/PersonalizedPracticePage';
 import { PracticeSessionPage } from './pages/PracticeSessionPage';
 import { PracticeResultPage } from './pages/PracticeResultPage';
+import { ExamSimulatorPage } from './pages/ExamSimulatorPage';
+import { MockExamInstructionsPage } from './pages/MockExamInstructionsPage';
+import { MockExamPage } from './pages/MockExamPage';
+import { MockExamResultPage } from './pages/MockExamResultPage';
+import { MockExamHistoryPage } from './pages/MockExamHistoryPage';
 import { StudyMaterialPage } from './pages/StudyMaterialPage';
 import { DoubtSolverPage } from './pages/DoubtSolverPage';
 import { RevisionPage } from './pages/RevisionPage';
@@ -73,6 +78,11 @@ export const App: React.FC = () => (
           <Route path="personalized-practice" element={<ProtectedRoute allowedRoles={['student']}><PersonalizedPracticePage /></ProtectedRoute>} />
           <Route path="personalized-practice/session/:sessionId" element={<ProtectedRoute allowedRoles={['student']}><PracticeSessionPage /></ProtectedRoute>} />
           <Route path="personalized-practice/session/:sessionId/result" element={<ProtectedRoute allowedRoles={['student']}><PracticeResultPage /></ProtectedRoute>} />
+          <Route path="exam-simulator" element={<ProtectedRoute allowedRoles={['student']}><ExamSimulatorPage /></ProtectedRoute>} />
+          <Route path="exam-simulator/history" element={<ProtectedRoute allowedRoles={['student']}><MockExamHistoryPage /></ProtectedRoute>} />
+          <Route path="exam-simulator/:examId/instructions" element={<ProtectedRoute allowedRoles={['student']}><MockExamInstructionsPage /></ProtectedRoute>} />
+          <Route path="exam-simulator/:examId" element={<ProtectedRoute allowedRoles={['student']}><MockExamPage /></ProtectedRoute>} />
+          <Route path="exam-simulator/:examId/result" element={<ProtectedRoute allowedRoles={['student']}><MockExamResultPage /></ProtectedRoute>} />
           <Route path="study-material" element={<ProtectedRoute allowedRoles={['student']}><StudyMaterialPage /></ProtectedRoute>} />
           <Route path="doubts" element={<ProtectedRoute allowedRoles={['student']}><DoubtSolverPage /></ProtectedRoute>} />
           <Route path="doubts/:id" element={<ProtectedRoute allowedRoles={['student']}><DoubtDetailPage /></ProtectedRoute>} />

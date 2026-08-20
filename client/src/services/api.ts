@@ -4058,6 +4058,129 @@ export const fetchPersonalizedSessionResult = async (sessionId: string) => {
   }
 };
 
+// Feature 35: AI Exam Simulator & Mock Test Engine APIs
+export const fetchMockExamRecommendations = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mock-exams/recommendations`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch mock exam recommendations' };
+  }
+};
+
+export const createSimulatedMockExam = async (payload: any) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mock-exams`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to create mock exam' };
+  }
+};
+
+export const fetchMockExamInstructions = async (examId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mock-exams/${examId}/instructions`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam instructions' };
+  }
+};
+
+export const startMockExam = async (examId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mock-exams/${examId}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to start exam' };
+  }
+};
+
+export const fetchMockExamQuestion = async (examId: string, questionNumber: number) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mock-exams/${examId}/questions/${questionNumber}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam question' };
+  }
+};
+
+export const submitMockExamAnswer = async (
+  examId: string,
+  payload: { questionNumber: number; selectedAnswer: string }
+) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mock-exams/${examId}/answers`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to submit answer' };
+  }
+};
+
+export const autosaveMockExam = async (examId: string, payload: any) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mock-exams/${examId}/autosave`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to autosave exam' };
+  }
+};
+
+export const submitMockExam = async (examId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mock-exams/${examId}/submit`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to submit exam' };
+  }
+};
+
+export const fetchMockExamResult = async (examId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mock-exams/${examId}/result`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam result' };
+  }
+};
+
+export const fetchMockExamHistory = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/mock-exams/history`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam history' };
+  }
+};
+
+
 
 
 

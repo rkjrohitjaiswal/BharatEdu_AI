@@ -37,6 +37,12 @@ import { GeneratedQuestion } from '../models/generated-question.model.js';
 import { PersonalizedAttempt } from '../models/personalized-attempt.model.js';
 import { QuestionQuality } from '../models/question-quality.model.js';
 import { VERIFIED_PRACTICE_QUESTION_BANK } from '../ai/personalized-practice/ai-coach.js';
+import { MockExam } from '../models/mock-exam.model.js';
+import { MockExamSection } from '../models/mock-exam-section.model.js';
+import { MockExamQuestion } from '../models/mock-exam-question.model.js';
+import { MockExamAttempt } from '../models/mock-exam-attempt.model.js';
+import { MockExamAnswer } from '../models/mock-exam-answer.model.js';
+import { MockExamResult } from '../models/mock-exam-result.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -122,6 +128,12 @@ const inMemPracticeQuestions: any[] = [];
 const inMemGeneratedQuestions: any[] = [];
 const inMemPersonalizedAttempts: any[] = [];
 const inMemPersonalizedSessions: any[] = [];
+const inMemMockExams: any[] = [];
+const inMemMockExamSections: any[] = [];
+const inMemMockExamQuestions: any[] = [];
+const inMemMockExamAttempts: any[] = [];
+const inMemMockExamAnswers: any[] = [];
+const inMemMockExamResults: any[] = [];
 const inMemRevisionHistory: any[] = [];
 const inMemRevisionItems: any[] = [];
 const inMemLearningPaths: any[] = [];
@@ -3519,6 +3531,113 @@ export const dataRepository = {
   async getPersonalizedPracticeSession(sessionId: string, studentId?: string): Promise<any> {
     return inMemPersonalizedSessions.find(
       (s) => s.sessionId === sessionId && (!studentId || String(s.studentId) === String(studentId))
+    );
+  },
+
+  async createMockExam(examData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new MockExam(examData);
+      return await doc.save();
+    }
+    const item = { _id: `exam_${Date.now()}_${Math.random()}`, ...examData, createdAt: new Date() };
+    inMemMockExams.push(item);
+    return item;
+  },
+
+  async getMockExamById(examId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await MockExam.findOne({ examId }).lean();
+    }
+    return inMemMockExams.find((e) => e.examId === examId);
+  },
+
+  async createMockExamQuestion(qData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new MockExamQuestion(qData);
+      return await doc.save();
+    }
+    const item = { _id: `meq_${Date.now()}_${Math.random()}`, ...qData, createdAt: new Date() };
+    inMemMockExamQuestions.push(item);
+    return item;
+  },
+
+  async getMockExamQuestions(examId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await MockExamQuestion.find({ examId }).sort({ questionNumber: 1 }).lean();
+    }
+    return inMemMockExamQuestions
+      .filter((q) => q.examId === examId)
+      .sort((a, b) => a.questionNumber - b.questionNumber);
+  },
+
+  async getMockExamQuestionByNumber(examId: string, questionNumber: number): Promise<any> {
+    if (isDBConnected()) {
+      return await MockExamQuestion.findOne({ examId, questionNumber }).lean();
+    }
+    return inMemMockExamQuestions.find((q) => q.examId === examId && q.questionNumber === questionNumber);
+  },
+
+  async createMockExamAttempt(attemptData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new MockExamAttempt(attemptData);
+      return await doc.save();
+    }
+    const item = { _id: `att_${Date.now()}_${Math.random()}`, ...attemptData };
+    inMemMockExamAttempts.push(item);
+    return item;
+  },
+
+  async saveMockExamAttempt(attemptData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await MockExamAttempt.findOneAndUpdate(
+        { attemptId: attemptData.attemptId },
+        { $set: attemptData },
+        { upsert: true, new: true }
+      );
+    }
+    const idx = inMemMockExamAttempts.findIndex((a) => a.attemptId === attemptData.attemptId);
+    if (idx >= 0) {
+      inMemMockExamAttempts[idx] = { ...inMemMockExamAttempts[idx], ...attemptData, updatedAt: new Date() };
+      return inMemMockExamAttempts[idx];
+    }
+    inMemMockExamAttempts.push(attemptData);
+    return attemptData;
+  },
+
+  async getStudentMockExamAttempt(examId: string, studentId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await MockExamAttempt.findOne({ examId, studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemMockExamAttempts.find(
+      (a) => a.examId === examId && String(a.studentId) === String(studentId)
+    );
+  },
+
+  async getStudentMockExamAttempts(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await MockExamAttempt.find({ studentId }).sort({ startedAt: -1 }).lean();
+    }
+    return inMemMockExamAttempts
+      .filter((a) => String(a.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.startedAt || 0).getTime() - new Date(a.startedAt || 0).getTime());
+  },
+
+  async saveMockExamResult(resultData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new MockExamResult(resultData);
+      return await doc.save();
+    }
+    const item = { _id: `res_${Date.now()}_${Math.random()}`, ...resultData };
+    inMemMockExamResults.push(item);
+    return item;
+  },
+
+  async getMockExamResultByStudent(examId: string, studentId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await MockExamResult.findOne({ examId, studentId }).lean();
+    }
+    return inMemMockExamResults.find(
+      (r) => r.examId === examId && String(r.studentId) === String(studentId)
     );
   },
 };
