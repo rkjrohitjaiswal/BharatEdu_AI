@@ -24,6 +24,7 @@ import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '../components/Button';
 import { StudentMentorCard } from '../components/dashboard/StudentMentorCard';
 import { LearningAnalyticsCard } from '../components/dashboard/LearningAnalyticsCard';
+import { StudyPlannerCard } from '../components/dashboard/StudyPlannerCard';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -97,6 +98,9 @@ export const DashboardPage: React.FC = () => {
 
       {/* Learning Analytics Compact Card */}
       <LearningAnalyticsCard />
+
+      {/* AI Study Planner Compact Card */}
+      <StudyPlannerCard />
 
       {/* 2. Key Metrics Stats Overview */}
       <LearningOverview

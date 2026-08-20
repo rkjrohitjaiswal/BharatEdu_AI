@@ -13,6 +13,7 @@ import {
   Users,
   GraduationCap,
   BarChart3,
+  Calendar,
   Home,
   Sparkles,
   LogIn,
@@ -43,6 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
   const studentNav: NavGroupItem[] = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'AI Success Mentor', path: '/mentor', icon: Bot, badge: 'Mentor' },
+    { name: 'AI Study Planner', path: '/study-planner', icon: Calendar, badge: 'Planner' },
     { name: 'Risk Assessment', path: '/risk', icon: AlertTriangle, badge: 'Early Warning' },
     { name: 'Analytics & Insights', path: '/analytics', icon: BarChart3, badge: 'Insights' },
     { name: 'Notifications', path: '/notifications', icon: Bell, badge: 'Alerts' },

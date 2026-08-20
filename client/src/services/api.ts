@@ -1725,3 +1725,113 @@ export const fetchStudentAnalyticsSummary = async (): Promise<{
     return { success: false, message: 'Failed to fetch analytics summary' };
   }
 };
+
+// --- FEATURE 18: STUDY PLANNER API HELPERS ---
+export const fetchTodayStudyPlanner = async (
+  availableMinutes?: number
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const url = availableMinutes
+      ? `${API_BASE_URL}/student/study-planner/today?availableMinutes=${availableMinutes}`
+      : `${API_BASE_URL}/student/study-planner/today`;
+    const response = await fetch(url, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch today\'s study plan' };
+  }
+};
+
+export const fetchWeekStudyPlanner = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-planner/week`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch weekly study plan' };
+  }
+};
+
+export const generateStudyPlanner = async (
+  availableMinutes?: number
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-planner/generate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ availableMinutes }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate study plan' };
+  }
+};
+
+export const refreshStudyPlanner = async (
+  availableMinutes?: number
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-planner/refresh`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ availableMinutes }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to refresh study plan' };
+  }
+};
+
+export const completeStudyPlannerTask = async (
+  taskId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/student/study-planner/tasks/${taskId}/complete`,
+      {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+      }
+    );
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to complete study task' };
+  }
+};
+
+export const fetchStudyPlannerSummary = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-planner/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch study planner summary' };
+  }
+};
