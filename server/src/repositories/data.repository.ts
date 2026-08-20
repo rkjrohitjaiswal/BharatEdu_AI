@@ -31,6 +31,9 @@ import { ExamPreparationModel } from '../models/exam-preparation.model.js';
 import { LearningResource } from '../models/learning-resource.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
+import { KnowledgeConcept } from '../models/knowledge-concept.model.js';
+import { ConceptDependency } from '../models/concept-dependency.model.js';
+import { StudentConceptMastery } from '../models/student-concept-mastery.model.js';
 import { ExamTopicProgressModel } from '../models/exam-topic-progress.model.js';
 import { CareerGoal, ICareerGoal } from '../models/career-goal.model.js';
 import { NotificationModel, INotification } from '../models/notification.model.js';
@@ -2029,5 +2032,16 @@ export const dataRepository = {
       return await RevisionSession.create(sessionData);
     }
     return sessionData;
+  },
+
+  async isParentLinkedToStudent(parentId: string, studentId: string): Promise<boolean> {
+    if (isDBConnected()) {
+      const link = await ParentStudentLink.findOne({ parentId, studentId, status: 'active' }).lean();
+      return Boolean(link);
+    }
+    const links = await this.getParentStudentLinksByParentId(parentId);
+    return (links || []).some(
+      (l: any) => String(l.studentId) === String(studentId) || String(l.student) === String(studentId)
+    );
   },
 };

@@ -2115,3 +2115,174 @@ export const completeRevisionSession = async (
   }
 };
 
+// --- FEATURE 21: KNOWLEDGE GRAPH API HELPERS ---
+export const fetchKnowledgeConcepts = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/knowledge-graph/concepts`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch knowledge concepts' };
+  }
+};
+
+export const fetchKnowledgeConcept = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/knowledge-graph/concepts/${id}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch concept details' };
+  }
+};
+
+export const fetchConceptPrerequisites = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/knowledge-graph/concepts/${id}/prerequisites`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch concept prerequisites' };
+  }
+};
+
+export const fetchConceptDependents = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/knowledge-graph/concepts/${id}/dependents`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch concept dependents' };
+  }
+};
+
+export const fetchConceptPath = async (
+  fromId: string,
+  toId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/knowledge-graph/concepts/${fromId}/path?toId=${toId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch concept path' };
+  }
+};
+
+export const fetchStudentConceptReadiness = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/knowledge-graph/student/${studentId}/readiness`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch concept readiness' };
+  }
+};
+
+export const fetchStudentRootGaps = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/knowledge-graph/student/${studentId}/root-gaps`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch root learning gaps' };
+  }
+};
+
+export const fetchStudentConceptRecommendations = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/knowledge-graph/student/${studentId}/recommendations`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch concept recommendations' };
+  }
+};
+
+export const fetchTeacherConceptOverview = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/knowledge-graph/teacher/students/${studentId}/overview`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher concept overview' };
+  }
+};
+
+export const fetchParentConceptOverview = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/knowledge-graph/parent/students/${studentId}/overview`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent concept overview' };
+  }
+};
+
+

@@ -27,6 +27,7 @@ import learningAnalyticsRoutes from './learning-analytics.routes.js';
 import studyPlannerRoutes from './study-planner.routes.js';
 import resourceRecommendationRoutes from './resource-recommendation.routes.js';
 import revisionRoutes from './revision.routes.js';
+import knowledgeGraphRoutes from './knowledge-graph.routes.js';
 
 const router = Router();
 
@@ -39,6 +40,7 @@ router.use('/student/analytics', learningAnalyticsRoutes);
 router.use('/student/study-planner', studyPlannerRoutes);
 router.use('/student/resources', resourceRecommendationRoutes);
 router.use('/student/revision', revisionRoutes);
+router.use('/knowledge-graph', knowledgeGraphRoutes);
 router.use('/risk', riskRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/notifications', notificationRoutes);
