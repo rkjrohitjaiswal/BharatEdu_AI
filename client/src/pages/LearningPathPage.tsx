@@ -1,105 +1,160 @@
 import React, { useEffect, useState } from 'react';
-import { PageHeader } from '../components/PageHeader';
-import { Card } from '../components/Card';
-import { Badge } from '../components/Badge';
-import { SkeletonLoader } from '../components/SkeletonLoader';
-import { fetchStudentDashboard } from '../services/api';
-import { StudentDashboardData } from '../types';
-import { CheckCircle2, BookOpen, Compass, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Button } from '../components/Button';
+import { ILearningPathDTO, ILearningPathStageDTO, ILearningPathTaskDTO } from '../types/learning-path';
+import { LearningLevelCard } from '../components/learning-path/LearningLevelCard';
+import { LearningPathAIInsight } from '../components/learning-path/LearningPathAIInsight';
+import { LearningPathHeader } from '../components/learning-path/LearningPathHeader';
+import { LearningPathNextConcept } from '../components/learning-path/LearningPathNextConcept';
+import { LearningPathProgress } from '../components/learning-path/LearningPathProgress';
+import { LearningPathStageCard } from '../components/learning-path/LearningPathStage';
+import {
+  completeLearningStage,
+  completeLearningTask,
+  fetchLearningPathDetails,
+  refreshLearningPath,
+  startLearningTask,
+} from '../services/api';
 
 export const LearningPathPage: React.FC = () => {
-  const [dashboardData, setDashboardData] = useState<StudentDashboardData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [path, setPath] = useState<ILearningPathDTO | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetchLearningPathDetails();
+      if (res.success && res.data) {
+        setPath(res.data);
+      } else {
+        setError(res.message || 'Failed to load learning path');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error loading learning path');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchStudentDashboard().then((res) => {
-      if (res.success && res.data) {
-        setDashboardData(res.data);
-      }
-      setLoading(false);
-    });
+    loadData();
   }, []);
 
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      const res = await refreshLearningPath();
+      if (res.success && res.data) {
+        setPath(res.data);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleTaskStart = async (taskId: string) => {
+    if (!path) return;
+    await startLearningTask(path.id, taskId);
+    await loadData();
+  };
+
+  const handleTaskComplete = async (taskId: string) => {
+    if (!path) return;
+    await completeLearningTask(path.id, taskId);
+    await loadData();
+  };
+
+  const handleStageComplete = async (stageId: string) => {
+    if (!path) return;
+    await completeLearningStage(path.id, stageId);
+    await loadData();
+  };
+
   if (loading) {
-    return <SkeletonLoader />;
+    return (
+      <div className="max-w-6xl mx-auto p-6 space-y-6 animate-pulse">
+        <div className="h-40 bg-slate-200 rounded-3xl" />
+        <div className="h-24 bg-slate-200 rounded-2xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="h-64 bg-slate-200 rounded-3xl" />
+          <div className="h-64 bg-slate-200 rounded-3xl" />
+        </div>
+      </div>
+    );
   }
 
-  const masteries = dashboardData?.mastery || [];
-  const recommendedTopics = (dashboardData?.learningProfile?.recommendedTopics || []).filter(
-    (t) => typeof t === 'object' && t !== null
-  );
-  const classLevel = dashboardData?.studentProfile?.classLevel || 8;
+  if (error || !path) {
+    return (
+      <div className="max-w-4xl mx-auto p-12 text-center space-y-4">
+        <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm max-w-md mx-auto">
+          {error || 'Unable to load your curriculum learning path.'}
+        </div>
+        <button
+          onClick={loadData}
+          className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 transition"
+        >
+          Retry Loading
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Personalized Learning Path"
-        description="Structured roadmap designed specifically around your grade level, learning pace, and goals."
-        badge={<Badge variant="emerald">Curriculum Roadmap</Badge>}
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* Header */}
+      <LearningPathHeader
+        title={path.title}
+        description={path.description}
+        board={path.board}
+        classLevel={path.classLevel}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
       />
 
-      <Card title="Current Curriculum Roadmap" subtitle={`Class ${classLevel} NCERT Curriculum • Adaptive Learning Stream`}>
-        {masteries.length === 0 && recommendedTopics.length === 0 ? (
-          <div className="text-center py-6 text-xs text-slate-500 space-y-2">
-            <Compass className="w-8 h-8 text-slate-300 mx-auto" />
-            <p className="font-semibold text-slate-700">No Learning Path Generated Yet</p>
-            <p className="text-slate-400">Complete initial practice or doubt solving to populate your personalized roadmap.</p>
-          </div>
-        ) : (
-          <div className="space-y-6 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-slate-200">
-            {/* Mastered / Attempted Modules */}
-            {masteries.map((m, idx) => {
-              const topicName = typeof m.topicId === 'object' && m.topicId !== null ? m.topicId.name : `Module ${idx + 1}`;
-              const topicDesc = typeof m.topicId === 'object' && m.topicId !== null ? m.topicId.description : '';
-              const isMastered = m.status === 'mastered' || (m.masteryScore || 0) >= 80;
+      {/* AI Advice Banner */}
+      <LearningPathAIInsight description={path.description} />
 
-              return (
-                <div key={m._id || idx} className="flex items-start gap-4 relative">
-                  <div
-                    className={`w-7 h-7 rounded-full text-white flex items-center justify-center font-bold text-xs shrink-0 z-10 ${
-                      isMastered ? 'bg-emerald-600' : 'bg-sky-500'
-                    }`}
-                  >
-                    {isMastered ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-semibold text-slate-900">{topicName}</h4>
-                      <Badge variant={isMastered ? 'emerald' : 'blue'} size="sm">
-                        {isMastered ? 'Mastered' : `${m.masteryScore}% Mastery`}
-                      </Badge>
-                    </div>
-                    {topicDesc && <p className="text-xs text-slate-500 mt-1">{topicDesc}</p>}
-                  </div>
-                </div>
-              );
-            })}
+      {/* Level & Progress Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <LearningLevelCard level={path.learningLevel} score={path.learningLevelScore} />
+        <LearningPathProgress
+          progressPercent={path.progressPercent}
+          completedStages={path.completedStages}
+          totalStages={path.totalStages}
+          estimatedTotalMinutes={path.estimatedTotalMinutes}
+          dailyMinutes={path.dailyMinutes}
+        />
+      </div>
 
-            {/* Recommended Next Topics */}
-            {recommendedTopics.map((rec: any, idx) => (
-              <div key={rec._id || idx} className="flex items-start gap-4 relative">
-                <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs shrink-0 z-10">
-                  <BookOpen className="w-4 h-4" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-semibold text-slate-900">{rec.name}</h4>
-                      <Badge variant="purple" size="sm">Recommended Next</Badge>
-                    </div>
-                    <Link to="/practice">
-                      <Button size="sm" icon={<ArrowRight className="w-3.5 h-3.5" />}>Start Practice</Button>
-                    </Link>
-                  </div>
-                  {rec.description && <p className="text-xs text-slate-500 mt-1">{rec.description}</p>}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+      {/* Next Best Concept Card */}
+      {path.nextBestConcept && (
+        <LearningPathNextConcept
+          nextConcept={path.nextBestConcept}
+          onStart={() => {
+            const activeStage = path.stages.find((s: ILearningPathStageDTO) => s.stageIndex === path.currentStage);
+            const pendingTask = activeStage?.tasks.find((t: ILearningPathTaskDTO) => t.status === 'pending' || t.status === 'active');
+            if (pendingTask) handleTaskStart(pendingTask.id);
+          }}
+        />
+      )}
+
+      {/* Curriculum Stages List */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-black text-slate-900 tracking-tight">Personalized Curriculum Stages ({path.stages.length})</h2>
+        <div className="space-y-4">
+          {path.stages.map((stage: ILearningPathStageDTO) => (
+            <LearningPathStageCard
+              key={stage.id}
+              stage={stage}
+              isCurrent={stage.stageIndex === path.currentStage}
+              onTaskStart={handleTaskStart}
+              onTaskComplete={handleTaskComplete}
+              onStageComplete={handleStageComplete}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

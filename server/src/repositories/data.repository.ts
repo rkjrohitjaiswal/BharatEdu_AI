@@ -38,6 +38,9 @@ import { StudentConceptMastery } from '../models/student-concept-mastery.model.j
 import { AdaptiveAssessment } from '../models/adaptive-assessment.model.js';
 import { QuestionAttempt } from '../models/question-attempt.model.js';
 import { StudentResourceProgress } from '../models/student-resource-progress.model.js';
+import { LearningPath } from '../models/learning-path.model.js';
+import { LearningPathStage } from '../models/learning-path-stage.model.js';
+import { LearningPathTask } from '../models/learning-path-task.model.js';
 import { ExamTopicProgressModel } from '../models/exam-topic-progress.model.js';
 import { CareerGoal, ICareerGoal } from '../models/career-goal.model.js';
 import { NotificationModel, INotification } from '../models/notification.model.js';
@@ -59,6 +62,9 @@ const inMemInterventions: any[] = [];
 const inMemResourceProgress: any[] = [];
 const inMemRevisionHistory: any[] = [];
 const inMemRevisionItems: any[] = [];
+const inMemLearningPaths: any[] = [];
+const inMemLearningPathStages: any[] = [];
+const inMemLearningPathTasks: any[] = [];
 const inMemSubjects: any[] = [];
 const inMemTopics: any[] = [];
 const inMemScholarships: any[] = [
@@ -2134,5 +2140,87 @@ export const dataRepository = {
     return inMemRevisionHistory
       .filter((rh) => String(rh.studentId) === String(studentId))
       .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  async getStudentLearningPaths(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await LearningPath.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemLearningPaths.filter((lp) => String(lp.studentId) === String(studentId));
+  },
+
+  async upsertLearningPath(studentId: string, pathId: string, pathData: any): Promise<any> {
+    if (isDBConnected()) {
+      if (mongoose.Types.ObjectId.isValid(pathId)) {
+        return await LearningPath.findOneAndUpdate({ _id: pathId, studentId }, { $set: pathData }, { upsert: true, new: true });
+      }
+      return await LearningPath.findOneAndUpdate({ studentId }, { $set: pathData }, { upsert: true, new: true });
+    }
+    const idx = inMemLearningPaths.findIndex(
+      (lp) => String(lp.studentId) === String(studentId) && String(lp._id || lp.id) === String(pathId)
+    );
+    const item = { _id: pathId, studentId, ...pathData, updatedAt: new Date() };
+    if (idx >= 0) {
+      inMemLearningPaths[idx] = { ...inMemLearningPaths[idx], ...item };
+    } else {
+      inMemLearningPaths.push(item);
+    }
+    return item;
+  },
+
+  async getLearningPathStages(learningPathId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await LearningPathStage.find({ learningPathId }).sort({ stageIndex: 1 }).lean();
+    }
+    return inMemLearningPathStages
+      .filter((s) => String(s.learningPathId) === String(learningPathId))
+      .sort((a, b) => a.stageIndex - b.stageIndex);
+  },
+
+  async upsertLearningPathStage(learningPathId: string, stageIndex: number, stageData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningPathStage.findOneAndUpdate(
+        { learningPathId, stageIndex },
+        { $set: stageData },
+        { upsert: true, new: true }
+      );
+    }
+    const idx = inMemLearningPathStages.findIndex(
+      (s) => String(s.learningPathId) === String(learningPathId) && s.stageIndex === stageIndex
+    );
+    const item = { _id: `stage_${stageIndex}`, learningPathId, stageIndex, ...stageData, updatedAt: new Date() };
+    if (idx >= 0) {
+      inMemLearningPathStages[idx] = { ...inMemLearningPathStages[idx], ...item };
+    } else {
+      inMemLearningPathStages.push(item);
+    }
+    return item;
+  },
+
+  async getLearningPathTasks(learningPathId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await LearningPathTask.find({ learningPathId }).sort({ createdAt: 1 }).lean();
+    }
+    return inMemLearningPathTasks.filter((t) => String(t.learningPathId) === String(learningPathId));
+  },
+
+  async upsertLearningPathTask(learningPathId: string, stageId: string, conceptId: string, taskData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningPathTask.findOneAndUpdate(
+        { learningPathId, stageId, conceptId },
+        { $set: taskData },
+        { upsert: true, new: true }
+      );
+    }
+    const idx = inMemLearningPathTasks.findIndex(
+      (t) => String(t.learningPathId) === String(learningPathId) && String(t.stageId) === String(stageId) && t.conceptId === conceptId
+    );
+    const item = { _id: `task_${stageId}_${conceptId}`, learningPathId, stageId, conceptId, ...taskData, updatedAt: new Date() };
+    if (idx >= 0) {
+      inMemLearningPathTasks[idx] = { ...inMemLearningPathTasks[idx], ...item };
+    } else {
+      inMemLearningPathTasks.push(item);
+    }
+    return item;
   },
 };

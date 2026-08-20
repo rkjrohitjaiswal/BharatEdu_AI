@@ -2714,6 +2714,218 @@ export const fetchParentRevisionSummary = async (
   }
 };
 
+// ===================================================
+// FEATURE 25: AI LEARNING PATH & PERSONALIZED CURRICULUM ENGINE
+// ===================================================
+
+export const fetchStudentLearningPaths = async (): Promise<{
+  success: boolean;
+  data?: any[];
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student learning paths' };
+  }
+};
+
+export const fetchLearningPathDetails = async (
+  pathId?: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const url = pathId ? `${API_BASE_URL}/student/learning-path/${pathId}` : `${API_BASE_URL}/student/learning-path/default`;
+    const response = await fetch(url, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch learning path details' };
+  }
+};
+
+export const fetchNextLearningTask = async (
+  pathId: string = 'default'
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/${pathId}/next`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch next learning task' };
+  }
+};
+
+export const refreshLearningPath = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/refresh`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to refresh learning path' };
+  }
+};
+
+export const startLearningTask = async (
+  pathId: string,
+  taskId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/${pathId}/tasks/${taskId}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to start learning task' };
+  }
+};
+
+export const completeLearningTask = async (
+  pathId: string,
+  taskId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/${pathId}/tasks/${taskId}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to complete learning task' };
+  }
+};
+
+export const completeLearningStage = async (
+  pathId: string,
+  stageId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/${pathId}/stages/${stageId}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to complete learning stage' };
+  }
+};
+
+export const pauseLearningPath = async (
+  pathId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/${pathId}/pause`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to pause learning path' };
+  }
+};
+
+export const resumeLearningPath = async (
+  pathId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/${pathId}/resume`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to resume learning path' };
+  }
+};
+
+export const fetchLearningPathSummary = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch learning path summary' };
+  }
+};
+
+export const fetchTeacherLearningPathSummary = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/teacher/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher learning path summary' };
+  }
+};
+
+export const fetchParentLearningPathSummary = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/learning-path/parent/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent learning path summary' };
+  }
+};
+
 
 
 

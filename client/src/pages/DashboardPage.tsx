@@ -31,6 +31,7 @@ import { KnowledgeGraphCard } from '../components/dashboard/KnowledgeGraphCard';
 import { AdaptiveAssessmentCard } from '../components/dashboard/AdaptiveAssessmentCard';
 import { ResourceHubCard } from '../components/dashboard/ResourceHubCard';
 import { SmartRevisionCard } from '../components/dashboard/SmartRevisionCard';
+import { LearningPathCard } from '../components/dashboard/LearningPathCard';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -122,6 +123,9 @@ export const DashboardPage: React.FC = () => {
 
       {/* Smart Resource Hub Compact Card */}
       <ResourceHubCard />
+
+      {/* AI Learning Path Compact Card */}
+      <LearningPathCard />
 
       {/* 2. Key Metrics Stats Overview */}
       <LearningOverview
