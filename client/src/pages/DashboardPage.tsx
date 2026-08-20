@@ -28,6 +28,7 @@ import { StudyPlannerCard } from '../components/dashboard/StudyPlannerCard';
 import { RecommendedResourcesCard } from '../components/dashboard/RecommendedResourcesCard';
 import { RevisionCard } from '../components/dashboard/RevisionCard';
 import { KnowledgeGraphCard } from '../components/dashboard/KnowledgeGraphCard';
+import { AdaptiveAssessmentCard } from '../components/dashboard/AdaptiveAssessmentCard';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -113,6 +114,9 @@ export const DashboardPage: React.FC = () => {
 
       {/* Knowledge Graph / Learning Map Compact Card */}
       <KnowledgeGraphCard />
+
+      {/* Adaptive Assessment Compact Card */}
+      <AdaptiveAssessmentCard />
 
       {/* 2. Key Metrics Stats Overview */}
       <LearningOverview

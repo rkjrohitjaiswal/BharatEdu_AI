@@ -2285,4 +2285,155 @@ export const fetchParentConceptOverview = async (
   }
 };
 
+// --- FEATURE 22: ADAPTIVE ASSESSMENT API HELPERS ---
+export const createAdaptiveAssessment = async (
+  targetConceptId?: string,
+  assessmentType: string = 'adaptive_practice',
+  questionCount: number = 5
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/assessments`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ targetConceptId, assessmentType, questionCount }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to create adaptive assessment' };
+  }
+};
+
+export const fetchNextAssessmentQuestion = async (
+  assessmentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/assessments/${assessmentId}/questions/next`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch next question' };
+  }
+};
+
+export const submitAssessmentAnswer = async (
+  assessmentId: string,
+  questionId: string,
+  selectedAnswer: string,
+  responseTimeSeconds: number = 10,
+  hintsUsed: number = 0
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/student/assessments/${assessmentId}/questions/${questionId}/answer`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ selectedAnswer, responseTimeSeconds, hintsUsed }),
+      }
+    );
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to submit answer' };
+  }
+};
+
+export const completeAdaptiveAssessment = async (
+  assessmentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/assessments/${assessmentId}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to complete assessment' };
+  }
+};
+
+export const fetchStudentAssessments = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/assessments`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student assessments' };
+  }
+};
+
+export const fetchAssessmentSummary = async (
+  assessmentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/assessments/${assessmentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch assessment summary' };
+  }
+};
+
+export const fetchTeacherAssessmentSummary = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/assessments/teacher/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher assessment summary' };
+  }
+};
+
+export const fetchParentAssessmentSummary = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/assessments/parent/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent assessment summary' };
+  }
+};
+
+
 

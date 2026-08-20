@@ -1,112 +1,92 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Document, Model, Schema } from 'mongoose';
 
-export type QuestionType = 'mcq' | 'true_false' | 'short_answer' | 'long_answer';
+export type QuestionType =
+  | 'mcq'
+  | 'true_false'
+  | 'multiple_select'
+  | 'short_answer'
+  | 'numerical'
+  | 'conceptual'
+  | 'application'
+  | 'scenario';
+
+export type QuestionDifficulty = 'foundational' | 'easy' | 'medium' | 'hard' | 'advanced';
+
 export type QuestionGeneratedBy = 'human' | 'ai';
-export type QuestionStatus = 'draft' | 'validated' | 'archived';
 
 export interface IQuestion extends Document {
-  subjectId: mongoose.Types.ObjectId;
-  topicId: mongoose.Types.ObjectId;
-  questionText: string;
+  questionId: string;
+  conceptId: string;
+  subject: string;
+  classLevel: string;
+  board: string;
   questionType: QuestionType;
-  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'easy' | 'medium' | 'hard';
+  difficulty: QuestionDifficulty;
+  stem: string;
   options: string[];
   correctAnswer: string;
   explanation: string;
-  source: string;
+  hint?: string;
+  sourceType: string;
   sourceReference: string;
-  language: 'english' | 'hindi' | 'gujarati';
   generatedBy: QuestionGeneratedBy;
-  status: QuestionStatus;
-  validated: boolean;
-  validationErrors?: string[];
-  curriculumReference?: string;
-  learningObjective?: string;
-  prerequisiteTopicIds?: mongoose.Types.ObjectId[];
-  sourceDocumentId?: mongoose.Types.ObjectId;
+  verified: boolean;
+  isActive: boolean;
+
+  // Backward compatibility fields
+  subjectId?: mongoose.Types.ObjectId;
+  topicId?: mongoose.Types.ObjectId;
+  questionText?: string;
+  status?: string;
+
   createdAt: Date;
   updatedAt: Date;
 }
 
 const QuestionSchema: Schema<IQuestion> = new Schema(
   {
-    subjectId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Subject',
-      required: true,
-      index: true,
-    },
-    topicId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Topic',
-      required: true,
-      index: true,
-    },
-    questionText: {
-      type: String,
-      required: [true, 'Question text is required'],
-      trim: true,
-    },
+    questionId: { type: String, required: true, unique: true, index: true },
+    conceptId: { type: String, required: true, index: true },
+    subject: { type: String, required: true, default: 'General' },
+    classLevel: { type: String, default: 'Class 10' },
+    board: { type: String, default: 'CBSE' },
     questionType: {
       type: String,
-      enum: ['mcq', 'true_false', 'short_answer', 'long_answer'],
-      required: true,
+      enum: [
+        'mcq',
+        'true_false',
+        'multiple_select',
+        'short_answer',
+        'numerical',
+        'conceptual',
+        'application',
+        'scenario',
+      ],
+      default: 'mcq',
     },
     difficulty: {
       type: String,
-      enum: ['beginner', 'intermediate', 'advanced', 'easy', 'medium', 'hard'],
+      enum: ['foundational', 'easy', 'medium', 'hard', 'advanced'],
       default: 'medium',
-    },
-    options: {
-      type: [String],
-      default: [],
-    },
-    correctAnswer: {
-      type: String,
-      required: [true, 'Correct answer is required'],
-      trim: true,
-    },
-    explanation: {
-      type: String,
-      default: '',
-      trim: true,
-    },
-    source: {
-      type: String,
-      default: 'NCERT Curriculum Resource',
-      trim: true,
-    },
-    sourceReference: {
-      type: String,
-      default: '',
-      trim: true,
-    },
-    language: {
-      type: String,
-      enum: ['english', 'hindi', 'gujarati'],
-      default: 'english',
-    },
-    generatedBy: {
-      type: String,
-      enum: ['human', 'ai'],
-      default: 'human',
-    },
-    status: {
-      type: String,
-      enum: ['draft', 'validated', 'archived'],
-      default: 'validated',
       index: true,
     },
-    validated: { type: Boolean, default: true },
-    validationErrors: [{ type: String }],
-    curriculumReference: { type: String, default: '' },
-    learningObjective: { type: String, default: '' },
-    prerequisiteTopicIds: [{ type: Schema.Types.ObjectId, ref: 'Topic' }],
-    sourceDocumentId: { type: Schema.Types.ObjectId, ref: 'EducationalDocument' },
+    stem: { type: String, required: true, trim: true },
+    options: { type: [String], default: [] },
+    correctAnswer: { type: String, required: true, trim: true },
+    explanation: { type: String, default: '', trim: true },
+    hint: { type: String, default: '', trim: true },
+    sourceType: { type: String, default: 'curriculum_bank' },
+    sourceReference: { type: String, default: '' },
+    generatedBy: { type: String, enum: ['human', 'ai'], default: 'human' },
+    verified: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: true, index: true },
+
+    // Backward compatibility fields
+    questionText: { type: String, trim: true },
+    status: { type: String, default: 'validated' },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-export const Question: Model<IQuestion> = mongoose.model<IQuestion>('Question', QuestionSchema);
+export const Question: Model<IQuestion> =
+  mongoose.models.Question || mongoose.model<IQuestion>('Question', QuestionSchema);

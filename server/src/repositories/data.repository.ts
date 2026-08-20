@@ -34,6 +34,8 @@ import { RevisionSession } from '../models/revision-session.model.js';
 import { KnowledgeConcept } from '../models/knowledge-concept.model.js';
 import { ConceptDependency } from '../models/concept-dependency.model.js';
 import { StudentConceptMastery } from '../models/student-concept-mastery.model.js';
+import { AdaptiveAssessment } from '../models/adaptive-assessment.model.js';
+import { QuestionAttempt } from '../models/question-attempt.model.js';
 import { ExamTopicProgressModel } from '../models/exam-topic-progress.model.js';
 import { CareerGoal, ICareerGoal } from '../models/career-goal.model.js';
 import { NotificationModel, INotification } from '../models/notification.model.js';
@@ -2043,5 +2045,12 @@ export const dataRepository = {
     return (links || []).some(
       (l: any) => String(l.studentId) === String(studentId) || String(l.student) === String(studentId)
     );
+  },
+
+  async getStudentAdaptiveAssessments(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AdaptiveAssessment.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return [];
   },
 };
