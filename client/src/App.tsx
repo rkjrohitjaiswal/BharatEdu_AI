@@ -52,6 +52,7 @@ import { ExamPaperResultsPage } from './pages/ExamPaperResultsPage';
 import { ExamPaperReviewPage } from './pages/ExamPaperReviewPage';
 import { ExamEvaluationPage } from './pages/ExamEvaluationPage';
 import { ExamEvaluationDetailPage } from './pages/ExamEvaluationDetailPage';
+import { DoubtDetailPage } from './pages/DoubtDetailPage';
 
 export const App: React.FC = () => (
   <AuthProvider>
@@ -66,6 +67,7 @@ export const App: React.FC = () => (
           <Route path="resources" element={<ProtectedRoute allowedRoles={['student']}><ResourceRecommendationsPage /></ProtectedRoute>} />
           <Route path="study-material" element={<ProtectedRoute allowedRoles={['student']}><StudyMaterialPage /></ProtectedRoute>} />
           <Route path="doubts" element={<ProtectedRoute allowedRoles={['student']}><DoubtSolverPage /></ProtectedRoute>} />
+          <Route path="doubts/:id" element={<ProtectedRoute allowedRoles={['student']}><DoubtDetailPage /></ProtectedRoute>} />
           <Route path="revision" element={<ProtectedRoute allowedRoles={['student']}><RevisionPage /></ProtectedRoute>} />
           <Route path="knowledge-graph" element={<ProtectedRoute allowedRoles={['student']}><KnowledgeGraphPage /></ProtectedRoute>} />
           <Route path="assessments" element={<ProtectedRoute allowedRoles={['student']}><AdaptiveAssessmentPage /></ProtectedRoute>} />

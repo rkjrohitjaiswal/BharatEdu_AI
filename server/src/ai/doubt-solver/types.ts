@@ -1,110 +1,75 @@
-import { DoubtDifficulty, DoubtSessionStatus } from '../../models/doubt-session.model.js';
-import { DoubtGeneratedBy, DoubtRole, ExplanationLevel } from '../../models/doubt-message.model.js';
+import { DoubtDifficultyLevel, DoubtSourceContext, DoubtStatus } from '../../models/student-doubt.model.js';
+import { DoubtResponseType, IDoubtResponseStep, IDoubtSourceReference } from '../../models/doubt-response.model.js';
+import { DoubtFeedbackType } from '../../models/doubt-feedback.model.js';
 
-export type DoubtCategory =
+export type DoubtIntentCategory =
   | 'concept_explanation'
-  | 'prerequisite_gap'
-  | 'worked_example'
-  | 'formula_question'
-  | 'calculation'
-  | 'coding_question'
-  | 'mistake_analysis'
+  | 'solve_problem'
+  | 'explain_answer'
+  | 'compare_concepts'
+  | 'formula_explanation'
+  | 'coding_help'
+  | 'debugging'
   | 'exam_question'
-  | 'revision_question'
-  | 'career_application'
-  | 'resource_request'
+  | 'mistake_explanation'
+  | 'prerequisite_help'
+  | 'revision_help'
+  | 'career_question'
   | 'general_academic';
 
-export interface IDoubtContextDTO {
-  studentId: string;
-  sessionId: string;
-  conceptId?: string;
-  topicId?: string;
-  masteryScore: number;
-  confidenceScore: number;
-  riskLevel: string;
-  examUrgency: boolean;
-  learningPathStage: number;
-  prerequisiteConceptIds: string[];
-  learningGapIds: string[];
-  revisionDue: boolean;
-  recommendedDifficulty: DoubtDifficulty;
-  capturedAt: string;
-}
+export type DoubtCategory = DoubtIntentCategory;
 
-export interface IDoubtMessageDTO {
-  id: string;
-  messageId: string;
-  sessionId: string;
+export type ExplanationLevel = 'beginner' | 'standard' | 'advanced' | 'exam_focused';
+export type ExplanationLanguage = 'en' | 'hi' | 'gu';
+
+export interface IDoubtFollowupDTO {
+  doubtId: string;
   studentId: string;
-  role: DoubtRole;
-  content: string;
-  explanationLevel: ExplanationLevel;
-  referencedConceptIds: string[];
-  referencedTopicIds: string[];
-  sourceReferences: string[];
-  generatedBy: DoubtGeneratedBy;
-  isHelpful?: boolean;
+  parentResponseId: string;
+  question: string;
+  responseId: string;
+  answer: string;
+  explanation: string;
   createdAt: string;
 }
 
-export interface IDoubtSessionDTO {
-  id: string;
-  sessionId: string;
+export interface IDoubtResponseDTO {
+  responseId: string;
+  doubtId: string;
   studentId: string;
+  answer: string;
+  explanation: string;
+  steps: IDoubtResponseStep[];
+  keyConcepts: string[];
+  prerequisiteConcepts: string[];
+  examples: string[];
+  commonMistakes: string[];
+  verificationNotes: string;
+  confidence: number;
+  sourceReferences: IDoubtSourceReference[];
+  responseType: DoubtResponseType;
+  intentCategory: DoubtIntentCategory;
+  explanationLevel: ExplanationLevel;
+  language: ExplanationLanguage;
+  generatedAt: string;
+}
+
+export interface IStudentDoubtDTO {
+  id: string;
+  doubtId: string;
+  studentId: string;
+  question: string;
+  normalizedQuestion: string;
   subject: string;
-  classLevel: string;
-  board: string;
-  topicId?: string;
+  topicId: string;
   conceptId?: string;
-  learningPathId?: string;
-  materialId?: string;
-  examId?: string;
-  title: string;
-  status: DoubtSessionStatus;
-  difficulty: DoubtDifficulty;
-  language: string;
-  messages?: IDoubtMessageDTO[];
+  sourceContext: DoubtSourceContext;
+  sourceId?: string;
+  difficulty: DoubtDifficultyLevel;
+  status: DoubtStatus;
+  response?: IDoubtResponseDTO;
+  followups?: IDoubtFollowupDTO[];
   createdAt: string;
   updatedAt: string;
-  lastActivityAt: string;
-}
-
-export interface ISolutionStep {
-  stepNumber: number;
-  title: string;
-  description: string;
-  formulaOrCode?: string;
-}
-
-export interface IDoubtSolutionDTO {
-  sessionId: string;
-  category: DoubtCategory;
-  explanationLevel: ExplanationLevel;
-  summary: string;
-  steps: ISolutionStep[];
-  prerequisiteChain: string[];
-  followUpQuestions: string[];
-  sourceReferences: string[];
-  recommendedPracticeId?: string;
-  recommendedRevisionId?: string;
-  generatedBy: DoubtGeneratedBy;
-}
-
-export interface ISocraticHintDTO {
-  sessionId: string;
-  hintLevel: number; // 0, 1, 2, 3
-  guidingQuestion: string;
-  hintContent: string;
-  nextStepPrompt: string;
-}
-
-export interface IDoubtSummaryData {
-  studentId: string;
-  totalSessionsCount: number;
-  activeSessionsCount: number;
-  resolvedSessionsCount: number;
-  topConfusedTopic?: string;
-  aiExplanation: string;
-  evaluatedAt: string;
+  resolvedAt?: string;
 }

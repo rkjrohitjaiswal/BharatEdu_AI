@@ -33,7 +33,7 @@ import { examPaperRouter, teacherExamPaperRouter, parentExamPaperRouter } from '
 import { examEvaluationRouter, teacherEvaluationRouter, parentEvaluationRouter } from './exam-evaluation.routes.js';
 import learningPathRoutes from './learning-path.routes.js';
 import studyMaterialRoutes from './study-material.routes.js';
-import doubtSolverRoutes from './doubt-solver.routes.js';
+import doubtSolverRoutes, { teacherDoubtRouter, parentDoubtRouter } from './doubt-solver.routes.js';
 
 const router = Router();
 
@@ -43,10 +43,12 @@ router.use('/teacher/copilot', teacherCopilotRoutes);
 router.use('/teacher/assessments', teacherAssessmentRouter);
 router.use('/teacher/exam-papers', teacherExamPaperRouter);
 router.use('/teacher/exam-evaluations', teacherEvaluationRouter);
+router.use('/teacher/doubts', teacherDoubtRouter);
 router.use('/parent/copilot', parentCopilotRoutes);
 router.use('/parent/assessments', parentAssessmentRouter);
 router.use('/parent/exam-papers', parentExamPaperRouter);
 router.use('/parent/exam-evaluations', parentEvaluationRouter);
+router.use('/parent/doubts', parentDoubtRouter);
 router.use('/student/mentor', studentMentorRoutes);
 router.use('/student/analytics', learningAnalyticsRoutes);
 router.use('/student/study-planner', studyPlannerRoutes);

@@ -1,293 +1,168 @@
 import React, { useEffect, useState } from 'react';
-import { HelpCircle, Lightbulb, MessageSquare, Plus, Send, Sparkles, Trash2 } from 'lucide-react';
-import {
-  createDoubtSession,
-  deleteDoubtSession,
-  fetchDoubtContext,
-  fetchDoubtMessages,
-  fetchDoubtRecommendations,
-  fetchDoubtSessions,
-  sendDoubtMessage,
-  solveDoubt,
-  startSocraticMode,
-  submitDoubtFeedback,
-} from '../services/api';
-import {
-  IDoubtContextClientDTO,
-  IDoubtMessageClientDTO,
-  IDoubtSessionClientDTO,
-  IDoubtSolutionClientDTO,
-  ISocraticHintClientDTO,
-} from '../types/doubt-solver';
-import { DoubtContextCard } from '../components/doubt-solver/DoubtContextCard';
-import { StepByStepSolutionCard } from '../components/doubt-solver/StepByStepSolution';
+import { useNavigate } from 'react-router-dom';
+import { fetchDoubts, solveDoubt } from '../services/api';
+import { IStudentDoubtClient } from '../types/doubt-solver';
 
 export const DoubtSolverPage: React.FC = () => {
-  const [sessions, setSessions] = useState<IDoubtSessionClientDTO[]>([]);
-  const [activeSession, setActiveSession] = useState<IDoubtSessionClientDTO | null>(null);
-  const [messages, setMessages] = useState<IDoubtMessageClientDTO[]>([]);
-  const [context, setContext] = useState<IDoubtContextClientDTO | null>(null);
-  const [solution, setSolution] = useState<IDoubtSolutionClientDTO | null>(null);
-  const [socraticHint, setSocraticHint] = useState<ISocraticHintClientDTO | null>(null);
-  const [inputQuestion, setInputQuestion] = useState('');
-  const [hintLevel, setHintLevel] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [solving, setSolving] = useState(false);
-  const [recommendations, setRecommendations] = useState<any>(null);
+  const navigate = useNavigate();
+  const [doubts, setDoubts] = useState<IStudentDoubtClient[]>([]);
+  const [questionInput, setQuestionInput] = useState<string>('');
+  const [subject, setSubject] = useState<string>('Mathematics');
+  const [level, setLevel] = useState<string>('standard');
+  const [language, setLanguage] = useState<string>('en');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
-    loadSessions();
+    loadDoubts();
   }, []);
 
-  const loadSessions = async () => {
+  const loadDoubts = async () => {
     setLoading(true);
-    const [sessRes, recRes] = await Promise.all([fetchDoubtSessions(), fetchDoubtRecommendations()]);
-    if (sessRes.success && Array.isArray(sessRes.data) && sessRes.data.length > 0) {
-      setSessions(sessRes.data);
-      const top = sessRes.data[0];
-      setActiveSession(top);
-      loadSessionDetails(top.sessionId || top.id);
-    }
-    if (recRes.success && recRes.data) {
-      setRecommendations(recRes.data);
+    const res = await fetchDoubts();
+    if (res.success && res.data) {
+      setDoubts(res.data);
     }
     setLoading(false);
   };
 
-  const loadSessionDetails = async (sessionId: string) => {
-    const [msgRes, ctxRes] = await Promise.all([fetchDoubtMessages(sessionId), fetchDoubtContext(sessionId)]);
-    if (msgRes.success && Array.isArray(msgRes.data)) {
-      setMessages(msgRes.data);
-    }
-    if (ctxRes.success && ctxRes.data) {
-      setContext(ctxRes.data);
-    }
-  };
-
-  const handleCreateNewSession = async () => {
-    const res = await createDoubtSession({ title: 'New Doubt Session' });
+  const handleAskDoubt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!questionInput.trim()) return;
+    setSubmitting(true);
+    const res = await solveDoubt({
+      question: questionInput.trim(),
+      subject,
+      level,
+      language,
+    });
+    setSubmitting(false);
     if (res.success && res.data) {
-      setSessions((prev) => [res.data, ...prev]);
-      setActiveSession(res.data);
-      setMessages([]);
-      setSolution(null);
-      setSocraticHint(null);
-    }
-  };
-
-  const handleSolveDoubt = async (questionText?: string) => {
-    const text = questionText || inputQuestion;
-    if (!text.trim() || !activeSession) return;
-
-    setSolving(true);
-    setInputQuestion('');
-
-    // Append user message immediately
-    const userMsg: IDoubtMessageClientDTO = {
-      id: `temp_${Date.now()}`,
-      messageId: `msg_${Date.now()}`,
-      sessionId: activeSession.sessionId,
-      studentId: activeSession.studentId,
-      role: 'student',
-      content: text,
-      explanationLevel: 'standard',
-      referencedConceptIds: [],
-      referencedTopicIds: [],
-      sourceReferences: [],
-      generatedBy: 'deterministic',
-      createdAt: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
-
-    const solRes = await solveDoubt(activeSession.sessionId || activeSession.id, text);
-    if (solRes.success && solRes.data) {
-      setSolution(solRes.data);
-      // Reload messages to get persisted tutor response
-      const msgRes = await fetchDoubtMessages(activeSession.sessionId || activeSession.id);
-      if (msgRes.success && Array.isArray(msgRes.data)) {
-        setMessages(msgRes.data);
-      }
-    }
-    setSolving(false);
-  };
-
-  const handleGetSocraticHint = async () => {
-    if (!activeSession) return;
-    const text = inputQuestion || 'Provide a guiding hint for this problem';
-    const res = await startSocraticMode(activeSession.sessionId || activeSession.id, hintLevel, text);
-    if (res.success && res.data) {
-      setSocraticHint(res.data);
-      setHintLevel((prev) => Math.min(prev + 1, 3));
-    }
-  };
-
-  const handleDeleteSession = async (id: string) => {
-    await deleteDoubtSession(id);
-    loadSessions();
-  };
-
-  const handleFeedback = async (messageId: string, isHelpful: boolean) => {
-    await submitDoubtFeedback(messageId, isHelpful);
-    if (activeSession) {
-      loadSessionDetails(activeSession.sessionId || activeSession.id);
+      setQuestionInput('');
+      navigate(`/doubts/${res.data.id || res.data.doubtId}`);
     }
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <HelpCircle className="w-6 h-6 text-indigo-600" />
-            <h1 className="text-xl font-black text-slate-900">AI Doubt Solver & Contextual Learning Tutor</h1>
+      <div className="bg-gradient-to-r from-indigo-700 via-purple-800 to-indigo-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="relative z-10 max-w-3xl">
+          <div className="inline-block px-3 py-1 bg-indigo-500/30 backdrop-blur-md rounded-full text-xs font-semibold uppercase tracking-wider mb-3">
+            Feature 32 • Grounded Step-by-Step AI Learning Engine
           </div>
-          <p className="text-xs text-slate-500 font-medium">
-            24/7 academic assistance with step-by-step explanations, Socratic hints, and prerequisite guidance.
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl mb-2">
+            AI Doubt Solver & Step-by-Step Explainer
+          </h1>
+          <p className="text-indigo-100 text-base">
+            Ask any academic question and receive grounded, step-by-step explanations personalized to your mastery, preferred level, and language (English, Hindi, Gujarati).
           </p>
         </div>
-
-        <button
-          onClick={handleCreateNewSession}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>New Doubt Session</span>
-        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar Sessions List */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">Active Doubt Sessions</h3>
-          <div className="space-y-2">
-            {sessions.map((sess) => (
-              <div
-                key={sess.id}
-                onClick={() => {
-                  setActiveSession(sess);
-                  loadSessionDetails(sess.sessionId || sess.id);
-                }}
-                className={`p-3 rounded-2xl border cursor-pointer transition flex items-center justify-between ${
-                  activeSession?.id === sess.id ? 'bg-indigo-50 border-indigo-300' : 'bg-white border-slate-200 hover:border-slate-300'
-                }`}
+      {/* Ask Doubt Form */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 space-y-4">
+        <h2 className="text-xl font-bold text-gray-900">Ask an Academic Doubt</h2>
+        <form onSubmit={handleAskDoubt} className="space-y-4">
+          <textarea
+            rows={3}
+            placeholder="Type your question or problem statement clearly (e.g. Explain how to solve linear equations in two variables)..."
+            value={questionInput}
+            onChange={(e) => setQuestionInput(e.target.value)}
+            className="w-full p-4 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Subject</label>
+              <select
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
               >
-                <div className="space-y-0.5 min-w-0 flex-1 pr-2">
-                  <h4 className="text-xs font-black text-slate-900 truncate">{sess.title}</h4>
-                  <span className="text-[10px] text-slate-500 font-bold">{sess.subject}</span>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Physics">Physics</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Biology">Biology</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Explanation Depth</label>
+              <select
+                value={level}
+                onChange={(e) => setLevel(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+              >
+                <option value="beginner">Beginner (Simple Concept)</option>
+                <option value="standard">Standard (4-Step Solution)</option>
+                <option value="advanced">Advanced (Deep Rigorous)</option>
+                <option value="exam_focused">Exam Focused (Board Step Marks)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Language</label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white"
+              >
+                <option value="en">English</option>
+                <option value="hi">Hindi (हिंदी)</option>
+                <option value="gu">Gujarati (ગુજરાતી)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={submitting || !questionInput.trim()}
+              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-sm rounded-lg shadow-sm transition-colors"
+            >
+              {submitting ? 'Solving Step-by-Step...' : 'Solve AI Doubt →'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* History */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-900">Your Asked Doubts History</h2>
+          <span className="text-xs font-semibold text-gray-400">{doubts.length} Doubts Recorded</span>
+        </div>
+
+        {loading ? (
+          <div className="p-12 text-center text-gray-400">Loading doubt history...</div>
+        ) : doubts.length === 0 ? (
+          <div className="p-12 text-center text-gray-500">No doubt history yet. Ask a question above!</div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {doubts.map((item) => (
+              <div key={item.id || item.doubtId} className="p-6 hover:bg-gray-50 flex items-center justify-between transition-colors">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-xs font-bold rounded">
+                      {item.subject}
+                    </span>
+                    <span className="text-xs text-gray-400">{new Date(item.createdAt).toLocaleString()}</span>
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-base">"{item.question}"</h3>
+                  <p className="text-xs text-gray-500">Topic: {item.topicId} | Status: <span className="text-green-600 font-semibold">{item.status.toUpperCase()}</span></p>
                 </div>
+
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteSession(sess.sessionId || sess.id);
-                  }}
-                  className="p-1 text-slate-400 hover:text-red-600 transition"
+                  onClick={() => navigate(`/doubts/${item.id || item.doubtId}`)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-semibold rounded-lg transition-colors"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  View Solution →
                 </button>
               </div>
             ))}
           </div>
-
-          {/* Context Card */}
-          {context && <DoubtContextCard context={context} />}
-        </div>
-
-        {/* Main Conversation & Solver Area */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Socratic Hint Card if active */}
-          {socraticHint && (
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase text-amber-800 tracking-wider flex items-center gap-1.5">
-                  <Lightbulb className="w-4 h-4 text-amber-600" /> Socratic Hint (Level {socraticHint.hintLevel + 1})
-                </span>
-              </div>
-              <p className="text-xs font-black text-amber-900">{socraticHint.guidingQuestion}</p>
-              <p className="text-xs text-amber-800 leading-relaxed">{socraticHint.hintContent}</p>
-              <p className="text-[11px] font-bold text-amber-700">{socraticHint.nextStepPrompt}</p>
-            </div>
-          )}
-
-          {/* Step By Step Solution if available */}
-          {solution && <StepByStepSolutionCard solution={solution} />}
-
-          {/* Messages List */}
-          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm min-h-[350px] space-y-4 flex flex-col justify-between">
-            <div className="space-y-3">
-              {messages.length === 0 ? (
-                <div className="p-8 text-center space-y-2">
-                  <HelpCircle className="w-8 h-8 text-slate-400 mx-auto" />
-                  <h3 className="text-sm font-black text-slate-700">Ask your academic question below</h3>
-                  <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    Type any problem from Mathematics, Science, or Computer Science for step-by-step guidance.
-                  </p>
-
-                  {/* Suggested Question Chips */}
-                  {recommendations?.recommendedQuestions && (
-                    <div className="flex flex-wrap justify-center gap-2 pt-3">
-                      {recommendations.recommendedQuestions.map((q: string, idx: number) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleSolveDoubt(q)}
-                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 text-xs font-bold transition border border-slate-200"
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.role === 'student' ? 'justify-end' : 'justify-start'}`}>
-                    <div
-                      className={`max-w-[80%] p-4 rounded-2xl space-y-2 text-xs font-medium leading-relaxed ${
-                        msg.role === 'student' ? 'bg-indigo-600 text-white' : 'bg-slate-50 border border-slate-200 text-slate-900'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between text-[10px] opacity-75 font-bold uppercase">
-                        <span>{msg.role === 'student' ? 'You' : 'AI Tutor'}</span>
-                        <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      </div>
-                      <p className="whitespace-pre-line">{msg.content}</p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Input & Action Buttons */}
-            <div className="pt-4 border-t border-slate-100 space-y-3">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={inputQuestion}
-                  onChange={(e) => setInputQuestion(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSolveDoubt()}
-                  placeholder="Ask a question or request step-by-step explanation..."
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-indigo-500 font-medium"
-                />
-                <button
-                  onClick={() => handleSolveDoubt()}
-                  disabled={solving || !inputQuestion.trim()}
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs inline-flex items-center gap-1 transition disabled:opacity-50"
-                >
-                  <Send className={`w-3.5 h-3.5 ${solving ? 'animate-spin' : ''}`} />
-                  <span>Solve</span>
-                </button>
-                <button
-                  onClick={handleGetSocraticHint}
-                  className="px-3 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-extrabold text-xs inline-flex items-center gap-1 transition"
-                  title="Socratic Hint Mode"
-                >
-                  <Lightbulb className="w-3.5 h-3.5" />
-                  <span>Hint</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

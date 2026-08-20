@@ -49,6 +49,10 @@ import { QuestionEvaluation } from '../models/question-evaluation.model.js';
 import { TopicEvaluation } from '../models/topic-evaluation.model.js';
 import { ConceptEvaluation } from '../models/concept-evaluation.model.js';
 import { StudentMisconception } from '../models/student-misconception.model.js';
+import { StudentDoubt } from '../models/student-doubt.model.js';
+import { DoubtResponse } from '../models/doubt-response.model.js';
+import { DoubtFollowup } from '../models/doubt-followup.model.js';
+import { DoubtFeedback } from '../models/doubt-feedback.model.js';
 import { StudyMaterial } from '../models/study-material.model.js';
 import { StudyFlashcard } from '../models/study-flashcard.model.js';
 import { DoubtSession } from '../models/doubt-session.model.js';
@@ -100,6 +104,10 @@ const inMemQuestionEvaluations: any[] = [];
 const inMemTopicEvaluations: any[] = [];
 const inMemConceptEvaluations: any[] = [];
 const inMemStudentMisconceptions: any[] = [];
+const inMemStudentDoubts: any[] = [];
+const inMemDoubtResponses: any[] = [];
+const inMemDoubtFollowups: any[] = [];
+const inMemDoubtFeedbacks: any[] = [];
 const inMemRevisionHistory: any[] = [];
 const inMemRevisionItems: any[] = [];
 const inMemLearningPaths: any[] = [];
@@ -2683,14 +2691,6 @@ export const dataRepository = {
     };
   },
 
-  async getTeacherDoubtSummary(studentId: string): Promise<any> {
-    return await this.getDoubtSummary(studentId);
-  },
-
-  async getParentDoubtSummary(studentId: string): Promise<any> {
-    return await this.getDoubtSummary(studentId);
-  },
-
   async createAdaptiveAssessment(asstData: any): Promise<any> {
     if (isDBConnected()) {
       const doc = new AdaptiveAssessment(asstData);
@@ -3210,5 +3210,113 @@ export const dataRepository = {
 
   async getParentEvaluationSummary(studentId: string): Promise<any> {
     return await this.getTeacherEvaluationSummary(studentId);
+  },
+
+  async createStudentDoubt(dData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new StudentDoubt(dData);
+      return await doc.save();
+    }
+    const item = { _id: `doubt_${Date.now()}_${Math.random()}`, ...dData, createdAt: new Date(), updatedAt: new Date() };
+    inMemStudentDoubts.push(item);
+    return item;
+  },
+
+  async getStudentDoubts(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await StudentDoubt.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemStudentDoubts
+      .filter((d) => String(d.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  async getStudentDoubtById(doubtId: string, studentId?: string): Promise<any> {
+    if (isDBConnected()) {
+      const query: any = { _id: doubtId };
+      if (studentId) query.studentId = studentId;
+      return await StudentDoubt.findOne(query).lean();
+    }
+    return inMemStudentDoubts.find(
+      (d) => (String(d._id || d.id) === String(doubtId) || d.doubtId === doubtId) && (!studentId || String(d.studentId) === String(studentId))
+    );
+  },
+
+  async updateStudentDoubt(doubtId: string, studentId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await StudentDoubt.findOneAndUpdate({ _id: doubtId, studentId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemStudentDoubts.findIndex(
+      (d) => (String(d._id || d.id) === String(doubtId) || d.doubtId === doubtId) && String(d.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemStudentDoubts[idx] = { ...inMemStudentDoubts[idx], ...updateData, updatedAt: new Date() };
+      return inMemStudentDoubts[idx];
+    }
+    return null;
+  },
+
+  async createDoubtResponse(rData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new DoubtResponse(rData);
+      return await doc.save();
+    }
+    const item = { _id: `resp_${Date.now()}_${Math.random()}`, ...rData, createdAt: new Date() };
+    inMemDoubtResponses.push(item);
+    return item;
+  },
+
+  async getDoubtResponses(doubtId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await DoubtResponse.find({ doubtId }).lean();
+    }
+    return inMemDoubtResponses.filter((r) => String(r.doubtId) === String(doubtId));
+  },
+
+  async createDoubtFollowup(fData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new DoubtFollowup(fData);
+      return await doc.save();
+    }
+    const item = { _id: `fup_${Date.now()}_${Math.random()}`, ...fData, createdAt: new Date() };
+    inMemDoubtFollowups.push(item);
+    return item;
+  },
+
+  async getDoubtFollowups(doubtId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await DoubtFollowup.find({ doubtId }).sort({ createdAt: 1 }).lean();
+    }
+    return inMemDoubtFollowups.filter((f) => String(f.doubtId) === String(doubtId));
+  },
+
+  async createDoubtFeedback(fbData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new DoubtFeedback(fbData);
+      return await doc.save();
+    }
+    const item = { _id: `fb_${Date.now()}_${Math.random()}`, ...fbData, createdAt: new Date() };
+    inMemDoubtFeedbacks.push(item);
+    return item;
+  },
+
+  async getDoubtFeedback(doubtId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await DoubtFeedback.find({ doubtId }).lean();
+    }
+    return inMemDoubtFeedbacks.filter((fb) => String(fb.doubtId) === String(doubtId));
+  },
+
+  async getTeacherDoubtSummary(studentId: string): Promise<any> {
+    const list = await this.getStudentDoubts(studentId);
+    return {
+      studentId,
+      totalDoubts: list.length,
+      resolvedCount: list.filter((d) => d.status === 'resolved' || d.status === 'answered').length,
+    };
+  },
+
+  async getParentDoubtSummary(studentId: string): Promise<any> {
+    return await this.getTeacherDoubtSummary(studentId);
   },
 };

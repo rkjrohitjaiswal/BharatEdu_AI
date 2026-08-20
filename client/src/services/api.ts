@@ -3098,7 +3098,7 @@ export const fetchDoubtMessages = async (sessionId: string) => {
   }
 };
 
-export const solveDoubt = async (sessionId: string, question: string) => {
+export const solveDoubtSession = async (sessionId: string, question: string) => {
   try {
     const response = await fetch(`${API_BASE_URL}/student/doubts/sessions/${sessionId}/solve`, {
       method: 'POST',
@@ -3124,7 +3124,7 @@ export const startSocraticMode = async (sessionId: string, hintLevel: number, qu
   }
 };
 
-export const submitDoubtFeedback = async (messageId: string, isHelpful: boolean) => {
+export const submitDoubtMessageFeedback = async (messageId: string, isHelpful: boolean) => {
   try {
     const response = await fetch(`${API_BASE_URL}/student/doubts/messages/${messageId}/feedback`, {
       method: 'POST',
@@ -3137,7 +3137,7 @@ export const submitDoubtFeedback = async (messageId: string, isHelpful: boolean)
   }
 };
 
-export const fetchDoubtContext = async (sessionId?: string) => {
+export const fetchLegacyDoubtContext = async (sessionId?: string) => {
   try {
     const response = await fetch(`${API_BASE_URL}/student/doubts/context${sessionId ? `?sessionId=${sessionId}` : ''}`, {
       headers: getAuthHeaders(),
@@ -3148,7 +3148,7 @@ export const fetchDoubtContext = async (sessionId?: string) => {
   }
 };
 
-export const fetchDoubtRecommendations = async () => {
+export const fetchLegacyDoubtRecommendations = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/student/doubts/recommendations`, {
       headers: getAuthHeaders(),
@@ -3749,6 +3749,136 @@ export const fetchParentEvaluationSummary = async (studentId: string) => {
     return await handleResponse(response);
   } catch (error) {
     return { success: false, message: 'Failed to fetch parent evaluation summary' };
+  }
+};
+
+// --- FEATURE 32: AI DOUBT SOLVER, STEP-BY-STEP EXPLANATION & PERSONALIZED LEARNING ENGINE ---
+export const fetchDoubts = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/doubts`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch doubts' };
+  }
+};
+
+export const fetchDoubt = async (doubtId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/doubts/${doubtId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch doubt details' };
+  }
+};
+
+export const solveDoubt = async (payload: { question: string; subject?: string; sourceContext?: string; sourceId?: string; level?: string; language?: string }) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/doubts`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to solve doubt' };
+  }
+};
+
+export const followupDoubt = async (doubtId: string, payload: { question: string; level?: string; language?: string }) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/doubts/${doubtId}/followup`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to submit follow-up doubt' };
+  }
+};
+
+export const submitDoubtFeedback = async (doubtId: string, payload: { responseId: string; helpful: boolean; feedbackType?: string; comment?: string }) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/doubts/${doubtId}/feedback`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to submit doubt feedback' };
+  }
+};
+
+export const fetchDoubtContext = async (doubtId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/doubts/${doubtId}/context`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch doubt context' };
+  }
+};
+
+export const fetchDoubtRecommendations = async (doubtId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/doubts/${doubtId}/recommendations`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch doubt recommendations' };
+  }
+};
+
+export const addDoubtToRevision = async (doubtId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/doubts/${doubtId}/add-to-revision`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to add doubt to revision' };
+  }
+};
+
+export const practiceDoubtConcept = async (doubtId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/doubts/${doubtId}/practice`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate practice for doubt concept' };
+  }
+};
+
+export const fetchTeacherDoubtSummary = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/doubts/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher doubt summary' };
+  }
+};
+
+export const fetchParentDoubtSummary = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/doubts/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent doubt summary' };
   }
 };
 

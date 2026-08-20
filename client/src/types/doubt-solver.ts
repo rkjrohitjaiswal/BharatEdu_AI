@@ -1,98 +1,98 @@
-export type DoubtCategory =
-  | 'concept_explanation'
-  | 'prerequisite_gap'
-  | 'worked_example'
-  | 'formula_question'
-  | 'calculation'
-  | 'coding_question'
-  | 'mistake_analysis'
-  | 'exam_question'
-  | 'revision_question'
-  | 'career_application'
-  | 'resource_request'
-  | 'general_academic';
+export type DoubtSourceContext =
+  | 'practice'
+  | 'exam'
+  | 'revision'
+  | 'learning_path'
+  | 'dashboard'
+  | 'free_question'
+  | 'teacher_assigned';
 
-export type ExplanationLevel = 'simple' | 'standard' | 'detailed' | 'exam' | 'coding';
-export type DoubtDifficulty = 'beginner' | 'intermediate' | 'advanced';
+export type DoubtDifficultyLevel = 'easy' | 'medium' | 'hard' | 'unknown';
+export type DoubtStatus = 'open' | 'answered' | 'needs_clarification' | 'resolved';
 
-export interface IDoubtContextClientDTO {
-  studentId: string;
-  sessionId: string;
-  conceptId?: string;
-  topicId?: string;
-  masteryScore: number;
-  confidenceScore: number;
-  riskLevel: string;
-  examUrgency: boolean;
-  learningPathStage: number;
-  prerequisiteConceptIds: string[];
-  learningGapIds: string[];
-  revisionDue: boolean;
-  recommendedDifficulty: DoubtDifficulty;
-  capturedAt: string;
-}
-
-export interface IDoubtMessageClientDTO {
-  id: string;
-  messageId: string;
-  sessionId: string;
-  studentId: string;
-  role: 'student' | 'tutor';
-  content: string;
-  explanationLevel: ExplanationLevel;
-  referencedConceptIds: string[];
-  referencedTopicIds: string[];
-  sourceReferences: string[];
-  generatedBy: 'ai' | 'deterministic' | 'hybrid';
-  isHelpful?: boolean;
-  createdAt: string;
-}
-
-export interface IDoubtSessionClientDTO {
-  id: string;
-  sessionId: string;
-  studentId: string;
-  subject: string;
-  classLevel: string;
-  board: string;
-  topicId?: string;
-  conceptId?: string;
-  learningPathId?: string;
-  materialId?: string;
-  examId?: string;
-  title: string;
-  status: 'active' | 'resolved' | 'archived';
-  difficulty: DoubtDifficulty;
-  language: string;
-  messages?: IDoubtMessageClientDTO[];
-  createdAt: string;
-  updatedAt: string;
-  lastActivityAt: string;
-}
-
-export interface ISolutionStepClient {
+export interface IDoubtResponseStepClient {
   stepNumber: number;
   title: string;
   description: string;
-  formulaOrCode?: string;
+  formula?: string;
+}
+
+export interface IDoubtSourceReferenceClient {
+  sourceType: string;
+  sourceId?: string;
+  officialSourceUrl?: string;
+  title: string;
+}
+
+export interface IDoubtFollowupClient {
+  doubtId: string;
+  studentId: string;
+  parentResponseId: string;
+  question: string;
+  responseId: string;
+  answer: string;
+  explanation: string;
+  createdAt: string;
+}
+
+export interface IDoubtResponseClient {
+  responseId: string;
+  doubtId: string;
+  studentId: string;
+  answer: string;
+  explanation: string;
+  steps: IDoubtResponseStepClient[];
+  keyConcepts: string[];
+  prerequisiteConcepts: string[];
+  examples: string[];
+  commonMistakes: string[];
+  verificationNotes: string;
+  confidence: number;
+  sourceReferences: IDoubtSourceReferenceClient[];
+  responseType: string;
+  intentCategory: string;
+  explanationLevel: string;
+  language: string;
+  generatedAt: string;
+}
+
+export interface IStudentDoubtClient {
+  id: string;
+  doubtId: string;
+  studentId: string;
+  question: string;
+  normalizedQuestion: string;
+  subject: string;
+  topicId: string;
+  conceptId?: string;
+  sourceContext: DoubtSourceContext;
+  sourceId?: string;
+  difficulty: DoubtDifficultyLevel;
+  status: DoubtStatus;
+  response?: IDoubtResponseClient;
+  followups?: IDoubtFollowupClient[];
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+}
+
+export interface IDoubtContextClientDTO {
+  subject: string;
+  topicId: string;
+  conceptId?: string;
+  difficulty: string;
+  masteryScore?: number;
+  riskLevel?: string;
+  prerequisiteConceptIds?: string[];
 }
 
 export interface IDoubtSolutionClientDTO {
-  sessionId: string;
-  category: DoubtCategory;
-  explanationLevel: ExplanationLevel;
-  summary: string;
-  steps: ISolutionStepClient[];
-  prerequisiteChain: string[];
-  followUpQuestions: string[];
-  sourceReferences: string[];
-  generatedBy: 'ai' | 'deterministic' | 'hybrid';
-}
-
-export interface ISocraticHintClientDTO {
-  sessionId: string;
-  hintLevel: number;
-  guidingQuestion: string;
-  hintContent: string;
-  nextStepPrompt: string;
+  category?: string;
+  summary?: string;
+  solutionText?: string;
+  explanation?: string;
+  prerequisites?: string[];
+  prerequisiteChain?: string[];
+  steps?: any[];
+  followUpQuestions?: string[];
 }

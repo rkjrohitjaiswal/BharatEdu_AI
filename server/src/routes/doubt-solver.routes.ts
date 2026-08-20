@@ -2,42 +2,41 @@ import { Router } from 'express';
 import { authenticateJWT } from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
 import {
-  handleCreateSession,
-  handleDeleteSession,
-  handleFeedback,
+  handleAddRevision,
+  handleFeedbackDoubt,
+  handleFollowupDoubt,
   handleGetContext,
-  handleGetMessages,
+  handleGetDoubtById,
+  handleGetDoubts,
   handleGetParentStudentSummary,
   handleGetRecommendations,
-  handleGetSessionById,
-  handleGetSessions,
   handleGetTeacherStudentSummary,
-  handleSendMessage,
-  handleSocraticMode,
-  handleSolveSession,
+  handlePractice,
+  handleSolveDoubt,
 } from '../controllers/doubt-solver.controller.js';
 
-const router = Router();
+export const doubtSolverRouter = Router();
 
-// Student Routes
-router.post('/sessions', authenticateJWT, requireRole('student'), handleCreateSession);
-router.get('/sessions', authenticateJWT, requireRole('student'), handleGetSessions);
-router.get('/sessions/:id', authenticateJWT, requireRole('student'), handleGetSessionById);
-router.delete('/sessions/:id', authenticateJWT, requireRole('student'), handleDeleteSession);
+// Student Endpoints
+doubtSolverRouter.get('/history', authenticateJWT, requireRole('student'), handleGetDoubts);
+doubtSolverRouter.get('/', authenticateJWT, requireRole('student'), handleGetDoubts);
+doubtSolverRouter.post('/', authenticateJWT, requireRole('student'), handleSolveDoubt);
 
-router.post('/sessions/:id/messages', authenticateJWT, requireRole('student'), handleSendMessage);
-router.get('/sessions/:id/messages', authenticateJWT, requireRole('student'), handleGetMessages);
+doubtSolverRouter.get('/:doubtId', authenticateJWT, requireRole('student'), handleGetDoubtById);
+doubtSolverRouter.post('/:doubtId/solve', authenticateJWT, requireRole('student'), handleSolveDoubt);
+doubtSolverRouter.post('/:doubtId/followup', authenticateJWT, requireRole('student'), handleFollowupDoubt);
+doubtSolverRouter.post('/:doubtId/feedback', authenticateJWT, requireRole('student'), handleFeedbackDoubt);
+doubtSolverRouter.get('/:doubtId/context', authenticateJWT, requireRole('student'), handleGetContext);
+doubtSolverRouter.get('/:doubtId/recommendations', authenticateJWT, requireRole('student'), handleGetRecommendations);
+doubtSolverRouter.post('/:doubtId/add-to-revision', authenticateJWT, requireRole('student'), handleAddRevision);
+doubtSolverRouter.post('/:doubtId/practice', authenticateJWT, requireRole('student'), handlePractice);
 
-router.post('/sessions/:id/solve', authenticateJWT, requireRole('student'), handleSolveSession);
-router.post('/sessions/:id/socratic', authenticateJWT, requireRole('student'), handleSocraticMode);
+// Teacher Endpoints
+export const teacherDoubtRouter = Router();
+teacherDoubtRouter.get('/student/:studentId/summary', authenticateJWT, requireRole('teacher'), handleGetTeacherStudentSummary);
 
-router.post('/messages/:id/feedback', authenticateJWT, requireRole('student'), handleFeedback);
+// Parent Endpoints
+export const parentDoubtRouter = Router();
+parentDoubtRouter.get('/student/:studentId/summary', authenticateJWT, requireRole('parent'), handleGetParentStudentSummary);
 
-router.get('/context', authenticateJWT, requireRole('student'), handleGetContext);
-router.get('/recommendations', authenticateJWT, requireRole('student'), handleGetRecommendations);
-
-// Teacher & Parent Summary Routes
-router.get('/teacher/student/:studentId/summary', authenticateJWT, requireRole('teacher'), handleGetTeacherStudentSummary);
-router.get('/parent/student/:studentId/summary', authenticateJWT, requireRole('parent'), handleGetParentStudentSummary);
-
-export default router;
+export default doubtSolverRouter;
