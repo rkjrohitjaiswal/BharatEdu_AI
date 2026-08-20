@@ -29,6 +29,9 @@ import { StudentGoal, IStudentGoal } from '../models/student-goal.model.js';
 import { Achievement, IAchievement } from '../models/achievement.model.js';
 import { ExamPreparationModel } from '../models/exam-preparation.model.js';
 import { LearningResource } from '../models/learning-resource.model.js';
+import { ResourceInteraction } from '../models/resource-interaction.model.js';
+import { ResourceBookmark } from '../models/resource-bookmark.model.js';
+import { ResourceRecommendation } from '../models/resource-recommendation.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -83,8 +86,6 @@ const inMemParentInvitations: any[] = [];
 const inMemSavedScholarships: any[] = [];
 const inMemInterventions: any[] = [];
 const inMemResourceProgress: any[] = [];
-const inMemLearningResources: any[] = [];
-const inMemResourceRecommendations: any[] = [];
 const inMemStudyMaterials: any[] = [];
 const inMemStudyFlashcards: any[] = [];
 const inMemDoubtSessions: any[] = [];
@@ -108,6 +109,10 @@ const inMemStudentDoubts: any[] = [];
 const inMemDoubtResponses: any[] = [];
 const inMemDoubtFollowups: any[] = [];
 const inMemDoubtFeedbacks: any[] = [];
+const inMemLearningResources: any[] = [];
+const inMemResourceInteractions: any[] = [];
+const inMemResourceBookmarks: any[] = [];
+const inMemResourceRecommendations: any[] = [];
 const inMemRevisionHistory: any[] = [];
 const inMemRevisionItems: any[] = [];
 const inMemLearningPaths: any[] = [];
@@ -3318,5 +3323,124 @@ export const dataRepository = {
 
   async getParentDoubtSummary(studentId: string): Promise<any> {
     return await this.getTeacherDoubtSummary(studentId);
+  },
+
+  async updateLearningResource(resourceId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningResource.findOneAndUpdate({ resourceId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemLearningResources.findIndex((r) => String(r._id || r.id) === String(resourceId) || r.resourceId === resourceId);
+    if (idx >= 0) {
+      inMemLearningResources[idx] = { ...inMemLearningResources[idx], ...updateData, updatedAt: new Date() };
+      return inMemLearningResources[idx];
+    }
+    return null;
+  },
+
+  async createResourceInteraction(iData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ResourceInteraction(iData);
+      return await doc.save();
+    }
+    const item = { _id: `act_${Date.now()}_${Math.random()}`, ...iData, createdAt: new Date() };
+    inMemResourceInteractions.push(item);
+    return item;
+  },
+
+  async getResourceInteractions(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ResourceInteraction.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemResourceInteractions
+      .filter((i) => String(i.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  async createResourceBookmark(bData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ResourceBookmark(bData);
+      return await doc.save();
+    }
+    const existingIdx = inMemResourceBookmarks.findIndex(
+      (b) => String(b.studentId) === String(bData.studentId) && String(b.resourceId) === String(bData.resourceId)
+    );
+    if (existingIdx >= 0) {
+      inMemResourceBookmarks[existingIdx] = { ...inMemResourceBookmarks[existingIdx], ...bData, updatedAt: new Date() };
+      return inMemResourceBookmarks[existingIdx];
+    }
+    const item = { _id: `bm_${Date.now()}_${Math.random()}`, ...bData, createdAt: new Date(), updatedAt: new Date() };
+    inMemResourceBookmarks.push(item);
+    return item;
+  },
+
+  async getResourceBookmarks(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ResourceBookmark.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemResourceBookmarks.filter((b) => String(b.studentId) === String(studentId));
+  },
+
+  async deleteResourceBookmark(resourceId: string, studentId: string): Promise<boolean> {
+    if (isDBConnected()) {
+      const res = await ResourceBookmark.deleteOne({ resourceId, studentId });
+      return res.deletedCount > 0;
+    }
+    const idx = inMemResourceBookmarks.findIndex(
+      (b) => String(b.resourceId) === String(resourceId) && String(b.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemResourceBookmarks.splice(idx, 1);
+      return true;
+    }
+    return false;
+  },
+
+  async createResourceRecommendation(recData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await ResourceRecommendation.findOneAndUpdate(
+        { recommendationId: recData.recommendationId },
+        { $set: recData },
+        { upsert: true, new: true }
+      );
+    }
+    const idx = inMemResourceRecommendations.findIndex((r) => r.recommendationId === recData.recommendationId);
+    if (idx >= 0) {
+      inMemResourceRecommendations[idx] = { ...inMemResourceRecommendations[idx], ...recData, updatedAt: new Date() };
+      return inMemResourceRecommendations[idx];
+    }
+    const item = { _id: `rec_${Date.now()}_${Math.random()}`, ...recData, createdAt: new Date(), updatedAt: new Date() };
+    inMemResourceRecommendations.push(item);
+    return item;
+  },
+
+  async getResourceRecommendations(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ResourceRecommendation.find({ studentId, isDismissed: false }).sort({ score: -1 }).lean();
+    }
+    return inMemResourceRecommendations
+      .filter((r) => String(r.studentId) === String(studentId) && !r.isDismissed)
+      .sort((a, b) => (b.score || 0) - (a.score || 0));
+  },
+
+  async getResourceRecommendation(recommendationId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await ResourceRecommendation.findOne({ recommendationId }).lean();
+    }
+    return inMemResourceRecommendations.find((r) => r.recommendationId === recommendationId);
+  },
+
+  async dismissResourceRecommendation(recommendationId: string, studentId: string): Promise<boolean> {
+    if (isDBConnected()) {
+      const res = await ResourceRecommendation.updateOne({ recommendationId, studentId }, { $set: { isDismissed: true } });
+      return res.modifiedCount > 0;
+    }
+    const idx = inMemResourceRecommendations.findIndex(
+      (r) => r.recommendationId === recommendationId && String(r.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemResourceRecommendations[idx].isDismissed = true;
+      return true;
+    }
+    return false;
   },
 };

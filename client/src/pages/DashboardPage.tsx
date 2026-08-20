@@ -33,6 +33,7 @@ import { MockExamCard } from '../components/dashboard/MockExamCard';
 import { ExamEvaluationCard } from '../components/dashboard/ExamEvaluationCard';
 import { ResourceHubCard } from '../components/dashboard/ResourceHubCard';
 import { ResourceRecommendationCard } from '../components/dashboard/ResourceRecommendationCard';
+import { LearningResourceCard } from '../components/dashboard/LearningResourceCard';
 import { StudyMaterialCard } from '../components/dashboard/StudyMaterialCard';
 import { DoubtSolverCard } from '../components/dashboard/DoubtSolverCard';
 import { SmartRevisionCard } from '../components/dashboard/SmartRevisionCard';
@@ -163,6 +164,9 @@ export const DashboardPage: React.FC = () => {
 
           {/* AI Doubt Solver Card */}
           <DoubtSolverCard />
+
+          {/* AI Learning Resource Discovery Card */}
+          <LearningResourceCard />
 
           {/* Overall Learning Mastery */}
           <MasteryCard learningProfile={learningProfile} />

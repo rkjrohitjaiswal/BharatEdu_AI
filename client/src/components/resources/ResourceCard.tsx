@@ -1,89 +1,119 @@
 import React from 'react';
-import { CheckCircle2, ExternalLink, PlayCircle, XCircle } from 'lucide-react';
-import { IResourceRecommendationClientDTO } from '../../types/resource-recommendations';
-import { ResourcePriorityBadge } from './ResourcePriorityBadge';
-import { ResourceQualityBadge } from './ResourceQualityBadge';
+import { ExternalLink, Bookmark, Clock, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { ILearningResourceClient, IResourceRecommendationClient } from '../../types/learning-resource';
 
-export interface ResourceCardProps {
-  recommendation: IResourceRecommendationClientDTO;
-  onStart: (id: string) => void;
-  onComplete: (id: string) => void;
-  onDismiss?: (id: string) => void;
+interface ResourceCardProps {
+  recommendation?: IResourceRecommendationClient;
+  resource?: ILearningResourceClient;
+  onOpen?: (resourceId: string, url?: string | null) => void;
+  onBookmark?: (resourceId: string) => void;
+  onDismiss?: (recommendationId: string) => void;
+  isBookmarked?: boolean;
 }
 
 export const ResourceCard: React.FC<ResourceCardProps> = ({
   recommendation,
-  onStart,
-  onComplete,
+  resource: rawResource,
+  onOpen,
+  onBookmark,
   onDismiss,
+  isBookmarked = false,
 }) => {
-  const { resource, reason, priority, relevanceScore, status, id, actionUrl } = recommendation;
+  const res = recommendation?.resource || rawResource;
+  if (!res) return null;
+
+  const priorityColor =
+    recommendation?.priority === 'critical'
+      ? 'bg-red-100 text-red-800 border-red-200'
+      : recommendation?.priority === 'high'
+      ? 'bg-amber-100 text-amber-800 border-amber-200'
+      : 'bg-indigo-50 text-indigo-700 border-indigo-100';
 
   return (
-    <div className="p-5 rounded-2xl border bg-white border-slate-200 shadow-sm hover:shadow-md transition space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-black uppercase text-indigo-600 tracking-wider">
-              {resource.provider} • {resource.resourceType}
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition p-6 flex flex-col justify-between space-y-4">
+      <div className="space-y-3">
+        {/* Badges */}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold uppercase text-[10px]">
+              {res.resourceType.replace('_', ' ')}
             </span>
-            <ResourcePriorityBadge priority={priority} />
-            <ResourceQualityBadge qualityScore={resource.qualityScore} isVerified={resource.isVerified} />
+            <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[10px] uppercase">
+              {res.subject}
+            </span>
           </div>
-          <h3 className="text-sm font-black text-slate-900 leading-snug">{resource.title}</h3>
+
+          {recommendation && (
+            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${priorityColor}`}>
+              {recommendation.priority} • Score {recommendation.score}
+            </span>
+          )}
         </div>
-        <span className="px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-700 font-extrabold text-xs shrink-0">
-          {relevanceScore}% Score
-        </span>
+
+        {/* Title */}
+        <h3 className="text-base font-extrabold text-slate-900 leading-snug hover:text-indigo-600 transition cursor-pointer"
+            onClick={() => onOpen && onOpen(res.resourceId, res.url)}>
+          {res.title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-xs text-slate-600 line-clamp-2 font-medium leading-relaxed">
+          {res.description}
+        </p>
+
+        {/* Reason Banner */}
+        {recommendation && (
+          <div className="p-2.5 bg-indigo-50/70 border border-indigo-100 rounded-xl text-xs text-indigo-900 font-medium">
+            💡 {recommendation.reason}
+          </div>
+        )}
       </div>
 
-      <p className="text-xs text-slate-600 leading-relaxed">{resource.description}</p>
+      {/* Footer Info & Actions */}
+      <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-bold">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            {res.estimatedMinutes}m
+          </span>
 
-      <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-700 leading-normal font-medium">
-        💡 <strong className="text-slate-900">Why recommended:</strong> {reason}
-      </div>
-
-      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
-        <a
-          href={actionUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs font-extrabold text-indigo-600 hover:underline"
-        >
-          Open Material <ExternalLink className="w-3.5 h-3.5" />
-        </a>
+          {res.verified && (
+            <span className="flex items-center gap-1 text-emerald-600" title="Verified Educational Source">
+              <ShieldCheck className="w-3.5 h-3.5" /> Verified
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center gap-2">
-          {status === 'completed' ? (
-            <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 font-extrabold text-xs flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Completed
-            </span>
+          {onBookmark && (
+            <button
+              onClick={() => onBookmark(res.resourceId)}
+              className={`p-2 rounded-xl border transition ${
+                isBookmarked ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+              }`}
+              title={isBookmarked ? 'Bookmarked' : 'Bookmark Resource'}
+            >
+              <Bookmark className="w-4 h-4" />
+            </button>
+          )}
+
+          {res.url ? (
+            <a
+              href={res.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onOpen && onOpen(res.resourceId, res.url)}
+              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition"
+            >
+              Open <ExternalLink className="w-3.5 h-3.5" />
+            </a>
           ) : (
-            <>
-              <button
-                onClick={() => (status === 'started' ? onComplete(id) : onStart(id))}
-                className="py-1.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs flex items-center gap-1 transition"
-              >
-                {status === 'started' ? (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Complete
-                  </>
-                ) : (
-                  <>
-                    <PlayCircle className="w-3.5 h-3.5" /> Start Resource
-                  </>
-                )}
-              </button>
-              {onDismiss && (
-                <button
-                  onClick={() => onDismiss(id)}
-                  className="p-1.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
-                  title="Dismiss Recommendation"
-                >
-                  <XCircle className="w-4 h-4" />
-                </button>
-              )}
-            </>
+            <button
+              onClick={() => onOpen && onOpen(res.resourceId, null)}
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs flex items-center gap-1.5 transition"
+            >
+              Launch Native Practice
+            </button>
           )}
         </div>
       </div>

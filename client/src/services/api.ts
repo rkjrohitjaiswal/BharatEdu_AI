@@ -2821,18 +2821,6 @@ export const fetchNextResource = async () => {
   }
 };
 
-export const refreshResourceRecommendations = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/student/resources/refresh`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    return { success: false, message: 'Failed to refresh resource recommendations' };
-  }
-};
-
 export const startResourceRecommendation = async (recId: string) => {
   try {
     const response = await fetch(`${API_BASE_URL}/student/resources/${recId}/start`, {
@@ -2854,29 +2842,6 @@ export const completeResourceRecommendation = async (recId: string) => {
     return await handleResponse(response);
   } catch (error) {
     return { success: false, message: 'Failed to complete resource recommendation' };
-  }
-};
-
-export const dismissResourceRecommendation = async (recId: string) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/student/resources/${recId}/dismiss`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    return { success: false, message: 'Failed to dismiss resource recommendation' };
-  }
-};
-
-export const fetchResourceHistory = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/student/resources/history`, {
-      headers: getAuthHeaders(),
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    return { success: false, message: 'Failed to fetch resource history' };
   }
 };
 
@@ -3879,6 +3844,141 @@ export const fetchParentDoubtSummary = async (studentId: string) => {
     return await handleResponse(response);
   } catch (error) {
     return { success: false, message: 'Failed to fetch parent doubt summary' };
+  }
+};
+
+// ==================================================
+// FEATURE 33: AI LEARNING RESOURCE RECOMMENDATION APIs
+// ==================================================
+
+export const fetchResourceRecommendations = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/recommendations`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch resource recommendations' };
+  }
+};
+
+export const fetchResourceRecommendationById = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/recommendations/${id}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch recommendation details' };
+  }
+};
+
+export const refreshResourceRecommendations = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/recommendations/refresh`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to refresh recommendations' };
+  }
+};
+
+export const dismissResourceRecommendation = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/recommendations/${id}/dismiss`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to dismiss recommendation' };
+  }
+};
+
+export const fetchAllLearningResources = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch learning resources' };
+  }
+};
+
+export const fetchLearningResourceDetails = async (resourceId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${resourceId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch learning resource details' };
+  }
+};
+
+export const recordResourceInteraction = async (
+  resourceId: string,
+  payload: { interactionType: string; progressPercent?: number; durationSeconds?: number }
+) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${resourceId}/interaction`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to record resource interaction' };
+  }
+};
+
+export const fetchResourceBookmarks = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/bookmarks`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch bookmarks' };
+  }
+};
+
+export const bookmarkLearningResource = async (resourceId: string, note?: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${resourceId}/bookmark`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ note }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to bookmark resource' };
+  }
+};
+
+export const removeResourceBookmark = async (resourceId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${resourceId}/bookmark`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to remove bookmark' };
+  }
+};
+
+export const fetchResourceHistory = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/history`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch resource history' };
   }
 };
 

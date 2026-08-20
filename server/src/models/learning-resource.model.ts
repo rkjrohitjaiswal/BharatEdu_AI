@@ -1,25 +1,22 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
 export type ResourceType =
   | 'video'
   | 'article'
   | 'textbook'
-  | 'documentation'
-  | 'notes'
-  | 'exercise'
-  | 'quiz'
-  | 'practice'
-  | 'simulation'
-  | 'project'
-  | 'assessment'
+  | 'ncert'
   | 'worksheet'
-  | 'reference'
-  | 'course'
-  | 'pdf'
-  | 'flashcards'
-  | 'revision'
-  | 'exam_material'
-  | 'career_resource';
+  | 'practice'
+  | 'quiz'
+  | 'assessment'
+  | 'documentation'
+  | 'coding_exercise'
+  | 'simulation'
+  | 'notes'
+  | 'course';
+
+export type ResourceDifficulty = 'beginner' | 'easy' | 'medium' | 'hard' | 'advanced';
+export type ResourceLanguage = 'en' | 'hi' | 'gu';
 
 export interface ILearningResource extends Document {
   resourceId: string;
@@ -27,40 +24,35 @@ export interface ILearningResource extends Document {
   description: string;
   resourceType: ResourceType;
   subject: string;
+  topicId: string;
+  conceptId: string;
   classLevel: string;
   board: string;
-  topicIds: string[];
-  conceptIds: string[];
-  skillIds: string[];
-  careerIds: string[];
-  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'foundational' | 'easy' | 'medium' | 'hard';
+  language: ResourceLanguage;
+  difficulty: ResourceDifficulty;
   estimatedMinutes: number;
-  language: string;
   provider: string;
-  officialSource?: string;
-  officialSourceUrl?: string;
-  url?: string;
-  qualityScore: number; // 0 to 100
-  isVerified: boolean;
+  author?: string;
+  url?: string | null;
+  thumbnailUrl?: string | null;
+  official: boolean;
+  verified: boolean;
   tags: string[];
-  active: boolean;
-
-  // Backward compatibility
-  topic?: string;
-  conceptId?: string;
-  verified?: boolean;
-  official?: boolean;
-  sourceDomain?: string;
-
+  prerequisites: string[];
+  careerTags: string[];
+  examTags: string[];
+  qualityScore: number;
+  popularityScore: number;
+  freshnessScore: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const LearningResourceSchema = new Schema<ILearningResource>(
+const LearningResourceSchema: Schema = new Schema(
   {
     resourceId: { type: String, required: true, unique: true, index: true },
-    title: { type: String, required: true, trim: true },
-    description: { type: String, default: '' },
+    title: { type: String, required: true },
+    description: { type: String, required: true },
     resourceType: {
       type: String,
       required: true,
@@ -68,58 +60,50 @@ const LearningResourceSchema = new Schema<ILearningResource>(
         'video',
         'article',
         'textbook',
-        'documentation',
-        'notes',
-        'exercise',
-        'quiz',
-        'practice',
-        'simulation',
-        'project',
-        'assessment',
+        'ncert',
         'worksheet',
-        'reference',
+        'practice',
+        'quiz',
+        'assessment',
+        'documentation',
+        'coding_exercise',
+        'simulation',
+        'notes',
         'course',
-        'pdf',
-        'flashcards',
-        'revision',
-        'exam_material',
-        'career_resource',
       ],
       index: true,
     },
     subject: { type: String, required: true, index: true },
-    classLevel: { type: String, default: 'Class 10' },
-    board: { type: String, default: 'CBSE' },
-    topicIds: [{ type: String }],
-    conceptIds: [{ type: String }],
-    skillIds: [{ type: String }],
-    careerIds: [{ type: String }],
+    topicId: { type: String, required: true, index: true },
+    conceptId: { type: String, required: true, index: true },
+    classLevel: { type: String, required: true, index: true },
+    board: { type: String, required: true, index: true },
+    language: { type: String, required: true, enum: ['en', 'hi', 'gu'], default: 'en', index: true },
     difficulty: {
       type: String,
-      enum: ['beginner', 'intermediate', 'advanced', 'foundational', 'easy', 'medium', 'hard'],
+      required: true,
+      enum: ['beginner', 'easy', 'medium', 'hard', 'advanced'],
       default: 'medium',
     },
-    estimatedMinutes: { type: Number, default: 15 },
-    language: { type: String, default: 'English' },
-    provider: { type: String, default: 'NCERT / Official Hub' },
-    officialSource: { type: String, default: 'NCERT / Diksha' },
-    officialSourceUrl: { type: String, default: '' },
-    url: { type: String, default: '' },
-    qualityScore: { type: Number, default: 90, min: 0, max: 100 },
-    isVerified: { type: Boolean, default: true },
-    tags: [{ type: String }],
-    active: { type: Boolean, default: true, index: true },
-
-    // Backward compatibility
-    topic: { type: String, default: '' },
-    conceptId: { type: String, default: '' },
-    verified: { type: Boolean, default: true },
-    official: { type: Boolean, default: true },
-    sourceDomain: { type: String, default: 'ncert.nic.in' },
+    estimatedMinutes: { type: Number, required: true, default: 15 },
+    provider: { type: String, required: true },
+    author: { type: String },
+    url: { type: String, default: null },
+    thumbnailUrl: { type: String, default: null },
+    official: { type: Boolean, default: false },
+    verified: { type: Boolean, default: false, index: true },
+    tags: { type: [String], default: [] },
+    prerequisites: { type: [String], default: [] },
+    careerTags: { type: [String], default: [] },
+    examTags: { type: [String], default: [] },
+    qualityScore: { type: Number, default: 80, min: 0, max: 100 },
+    popularityScore: { type: Number, default: 50, min: 0, max: 100 },
+    freshnessScore: { type: Number, default: 90, min: 0, max: 100 },
   },
   { timestamps: true }
 );
 
-export const LearningResource =
-  mongoose.models.LearningResource ||
-  mongoose.model<ILearningResource>('LearningResource', LearningResourceSchema);
+LearningResourceSchema.index({ conceptId: 1, topicId: 1, subject: 1 });
+LearningResourceSchema.index({ board: 1, classLevel: 1 });
+
+export const LearningResource = mongoose.model<ILearningResource>('LearningResource', LearningResourceSchema);

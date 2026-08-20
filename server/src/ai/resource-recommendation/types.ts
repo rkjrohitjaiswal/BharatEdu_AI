@@ -1,62 +1,110 @@
-import { RecommendationPriority, RecommendationStatus, RecommendationType } from '../../models/student-resource-recommendation.model.js';
-import { ResourceType } from '../../models/learning-resource.model.js';
+import { ILearningResource, ResourceDifficulty, ResourceLanguage, ResourceType } from '../../models/learning-resource.model.js';
+import { RecommendationContext, RecommendationPriority } from '../../models/resource-recommendation.model.js';
 
-export interface ILearningResourceDTO {
+export interface ResourceCandidate {
   resourceId: string;
   title: string;
   description: string;
   resourceType: ResourceType;
   subject: string;
+  topicId: string;
+  conceptId: string;
   classLevel: string;
   board: string;
-  topicIds: string[];
-  conceptIds: string[];
-  skillIds: string[];
-  careerIds: string[];
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  language: ResourceLanguage;
+  difficulty: ResourceDifficulty;
   estimatedMinutes: number;
-  language: string;
   provider: string;
-  officialSource?: string;
-  officialSourceUrl?: string;
-  url?: string;
-  qualityScore: number;
-  isVerified: boolean;
+  author?: string;
+  url?: string | null;
+  officialSourceUrl?: string | null;
+  thumbnailUrl?: string | null;
+  official: boolean;
+  verified: boolean;
   tags: string[];
+  prerequisites: string[];
+  careerTags: string[];
+  examTags: string[];
+  qualityScore: number;
+  popularityScore: number;
+  freshnessScore: number;
 }
 
-export interface IResourceRecommendationDTO {
-  id: string;
+export interface ResourceRankingBreakdown {
+  conceptRelevance: number; // Max 25
+  learningGapRelevance: number; // Max 15
+  prerequisiteRelevance: number; // Max 15
+  examRelevance: number; // Max 10
+  difficultyFit: number; // Max 10
+  learningPathAlignment: number; // Max 10
+  careerGoalAlignment: number; // Max 5
+  languagePreference: number; // Max 5
+  qualityVerification: number; // Max 5
+  totalScore: number; // 0 - 100
+}
+
+export interface ResourceRecommendation {
+  recommendationId: string;
   studentId: string;
   resourceId: string;
-  resource: ILearningResourceDTO;
+  resource?: ResourceCandidate;
   reason: string;
-  recommendationType: RecommendationType;
   priority: RecommendationPriority;
-  relevanceScore: number; // 0 to 100
-  difficultyMatch: number;
-  masteryMatch: number;
-  goalMatch: number;
-  examMatch: number;
-  careerMatch: number;
-  riskMatch: number;
-  prerequisiteMatch: number;
-  estimatedMinutes: number;
-  status: RecommendationStatus;
-  recommendedAt: string;
-  startedAt?: string;
-  completedAt?: string;
-  dismissedAt?: string;
-  actionUrl: string;
+  score: number;
+  recommendationContext: RecommendationContext;
+  breakdown: ResourceRankingBreakdown;
+  sourceEntityId?: string;
+  expiresAt?: string;
+  isDismissed: boolean;
+  createdAt: string;
 }
 
-export interface IResourceRecommendationSummaryData {
+export interface StudentResourceContext {
   studentId: string;
-  totalRecommendedCount: number;
-  todayRecommendedCount: number;
-  completedCount: number;
-  topRecommendation?: IResourceRecommendationDTO;
-  avgRelevanceScore: number;
-  aiExplanation: string;
-  evaluatedAt: string;
+  classLevel: string;
+  board: string;
+  preferredLanguage: ResourceLanguage;
+  availableDailyMinutes: number;
+  weakConceptIds: string[];
+  prerequisiteGaps: string[];
+  dueRevisionConceptIds: string[];
+  unresolvedDoubtConcepts: string[];
+  recentMistakeConcepts: string[];
+  currentLearningPathStage: string;
+  nextConceptId?: string;
+  daysUntilExam: number;
+  examCriticalConcepts: string[];
+  careerGoalIds: string[];
+  careerTags: string[];
+  activeGoalConcepts: string[];
+  isHighRisk: boolean;
+  completedResourceIds: string[];
+  skippedResourceIds: string[];
+  helpfulResourceTypes: ResourceType[];
+  dismissedResourceIds: string[];
+}
+
+export interface ResourceExplanation {
+  recommendationId: string;
+  whyRecommended: string;
+  howItHelps: string;
+  whatToLearnBefore: string[];
+  whatToDoAfter: string;
+}
+
+export interface ResourcePreferenceProfile {
+  studentId: string;
+  preferredLanguage: ResourceLanguage;
+  preferredResourceTypes: ResourceType[];
+  preferredMaxMinutes: number;
+  dislikedResourceIds: string[];
+}
+
+export interface ResourceRecommendationSummary {
+  studentId: string;
+  totalRecommendations: number;
+  criticalCount: number;
+  topRecommendation?: ResourceRecommendation;
+  contextBreakdown: Record<string, number>;
+  generatedAt: string;
 }

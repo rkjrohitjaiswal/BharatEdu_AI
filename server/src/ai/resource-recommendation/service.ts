@@ -1,114 +1,179 @@
 import { dataRepository } from '../../repositories/data.repository.js';
 import { generateAIResourceExplanation } from './ai-coach.js';
-import {
-  getResourceRecommendationSummaryEngine,
-  getStudentResourceRecommendationsEngine,
-  seedOrRefreshStudentResourceRecommendationsEngine,
-} from './engine.js';
-import { IResourceRecommendationDTO } from './types.js';
+import { STARTER_RESOURCE_CATALOG } from './catalog.js';
+import { buildStudentResourceContext } from './context.js';
+import { generateResourceRecommendationsPipeline } from './engine.js';
+import { isUrlSafeAndVerified } from './quality.js';
+import { ResourceCandidate, ResourceRecommendation, ResourceRecommendationSummary } from './types.js';
 
-export async function getRecommendedResources(studentId: string): Promise<IResourceRecommendationDTO[]> {
-  return await getStudentResourceRecommendationsEngine(studentId);
-}
+export class LearningResourceService {
+  static async getRecommendations(studentId: string): Promise<ResourceRecommendation[]> {
+    const existing = await dataRepository.getResourceRecommendations(studentId);
+    if (existing && existing.length > 0) {
+      const result: ResourceRecommendation[] = [];
+      for (const rec of existing) {
+        if (rec.isDismissed) continue;
+        const resObj = await this.getResourceDetails(rec.resourceId);
+        result.push({
+          recommendationId: rec.recommendationId || rec._id,
+          studentId: rec.studentId,
+          resourceId: rec.resourceId,
+          resource: resObj || undefined,
+          reason: rec.reason,
+          priority: rec.priority || 'medium',
+          score: rec.score || 75,
+          recommendationContext: rec.recommendationContext || 'general',
+          breakdown: {
+            conceptRelevance: 20,
+            learningGapRelevance: 15,
+            prerequisiteRelevance: 10,
+            examRelevance: 10,
+            difficultyFit: 8,
+            learningPathAlignment: 8,
+            careerGoalAlignment: 4,
+            languagePreference: 5,
+            qualityVerification: 5,
+            totalScore: rec.score || 75,
+          },
+          isDismissed: !!rec.isDismissed,
+          createdAt: rec.createdAt ? new Date(rec.createdAt).toISOString() : new Date().toISOString(),
+        });
+      }
+      if (result.length > 0) return result;
+    }
 
-export async function getTodayResources(studentId: string): Promise<IResourceRecommendationDTO[]> {
-  const recs = await getStudentResourceRecommendationsEngine(studentId);
-  return recs.filter((r) => r.status === 'recommended' || r.status === 'started').slice(0, 5);
-}
-
-export async function getNextResource(studentId: string): Promise<IResourceRecommendationDTO | null> {
-  const recs = await getTodayResources(studentId);
-  return recs[0] || null;
-}
-
-export async function refreshResourceRecommendations(studentId: string): Promise<IResourceRecommendationDTO[]> {
-  return await seedOrRefreshStudentResourceRecommendationsEngine(studentId);
-}
-
-export async function startResourceRecommendation(studentId: string, recId: string) {
-  const updated = await dataRepository.startRecommendation(recId, studentId);
-  return updated || { id: recId, status: 'started' };
-}
-
-export async function completeResourceRecommendation(studentId: string, recId: string) {
-  const updated = await dataRepository.completeRecommendation(recId, studentId);
-
-  // Trigger Notification via Feature 11
-  await dataRepository.createNotification({
-    recipientUserId: studentId,
-    recipientRole: 'student',
-    type: 'RESOURCE_RECOMMENDATION',
-    title: 'Educational Resource Completed',
-    message: 'Great job completing your recommended learning material!',
-    priority: 'normal',
-    sourceType: 'RESOURCE_HUB',
-  });
-
-  return updated || { id: recId, status: 'completed' };
-}
-
-export async function dismissResourceRecommendation(studentId: string, recId: string) {
-  const updated = await dataRepository.dismissRecommendation(recId, studentId);
-  return updated || { id: recId, status: 'dismissed' };
-}
-
-export async function getResourceHistory(studentId: string) {
-  const recs = await getStudentResourceRecommendationsEngine(studentId);
-  return recs.filter((r) => r.status === 'completed' || r.status === 'dismissed');
-}
-
-export async function getResourceSummary(studentId: string) {
-  return await getResourceRecommendationSummaryEngine(studentId);
-}
-
-export async function getResourceExplanation(studentId: string, recId: string) {
-  const recs = await getStudentResourceRecommendationsEngine(studentId);
-  const target = recs.find((r) => r.id === recId) || recs[0];
-  const user = await dataRepository.getUserById(studentId);
-
-  if (!target) {
-    return { explanation: 'Recommended learning material aligned with your curriculum.' };
+    return await generateResourceRecommendationsPipeline(studentId);
   }
 
-  const aiText = await generateAIResourceExplanation(
-    user?.name || 'Student',
-    target.resource.title,
-    target.resource.provider,
-    target.reason
-  );
-
-  return {
-    id: target.id,
-    resourceTitle: target.resource.title,
-    reason: target.reason,
-    explanation: aiText,
-    actionUrl: target.actionUrl,
-  };
-}
-
-export async function getTeacherStudentResourceSummary(teacherId: string, studentId: string) {
-  const summary = await getResourceSummary(studentId);
-  return {
-    studentId,
-    summary,
-    teacherNote: summary.topRecommendation
-      ? `Student is assigned resource "${summary.topRecommendation.resource.title}".`
-      : 'Student is engaging with verified learning resources.',
-  };
-}
-
-export async function getParentStudentResourceSummary(parentId: string, studentId: string) {
-  const isLinked = await dataRepository.isParentLinkedToStudent(parentId, studentId);
-  if (!isLinked) {
-    throw new Error('Access denied: Parent is not linked to this student');
+  static async refreshRecommendations(studentId: string): Promise<ResourceRecommendation[]> {
+    return await generateResourceRecommendationsPipeline(studentId);
   }
 
-  const summary = await getResourceSummary(studentId);
-  return {
-    studentId,
-    summary,
-    parentExplanation: summary.topRecommendation
-      ? `Your child is focusing on "${summary.topRecommendation.resource.title}".`
-      : 'Your child is following their recommended study materials.',
-  };
+  static async getRecommendation(studentId: string, recommendationId: string): Promise<ResourceRecommendation | null> {
+    const list = await this.getRecommendations(studentId);
+    return list.find((r) => r.recommendationId === recommendationId) || null;
+  }
+
+  static async dismissRecommendation(studentId: string, recommendationId: string): Promise<boolean> {
+    return await dataRepository.dismissResourceRecommendation(recommendationId, studentId);
+  }
+
+  static async bookmarkResource(studentId: string, resourceId: string, note?: string): Promise<any> {
+    return await dataRepository.createResourceBookmark({
+      studentId,
+      resourceId,
+      note: note || '',
+    });
+  }
+
+  static async removeBookmark(studentId: string, resourceId: string): Promise<boolean> {
+    return await dataRepository.deleteResourceBookmark(resourceId, studentId);
+  }
+
+  static async recordInteraction(
+    studentId: string,
+    resourceId: string,
+    interactionType: any,
+    progressPercent = 0,
+    durationSeconds = 0
+  ): Promise<any> {
+    return await dataRepository.createResourceInteraction({
+      studentId,
+      resourceId,
+      interactionType,
+      progressPercent,
+      durationSeconds,
+    });
+  }
+
+  static async getBookmarks(studentId: string): Promise<any[]> {
+    const bookmarks = await dataRepository.getResourceBookmarks(studentId);
+    const results: any[] = [];
+    for (const b of bookmarks) {
+      const resDetails = await this.getResourceDetails(b.resourceId);
+      results.push({
+        ...b,
+        resource: resDetails,
+      });
+    }
+    return results;
+  }
+
+  static async getHistory(studentId: string): Promise<any[]> {
+    return await dataRepository.getResourceInteractions(studentId);
+  }
+
+  static async getResourceDetails(resourceId: string): Promise<ResourceCandidate | null> {
+    const starter = STARTER_RESOURCE_CATALOG.find((r) => r.resourceId === resourceId);
+    if (starter) return starter;
+
+    const dbRes = await dataRepository.getLearningResource(resourceId);
+    if (dbRes) {
+      return {
+        resourceId: dbRes.resourceId || dbRes._id,
+        title: dbRes.title,
+        description: dbRes.description,
+        resourceType: dbRes.resourceType,
+        subject: dbRes.subject,
+        topicId: dbRes.topicId,
+        conceptId: dbRes.conceptId,
+        classLevel: dbRes.classLevel,
+        board: dbRes.board,
+        language: dbRes.language,
+        difficulty: dbRes.difficulty,
+        estimatedMinutes: dbRes.estimatedMinutes,
+        provider: dbRes.provider,
+        author: dbRes.author,
+        url: isUrlSafeAndVerified(dbRes.url).safe ? dbRes.url : null,
+        thumbnailUrl: dbRes.thumbnailUrl,
+        official: dbRes.official,
+        verified: dbRes.verified,
+        tags: dbRes.tags || [],
+        prerequisites: dbRes.prerequisites || [],
+        careerTags: dbRes.careerTags || [],
+        examTags: dbRes.examTags || [],
+        qualityScore: dbRes.qualityScore || 80,
+        popularityScore: dbRes.popularityScore || 50,
+        freshnessScore: dbRes.freshnessScore || 90,
+      };
+    }
+
+    return null;
+  }
+
+  static async getRecommendationSummary(studentId: string): Promise<ResourceRecommendationSummary> {
+    const recs = await this.getRecommendations(studentId);
+    const criticalCount = recs.filter((r) => r.priority === 'critical').length;
+    const contextBreakdown: Record<string, number> = {};
+
+    recs.forEach((r) => {
+      contextBreakdown[r.recommendationContext] = (contextBreakdown[r.recommendationContext] || 0) + 1;
+    });
+
+    return {
+      studentId,
+      totalRecommendations: recs.length,
+      criticalCount,
+      topRecommendation: recs[0] || undefined,
+      contextBreakdown,
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  static async getTeacherResourceSummary(studentId: string): Promise<any> {
+    const recs = await this.getRecommendations(studentId);
+    const history = await this.getHistory(studentId);
+
+    return {
+      studentId,
+      totalRecommended: recs.length,
+      totalInteractions: history.length,
+      topRecommendedTopics: Array.from(new Set(recs.map((r) => r.resource?.topicId).filter(Boolean))),
+      completedCount: history.filter((h) => h.interactionType === 'completed').length,
+    };
+  }
+
+  static async getParentResourceSummary(studentId: string): Promise<any> {
+    return await this.getTeacherResourceSummary(studentId);
+  }
 }

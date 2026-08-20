@@ -1,58 +1,77 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-export type RecommendationStatus = 'recommended' | 'started' | 'completed' | 'dismissed' | 'expired';
+export type RecommendationPriority = 'critical' | 'high' | 'medium' | 'low';
+export type RecommendationContext =
+  | 'learning_gap'
+  | 'prerequisite'
+  | 'exam'
+  | 'doubt'
+  | 'mistake'
+  | 'revision'
+  | 'learning_path'
+  | 'career'
+  | 'goal'
+  | 'risk'
+  | 'practice'
+  | 'general';
 
 export interface IResourceRecommendation extends Document {
-  studentId: mongoose.Types.ObjectId;
+  recommendationId: string;
+  studentId: string;
   resourceId: string;
-  topic: string;
   reason: string;
-  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-  relevanceScore: number;
-  trustScore: number;
-  difficultyMatch: string;
-  estimatedMinutes: number;
-  sourceFeature: string;
-  actionUrl: string;
-  status: RecommendationStatus;
-  generatedAt: Date;
+  priority: RecommendationPriority;
+  score: number;
+  recommendationContext: RecommendationContext;
+  sourceEntityId?: string;
   expiresAt?: Date;
-  completedAt?: Date;
+  isDismissed: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const ResourceRecommendationSchema = new Schema<IResourceRecommendation>(
+const ResourceRecommendationSchema: Schema = new Schema(
   {
-    studentId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-      index: true,
-    },
+    recommendationId: { type: String, required: true, unique: true, index: true },
+    studentId: { type: String, required: true, index: true },
     resourceId: { type: String, required: true, index: true },
-    topic: { type: String, required: true },
     reason: { type: String, required: true },
-    priority: { type: String, enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'], default: 'MEDIUM' },
-    relevanceScore: { type: Number, min: 0, max: 100, default: 50 },
-    trustScore: { type: Number, min: 0, max: 100, default: 80 },
-    difficultyMatch: { type: String, default: 'Optimal' },
-    estimatedMinutes: { type: Number, default: 15 },
-    sourceFeature: { type: String, default: 'Recommendation Engine' },
-    actionUrl: { type: String, default: '/resources' },
-    status: {
+    priority: {
       type: String,
-      enum: ['recommended', 'started', 'completed', 'dismissed', 'expired'],
-      default: 'recommended',
-      index: true,
+      required: true,
+      enum: ['critical', 'high', 'medium', 'low'],
+      default: 'medium',
     },
-    generatedAt: { type: Date, default: Date.now },
+    score: { type: Number, required: true, min: 0, max: 100 },
+    recommendationContext: {
+      type: String,
+      required: true,
+      enum: [
+        'learning_gap',
+        'prerequisite',
+        'exam',
+        'doubt',
+        'mistake',
+        'revision',
+        'learning_path',
+        'career',
+        'goal',
+        'risk',
+        'practice',
+        'general',
+      ],
+      default: 'general',
+    },
+    sourceEntityId: { type: String },
     expiresAt: { type: Date },
-    completedAt: { type: Date },
+    isDismissed: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-ResourceRecommendationSchema.index({ studentId: 1, resourceId: 1, topic: 1 }, { unique: true });
+ResourceRecommendationSchema.index({ studentId: 1, resourceId: 1, recommendationContext: 1 });
 
-export const ResourceRecommendation =
-  mongoose.models.ResourceRecommendation ||
-  mongoose.model<IResourceRecommendation>('ResourceRecommendation', ResourceRecommendationSchema);
+export const ResourceRecommendation = mongoose.model<IResourceRecommendation>(
+  'ResourceRecommendation',
+  ResourceRecommendationSchema
+);

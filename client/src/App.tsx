@@ -37,7 +37,8 @@ import { TeacherCopilotPage } from './pages/TeacherCopilotPage';
 import { ParentCopilotPage } from './pages/ParentCopilotPage';
 import { StudentMentorPage } from './pages/StudentMentorPage';
 import { StudyPlannerPage } from './pages/StudyPlannerPage';
-import { ResourceRecommendationsPage } from './pages/ResourceRecommendationsPage';
+import { LearningResourcesPage } from './pages/LearningResourcesPage';
+import { ResourceDetailsPage } from './pages/ResourceDetailsPage';
 import { StudyMaterialPage } from './pages/StudyMaterialPage';
 import { DoubtSolverPage } from './pages/DoubtSolverPage';
 import { RevisionPage } from './pages/RevisionPage';
@@ -64,7 +65,8 @@ export const App: React.FC = () => (
           <Route index element={<LandingPage />} />
           <Route path="student/mentor" element={<ProtectedRoute allowedRoles={['student']}><StudentMentorPage /></ProtectedRoute>} />
           <Route path="study-planner" element={<ProtectedRoute allowedRoles={['student']}><StudyPlannerPage /></ProtectedRoute>} />
-          <Route path="resources" element={<ProtectedRoute allowedRoles={['student']}><ResourceRecommendationsPage /></ProtectedRoute>} />
+          <Route path="resources" element={<ProtectedRoute allowedRoles={['student']}><LearningResourcesPage /></ProtectedRoute>} />
+          <Route path="resources/:resourceId" element={<ProtectedRoute allowedRoles={['student']}><ResourceDetailsPage /></ProtectedRoute>} />
           <Route path="study-material" element={<ProtectedRoute allowedRoles={['student']}><StudyMaterialPage /></ProtectedRoute>} />
           <Route path="doubts" element={<ProtectedRoute allowedRoles={['student']}><DoubtSolverPage /></ProtectedRoute>} />
           <Route path="doubts/:id" element={<ProtectedRoute allowedRoles={['student']}><DoubtDetailPage /></ProtectedRoute>} />
