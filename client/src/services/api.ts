@@ -1855,6 +1855,7 @@ export const fetchAllResources = async (): Promise<{
 export const fetchRecommendedResources = async (): Promise<{
   success: boolean;
   data?: any;
+  aiExplanation?: string;
   message?: string;
 }> => {
   try {
@@ -1903,6 +1904,7 @@ export const generateResourceRecommendations = async (): Promise<{
 export const refreshResourceRecommendations = async (): Promise<{
   success: boolean;
   data?: any;
+  aiExplanation?: string;
   message?: string;
 }> => {
   try {
@@ -2434,6 +2436,156 @@ export const fetchParentAssessmentSummary = async (
     return { success: false, message: 'Failed to fetch parent assessment summary' };
   }
 };
+
+// --- FEATURE 23: SMART RESOURCE HUB API HELPERS ---
+export const fetchResourceCatalog = async (
+  query?: string,
+  subject?: string,
+  topic?: string,
+  type?: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const params = new URLSearchParams();
+    if (query) params.append('query', query);
+    if (subject) params.append('subject', subject);
+    if (topic) params.append('topic', topic);
+    if (type) params.append('type', type);
+
+    const response = await fetch(`${API_BASE_URL}/student/resources?${params.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to search resource catalog' };
+  }
+};
+
+export const fetchResourceDetails = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${id}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch resource details' };
+  }
+};
+
+export const startResourceTracking = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${id}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to start resource tracking' };
+  }
+};
+
+export const updateResourceProgressTracking = async (
+  id: string,
+  progressPercent: number
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${id}/progress`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ progressPercent }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to update resource progress' };
+  }
+};
+
+export const completeResourceTracking = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${id}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to complete resource tracking' };
+  }
+};
+
+export const fetchResourceHistory = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/history`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch resource history' };
+  }
+};
+
+export const fetchTeacherResourceSummary = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/teacher/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher resource summary' };
+  }
+};
+
+export const fetchParentResourceSummary = async (
+  studentId: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/parent/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent resource summary' };
+  }
+};
+
 
 
 

@@ -1,12 +1,15 @@
 import { Router } from 'express';
 import {
-  generateRecommendationsController,
-  getAllResourcesController,
-  getRecommendationSummaryController,
+  completeResourceController,
+  getParentStudentResourceSummaryController,
   getRecommendedResourcesController,
-  getResourceByIdController,
+  getResourceDetailsController,
+  getStudentResourceHistoryController,
+  getTeacherStudentResourceSummaryController,
   refreshRecommendationsController,
-  updateRecommendationStatusController,
+  searchResourcesController,
+  startResourceController,
+  updateResourceProgressController,
 } from '../controllers/resource-recommendation.controller.js';
 import { authenticateJWT } from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
@@ -14,14 +17,21 @@ import { requireRole } from '../middleware/role.middleware.js';
 const router = Router();
 
 router.use(authenticateJWT);
-router.use(requireRole('student'));
 
-router.get('/', getAllResourcesController);
-router.get('/recommended', getRecommendedResourcesController);
-router.get('/summary', getRecommendationSummaryController);
-router.get('/:id', getResourceByIdController);
-router.post('/generate', generateRecommendationsController);
-router.post('/refresh', refreshRecommendationsController);
-router.patch('/recommendations/:id/status', updateRecommendationStatusController);
+// Student endpoints
+router.get('/recommended', requireRole('student'), getRecommendedResourcesController);
+router.get('/history', requireRole('student'), getStudentResourceHistoryController);
+router.post('/refresh', requireRole('student'), refreshRecommendationsController);
+router.get('/', searchResourcesController);
+router.get('/:id', getResourceDetailsController);
+router.post('/:id/start', requireRole('student'), startResourceController);
+router.put('/:id/progress', requireRole('student'), updateResourceProgressController);
+router.post('/:id/complete', requireRole('student'), completeResourceController);
+
+// Teacher analytics endpoint
+router.get('/teacher/student/:studentId/summary', requireRole('teacher'), getTeacherStudentResourceSummaryController);
+
+// Parent progress endpoint
+router.get('/parent/student/:studentId/summary', requireRole('parent'), getParentStudentResourceSummaryController);
 
 export default router;

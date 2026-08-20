@@ -1,63 +1,52 @@
-export type ResourcePriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-export type RecommendationStatusType = 'recommended' | 'started' | 'completed' | 'dismissed' | 'expired';
+import { ResourceType } from '../../models/learning-resource.model.js';
 
-export interface IResourceData {
-  id: string;
+export interface IResourceItem {
+  resourceId: string;
   title: string;
   description: string;
-  resourceType: string;
+  resourceType: ResourceType;
   subject: string;
   topic: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  board: string;
+  conceptId: string;
   classLevel: string;
-  language: string;
-  url: string;
-  provider: string;
-  sourceDomain: string;
-  thumbnailUrl?: string;
+  board: string;
+  difficulty: 'foundational' | 'easy' | 'medium' | 'hard' | 'advanced' | 'beginner' | 'intermediate';
   estimatedMinutes: number;
+  provider: string;
+  officialSourceUrl?: string;
   tags: string[];
-  verified: boolean;
-  official: boolean;
+  language: string;
+  isVerified: boolean;
   active: boolean;
 }
 
-export interface IRecommendationData {
-  recommendationId: string;
-  studentId: string;
-  resource: IResourceData;
+export interface IRecommendationResult {
+  resourceId: string;
+  title: string;
+  description: string;
+  resourceType: ResourceType;
+  subject: string;
   topic: string;
+  conceptId: string;
   reason: string;
-  priority: ResourcePriority;
-  relevanceScore: number;
-  trustScore: number;
-  difficultyMatch: string;
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   estimatedMinutes: number;
-  sourceFeature: string;
+  relatedConcept: string;
+  relatedTopic: string;
   actionUrl: string;
-  status: RecommendationStatusType;
-  generatedAt: string;
-  expiresAt?: string;
-  completedAt?: string;
+  relevanceScore: number; // 0 to 100
+  isVerified: boolean;
+  provider: string;
+  officialSourceUrl?: string;
 }
 
-export interface IRecommendationSummaryData {
-  studentName: string;
+export interface IResourceHubSummaryData {
+  studentId: string;
   totalRecommended: number;
-  topPriorityResource: IRecommendationData | null;
-  highPriorityCount: number;
-  activeGapsAddressed: number;
-  examUrgencyActive: boolean;
-  riskLevel: string;
-  summaryMessage: string;
-  evaluatedAt: string;
-}
-
-export interface IResourceAdviceData {
-  recommendationReasoning: string;
-  studyStrategy: string;
-  personalizedTip: string;
-  aiGenerated: boolean;
+  topRecommendation: IRecommendationResult | null;
+  prerequisiteGapRecommendationsCount: number;
+  weakTopicRecommendationsCount: number;
+  examUrgencyRecommendationsCount: number;
+  quickUnder15MinCount: number;
   evaluatedAt: string;
 }

@@ -36,6 +36,7 @@ import { ConceptDependency } from '../models/concept-dependency.model.js';
 import { StudentConceptMastery } from '../models/student-concept-mastery.model.js';
 import { AdaptiveAssessment } from '../models/adaptive-assessment.model.js';
 import { QuestionAttempt } from '../models/question-attempt.model.js';
+import { StudentResourceProgress } from '../models/student-resource-progress.model.js';
 import { ExamTopicProgressModel } from '../models/exam-topic-progress.model.js';
 import { CareerGoal, ICareerGoal } from '../models/career-goal.model.js';
 import { NotificationModel, INotification } from '../models/notification.model.js';
@@ -54,6 +55,7 @@ const inMemParentStudentLinks: any[] = [];
 const inMemParentInvitations: any[] = [];
 const inMemSavedScholarships: any[] = [];
 const inMemInterventions: any[] = [];
+const inMemResourceProgress: any[] = [];
 const inMemSubjects: any[] = [];
 const inMemTopics: any[] = [];
 const inMemScholarships: any[] = [
@@ -2052,5 +2054,34 @@ export const dataRepository = {
       return await AdaptiveAssessment.find({ studentId }).sort({ createdAt: -1 }).lean();
     }
     return [];
+  },
+
+  async getStudentResourceProgressList(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await StudentResourceProgress.find({ studentId }).sort({ updatedAt: -1 }).lean();
+    }
+    return inMemResourceProgress
+      .filter((rp) => String(rp.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+  },
+
+  async upsertResourceProgress(studentId: string, resourceId: string, progressData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await StudentResourceProgress.findOneAndUpdate(
+        { studentId, resourceId },
+        { $set: progressData },
+        { upsert: true, new: true }
+      );
+    }
+    const idx = inMemResourceProgress.findIndex(
+      (rp) => String(rp.studentId) === String(studentId) && rp.resourceId === resourceId
+    );
+    const item = { studentId, resourceId, ...progressData, updatedAt: new Date() };
+    if (idx >= 0) {
+      inMemResourceProgress[idx] = { ...inMemResourceProgress[idx], ...item };
+    } else {
+      inMemResourceProgress.push(item);
+    }
+    return item;
   },
 };

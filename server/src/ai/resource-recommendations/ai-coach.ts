@@ -1,27 +1,15 @@
-import { IResourceAdviceData } from './types.js';
-
-export async function generateAIResourceAdvice(
+export async function generateAIResourceExplanation(
   studentName: string,
-  totalRecommended: number,
-  topPriorityTopic: string,
-  gapsCount: number,
-  riskLevel: string
-): Promise<IResourceAdviceData> {
+  topResourceTitle?: string,
+  reason?: string
+): Promise<string> {
   const key = process.env.AI_API_KEY;
 
-  const defaultReasoning = `Selected ${totalRecommended} learning resources prioritizing ${topPriorityTopic} based on your active learning gaps (${gapsCount}) and current risk level (${riskLevel}).`;
-  const defaultStrategy = `Start with short notes or videos (10–15 mins) before attempting targeted practice quizzes to reinforce weak concepts.`;
-  const defaultTip = `Focus on one high-priority topic at a time to build long-term retention.`;
+  const defaultMsg = topResourceTitle
+    ? `Hello ${studentName}! Based on your learning graph, studying "${topResourceTitle}" is your highest priority right now. ${reason}`
+    : `Hello ${studentName}! Explore curated resources aligned with your study goals and prerequisite learning map.`;
 
-  if (!key) {
-    return {
-      recommendationReasoning: defaultReasoning,
-      studyStrategy: defaultStrategy,
-      personalizedTip: defaultTip,
-      aiGenerated: false,
-      evaluatedAt: new Date().toISOString(),
-    };
-  }
+  if (!key) return defaultMsg;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -29,67 +17,26 @@ export async function generateAIResourceAdvice(
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: process.env.AI_MODEL || 'gpt-4o-mini',
-        temperature: 0.4,
+        temperature: 0.3,
         messages: [
           {
             role: 'system',
             content:
-              'You are a supportive educational resource advisor. Explain why these learning resources were selected based on student progress, suggest how to study them, and provide an encouraging learning strategy. Never invent metrics, modify relevance/trust scores, fabricate URLs, or expose private data.',
+              'You are an expert educational resource advisor. Provide a concise, encouraging 2-sentence explanation of why the recommended study resource is crucial for the student. Never invent resources, alter priority scores, or leak secrets.',
           },
           {
             role: 'user',
-            content: JSON.stringify({
-              studentName,
-              totalRecommended,
-              topPriorityTopic,
-              gapsCount,
-              riskLevel,
-            }),
+            content: JSON.stringify({ studentName, topResourceTitle, reason }),
           },
         ],
       }),
     });
 
-    if (!response.ok) throw new Error('AI request failed');
+    if (!response.ok) return defaultMsg;
     const json: any = await response.json();
     const text = json?.choices?.[0]?.message?.content?.trim();
-
-    if (!text) throw new Error('Empty AI response');
-
-    const safeText = sanitizeText(text);
-
-    return {
-      recommendationReasoning: defaultReasoning,
-      studyStrategy: safeText,
-      personalizedTip: defaultTip,
-      aiGenerated: true,
-      evaluatedAt: new Date().toISOString(),
-    };
+    return text || defaultMsg;
   } catch (err) {
-    return {
-      recommendationReasoning: defaultReasoning,
-      studyStrategy: defaultStrategy,
-      personalizedTip: defaultTip,
-      aiGenerated: false,
-      evaluatedAt: new Date().toISOString(),
-    };
+    return defaultMsg;
   }
-}
-
-function sanitizeText(text: string): string {
-  let safe = text;
-  [
-    'password',
-    'JWT_SECRET',
-    'AI_API_KEY',
-    'correctAnswer',
-    'token',
-    'Bearer',
-    'tutorConversationId',
-    'privateTeacherNote',
-  ].forEach((kw) => {
-    const regex = new RegExp(kw, 'gi');
-    safe = safe.replace(regex, '[REDACTED]');
-  });
-  return safe;
 }

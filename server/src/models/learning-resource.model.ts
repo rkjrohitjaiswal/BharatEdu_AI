@@ -1,11 +1,15 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export type ResourceType =
-  | 'video'
   | 'article'
-  | 'notes'
-  | 'pdf'
+  | 'video'
   | 'practice'
+  | 'assessment'
+  | 'notes'
+  | 'worksheet'
+  | 'reference'
+  | 'course'
+  | 'pdf'
   | 'quiz'
   | 'flashcards'
   | 'simulation'
@@ -15,41 +19,52 @@ export type ResourceType =
   | 'career_resource';
 
 export interface ILearningResource extends Document {
+  resourceId: string;
   title: string;
   description: string;
   resourceType: ResourceType;
   subject: string;
   topic: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  board: string;
+  conceptId?: string;
   classLevel: string;
-  language: string;
-  url: string;
-  provider: string;
-  sourceDomain: string;
-  thumbnailUrl?: string;
+  board: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'foundational' | 'easy' | 'medium' | 'hard';
   estimatedMinutes: number;
+  provider: string;
+  officialSourceUrl?: string;
   tags: string[];
-  verified: boolean;
-  official: boolean;
+  language: string;
+  isVerified: boolean;
   active: boolean;
+
+  // Backward compatibility fields
+  url?: string;
+  verified?: boolean;
+  official?: boolean;
+  sourceDomain?: string;
+
   createdAt: Date;
   updatedAt: Date;
 }
 
 const LearningResourceSchema = new Schema<ILearningResource>(
   {
+    resourceId: { type: String, required: true, unique: true, index: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, default: '' },
     resourceType: {
       type: String,
       required: true,
       enum: [
-        'video',
         'article',
-        'notes',
-        'pdf',
+        'video',
         'practice',
+        'assessment',
+        'notes',
+        'worksheet',
+        'reference',
+        'course',
+        'pdf',
         'quiz',
         'flashcards',
         'simulation',
@@ -62,23 +77,27 @@ const LearningResourceSchema = new Schema<ILearningResource>(
     },
     subject: { type: String, required: true, index: true },
     topic: { type: String, required: true, index: true },
+    conceptId: { type: String, index: true },
+    classLevel: { type: String, default: 'Class 10' },
+    board: { type: String, default: 'CBSE' },
     difficulty: {
       type: String,
-      enum: ['beginner', 'intermediate', 'advanced'],
-      default: 'intermediate',
+      enum: ['beginner', 'intermediate', 'advanced', 'foundational', 'easy', 'medium', 'hard'],
+      default: 'medium',
     },
-    board: { type: String, default: 'CBSE' },
-    classLevel: { type: String, default: 'Class 10' },
-    language: { type: String, default: 'English' },
-    url: { type: String, required: true },
-    provider: { type: String, default: 'BharatEdu Repository' },
-    sourceDomain: { type: String, default: 'bharatedu.ai' },
-    thumbnailUrl: { type: String, default: '' },
     estimatedMinutes: { type: Number, default: 15 },
+    provider: { type: String, default: 'BharatEdu Repository' },
+    officialSourceUrl: { type: String, default: '' },
     tags: [{ type: String }],
+    language: { type: String, default: 'English' },
+    isVerified: { type: Boolean, default: true },
+    active: { type: Boolean, default: true, index: true },
+
+    // Backward compatibility fields
+    url: { type: String },
     verified: { type: Boolean, default: true },
     official: { type: Boolean, default: true },
-    active: { type: Boolean, default: true, index: true },
+    sourceDomain: { type: String, default: 'bharatedu.ai' },
   },
   { timestamps: true }
 );

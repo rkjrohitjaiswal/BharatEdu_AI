@@ -1,32 +1,15 @@
 import { Request, Response } from 'express';
 import {
-  changeRecommendationStatus,
-  generateRecommendations,
-  getAllCatalogResources,
-  getRecommendationSummary,
+  completeResource,
+  getParentStudentResourceSummary,
   getRecommendedResources,
-  getResourceById,
-  refreshRecommendations,
+  getResourceDetails,
+  getStudentResourceHistory,
+  getTeacherStudentResourceSummary,
+  searchResources,
+  startResource,
+  updateResourceProgress,
 } from '../ai/resource-recommendations/service.js';
-
-export const getAllResourcesController = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can access learning resources' });
-      return;
-    }
-
-    const resources = await getAllCatalogResources();
-    res.status(200).json({ success: true, data: resources });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch learning resources' });
-  }
-};
 
 export const getRecommendedResourcesController = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -35,19 +18,44 @@ export const getRecommendedResourcesController = async (req: Request, res: Respo
       res.status(401).json({ success: false, message: 'Authentication required' });
       return;
     }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can access recommended resources' });
-      return;
-    }
 
-    const recommendations = await getRecommendedResources(user.id);
-    res.status(200).json({ success: true, data: recommendations });
+    const data = await getRecommendedResources(user.id);
+    res.status(200).json({ success: true, data: data.recommendations, aiExplanation: data.aiExplanation });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch resource recommendations' });
+    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch recommendations' });
   }
 };
 
-export const getResourceByIdController = async (req: Request, res: Response): Promise<void> => {
+export const searchResourcesController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { query, subject, topic, type } = req.query;
+    const resources = await searchResources(
+      query ? String(query) : undefined,
+      subject ? String(subject) : undefined,
+      topic ? String(topic) : undefined,
+      type ? String(type) : undefined
+    );
+    res.status(200).json({ success: true, data: resources });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error?.message || 'Failed to search resources' });
+  }
+};
+
+export const getResourceDetailsController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const resource = await getResourceDetails(id);
+    if (!resource) {
+      res.status(404).json({ success: false, message: 'Resource not found' });
+      return;
+    }
+    res.status(200).json({ success: true, data: resource });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch resource details' });
+  }
+};
+
+export const startResourceController = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = (req as any).user;
     const { id } = req.params;
@@ -56,39 +64,61 @@ export const getResourceByIdController = async (req: Request, res: Response): Pr
       res.status(401).json({ success: false, message: 'Authentication required' });
       return;
     }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can access resource details' });
-      return;
-    }
 
-    const resource = await getResourceById(id);
-    if (!resource) {
-      res.status(404).json({ success: false, message: 'Resource not found' });
-      return;
-    }
-
-    res.status(200).json({ success: true, data: resource });
+    const result = await startResource(user.id, id);
+    res.status(200).json({ success: true, data: result });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch resource details' });
+    res.status(500).json({ success: false, message: error?.message || 'Failed to start resource' });
   }
 };
 
-export const generateRecommendationsController = async (req: Request, res: Response): Promise<void> => {
+export const updateResourceProgressController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = (req as any).user;
+    const { id } = req.params;
+    const { progressPercent = 50 } = req.body;
+
+    if (!user || !user.id) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
+
+    const result = await updateResourceProgress(user.id, id, Number(progressPercent));
+    res.status(200).json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error?.message || 'Failed to update resource progress' });
+  }
+};
+
+export const completeResourceController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = (req as any).user;
+    const { id } = req.params;
+
+    if (!user || !user.id) {
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
+    }
+
+    const result = await completeResource(user.id, id);
+    res.status(200).json({ success: true, data: result });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error?.message || 'Failed to complete resource' });
+  }
+};
+
+export const getStudentResourceHistoryController = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = (req as any).user;
     if (!user || !user.id) {
       res.status(401).json({ success: false, message: 'Authentication required' });
       return;
     }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can generate resource recommendations' });
-      return;
-    }
 
-    const recommendations = await generateRecommendations(user.id);
-    res.status(200).json({ success: true, data: recommendations });
+    const history = await getStudentResourceHistory(user.id);
+    res.status(200).json({ success: true, data: history });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to generate recommendations' });
+    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch resource history' });
   }
 };
 
@@ -99,59 +129,52 @@ export const refreshRecommendationsController = async (req: Request, res: Respon
       res.status(401).json({ success: false, message: 'Authentication required' });
       return;
     }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can refresh recommendations' });
-      return;
-    }
 
-    const recommendations = await refreshRecommendations(user.id);
-    res.status(200).json({ success: true, data: recommendations });
+    const data = await getRecommendedResources(user.id);
+    res.status(200).json({ success: true, data: data.recommendations, aiExplanation: data.aiExplanation });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error?.message || 'Failed to refresh recommendations' });
   }
 };
 
-export const updateRecommendationStatusController = async (req: Request, res: Response): Promise<void> => {
+export const getTeacherStudentResourceSummaryController = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = (req as any).user;
-    const { id } = req.params;
-    const { status } = req.body;
+    const { studentId } = req.params;
 
     if (!user || !user.id) {
       res.status(401).json({ success: false, message: 'Authentication required' });
       return;
     }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can update recommendation status' });
-      return;
-    }
-    if (!id || !status) {
-      res.status(400).json({ success: false, message: 'Recommendation ID and status are required' });
+    if (user.role !== 'teacher') {
+      res.status(403).json({ success: false, message: 'Only teachers can access student resource analytics' });
       return;
     }
 
-    const updated = await changeRecommendationStatus(user.id, id, status);
-    res.status(200).json({ success: true, data: updated });
+    const summary = await getTeacherStudentResourceSummary(user.id, studentId);
+    res.status(200).json({ success: true, data: summary });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to update recommendation status' });
+    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch teacher resource summary' });
   }
 };
 
-export const getRecommendationSummaryController = async (req: Request, res: Response): Promise<void> => {
+export const getParentStudentResourceSummaryController = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = (req as any).user;
+    const { studentId } = req.params;
+
     if (!user || !user.id) {
       res.status(401).json({ success: false, message: 'Authentication required' });
       return;
     }
-    if (user.role !== 'student') {
-      res.status(403).json({ success: false, message: 'Only students can access recommendation summary' });
+    if (user.role !== 'parent') {
+      res.status(403).json({ success: false, message: 'Only parents can access student resource analytics' });
       return;
     }
 
-    const summary = await getRecommendationSummary(user.id);
+    const summary = await getParentStudentResourceSummary(user.id, studentId);
     res.status(200).json({ success: true, data: summary });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch recommendation summary' });
+    res.status(403).json({ success: false, message: error?.message || 'Access denied for parent resource summary' });
   }
 };
