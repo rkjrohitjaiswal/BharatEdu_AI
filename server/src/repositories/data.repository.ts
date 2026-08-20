@@ -32,6 +32,11 @@ import { LearningResource } from '../models/learning-resource.model.js';
 import { ResourceInteraction } from '../models/resource-interaction.model.js';
 import { ResourceBookmark } from '../models/resource-bookmark.model.js';
 import { ResourceRecommendation } from '../models/resource-recommendation.model.js';
+import { PracticeQuestion } from '../models/practice-question.model.js';
+import { GeneratedQuestion } from '../models/generated-question.model.js';
+import { PersonalizedAttempt } from '../models/personalized-attempt.model.js';
+import { QuestionQuality } from '../models/question-quality.model.js';
+import { VERIFIED_PRACTICE_QUESTION_BANK } from '../ai/personalized-practice/ai-coach.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -113,6 +118,10 @@ const inMemLearningResources: any[] = [];
 const inMemResourceInteractions: any[] = [];
 const inMemResourceBookmarks: any[] = [];
 const inMemResourceRecommendations: any[] = [];
+const inMemPracticeQuestions: any[] = [];
+const inMemGeneratedQuestions: any[] = [];
+const inMemPersonalizedAttempts: any[] = [];
+const inMemPersonalizedSessions: any[] = [];
 const inMemRevisionHistory: any[] = [];
 const inMemRevisionItems: any[] = [];
 const inMemLearningPaths: any[] = [];
@@ -3442,5 +3451,74 @@ export const dataRepository = {
       return true;
     }
     return false;
+  },
+
+  async getPracticeQuestions(conceptId?: string): Promise<any[]> {
+    if (isDBConnected()) {
+      const query: any = { active: true };
+      if (conceptId) query.conceptId = conceptId;
+      return await PracticeQuestion.find(query).lean();
+    }
+    if (conceptId) {
+      return inMemPracticeQuestions.filter((q) => q.conceptId === conceptId && q.active !== false);
+    }
+    return inMemPracticeQuestions.filter((q) => q.active !== false);
+  },
+
+  async getPracticeQuestionById(questionId: string): Promise<any> {
+    if (isDBConnected()) {
+      const dbQ = await PracticeQuestion.findOne({ questionId }).lean();
+      if (dbQ) return dbQ;
+    }
+    const found = inMemPracticeQuestions.find((q) => q.questionId === questionId || String(q._id) === String(questionId));
+    if (found) return found;
+    return VERIFIED_PRACTICE_QUESTION_BANK.find((q) => q.questionId === questionId);
+  },
+
+  async createPracticeQuestion(qData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new PracticeQuestion(qData);
+      return await doc.save();
+    }
+    const item = { _id: `pq_${Date.now()}_${Math.random()}`, ...qData, createdAt: new Date() };
+    inMemPracticeQuestions.push(item);
+    return item;
+  },
+
+  async savePersonalizedAttempt(attemptData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new PersonalizedAttempt(attemptData);
+      return await doc.save();
+    }
+    const item = { _id: `att_${Date.now()}_${Math.random()}`, ...attemptData };
+    inMemPersonalizedAttempts.push(item);
+    return item;
+  },
+
+  async getStudentPersonalizedAttempts(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await PersonalizedAttempt.find({ studentId }).sort({ submittedAt: -1 }).lean();
+    }
+    return inMemPersonalizedAttempts
+      .filter((a) => String(a.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.submittedAt || 0).getTime() - new Date(a.submittedAt || 0).getTime());
+  },
+
+  async savePersonalizedPracticeSession(sessionData: any): Promise<any> {
+    const idx = inMemPersonalizedSessions.findIndex(
+      (s) => s.sessionId === sessionData.sessionId && String(s.studentId) === String(sessionData.studentId)
+    );
+    if (idx >= 0) {
+      inMemPersonalizedSessions[idx] = { ...inMemPersonalizedSessions[idx], ...sessionData };
+      return inMemPersonalizedSessions[idx];
+    }
+    inMemPersonalizedSessions.push(sessionData);
+    return sessionData;
+  },
+
+  async getPersonalizedPracticeSession(sessionId: string, studentId?: string): Promise<any> {
+    return inMemPersonalizedSessions.find(
+      (s) => s.sessionId === sessionId && (!studentId || String(s.studentId) === String(studentId))
+    );
   },
 };

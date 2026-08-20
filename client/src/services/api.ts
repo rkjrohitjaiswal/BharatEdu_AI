@@ -3982,6 +3982,83 @@ export const fetchResourceHistory = async () => {
   }
 };
 
+// Feature 34: Personalized Practice Engine APIs
+export const fetchPersonalizedPracticeRecommendations = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/personalized-practice/recommendations`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch practice recommendations' };
+  }
+};
+
+export const createPersonalizedPracticeSession = async (payload: { mode?: string; questionCount?: number; conceptId?: string }) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/personalized-practice/sessions`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to create practice session' };
+  }
+};
+
+export const fetchPersonalizedSessionQuestion = async (sessionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/personalized-practice/sessions/${sessionId}/question`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch question' };
+  }
+};
+
+export const submitPersonalizedSessionAnswer = async (
+  sessionId: string,
+  payload: { selectedAnswer: any; responseTimeSeconds?: number }
+) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/personalized-practice/sessions/${sessionId}/answer`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to submit answer' };
+  }
+};
+
+export const requestPersonalizedSessionHint = async (sessionId: string, hintLevel: number = 1) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/personalized-practice/sessions/${sessionId}/hint`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ hintLevel }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to request hint' };
+  }
+};
+
+export const fetchPersonalizedSessionResult = async (sessionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/personalized-practice/sessions/${sessionId}/result`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch session result' };
+  }
+};
+
+
 
 
 

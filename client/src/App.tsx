@@ -39,6 +39,9 @@ import { StudentMentorPage } from './pages/StudentMentorPage';
 import { StudyPlannerPage } from './pages/StudyPlannerPage';
 import { LearningResourcesPage } from './pages/LearningResourcesPage';
 import { ResourceDetailsPage } from './pages/ResourceDetailsPage';
+import { PersonalizedPracticePage } from './pages/PersonalizedPracticePage';
+import { PracticeSessionPage } from './pages/PracticeSessionPage';
+import { PracticeResultPage } from './pages/PracticeResultPage';
 import { StudyMaterialPage } from './pages/StudyMaterialPage';
 import { DoubtSolverPage } from './pages/DoubtSolverPage';
 import { RevisionPage } from './pages/RevisionPage';
@@ -67,6 +70,9 @@ export const App: React.FC = () => (
           <Route path="study-planner" element={<ProtectedRoute allowedRoles={['student']}><StudyPlannerPage /></ProtectedRoute>} />
           <Route path="resources" element={<ProtectedRoute allowedRoles={['student']}><LearningResourcesPage /></ProtectedRoute>} />
           <Route path="resources/:resourceId" element={<ProtectedRoute allowedRoles={['student']}><ResourceDetailsPage /></ProtectedRoute>} />
+          <Route path="personalized-practice" element={<ProtectedRoute allowedRoles={['student']}><PersonalizedPracticePage /></ProtectedRoute>} />
+          <Route path="personalized-practice/session/:sessionId" element={<ProtectedRoute allowedRoles={['student']}><PracticeSessionPage /></ProtectedRoute>} />
+          <Route path="personalized-practice/session/:sessionId/result" element={<ProtectedRoute allowedRoles={['student']}><PracticeResultPage /></ProtectedRoute>} />
           <Route path="study-material" element={<ProtectedRoute allowedRoles={['student']}><StudyMaterialPage /></ProtectedRoute>} />
           <Route path="doubts" element={<ProtectedRoute allowedRoles={['student']}><DoubtSolverPage /></ProtectedRoute>} />
           <Route path="doubts/:id" element={<ProtectedRoute allowedRoles={['student']}><DoubtDetailPage /></ProtectedRoute>} />
