@@ -1,75 +1,62 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export type AssessmentType =
-  | 'assignment'
-  | 'quiz'
-  | 'subjective_test'
-  | 'coding_assessment'
-  | 'project'
-  | 'worksheet'
-  | 'mixed';
-
-export type AssessmentStatus = 'draft' | 'published' | 'closed' | 'archived';
-
 export interface IAssessment extends Document {
   assessmentId: string;
-  teacherId: string;
+  teacherId?: string;
+  classId?: string;
+  studentId?: string;
   title: string;
-  description?: string;
+  description: string;
   subject: string;
-  topic?: string;
-  conceptIds: string[];
-  classLevel: string;
+  classLevel: number;
   board: string;
-  assessmentType: AssessmentType;
-  instructions?: string;
+  assessmentType: 'diagnostic' | 'practice' | 'formative' | 'summative' | 'mock_exam' | 'adaptive' | 'revision' | 'remedial';
+  durationMinutes: number;
+  totalQuestions: number;
   totalMarks: number;
   passingMarks: number;
-  durationMinutes?: number;
-  dueAt?: Date;
-  lateSubmissionAllowed: boolean;
-  latePenaltyPercent: number;
-  status: AssessmentStatus;
-  rubricId?: string;
-  questionCount: number;
+  status: 'draft' | 'published' | 'active' | 'completed' | 'archived';
+  source: 'teacher' | 'system' | 'ai';
   createdAt: Date;
-  updatedAt: Date;
+  publishedAt?: Date;
+  completedAt?: Date;
 }
 
 const AssessmentSchema = new Schema<IAssessment>(
   {
     assessmentId: { type: String, required: true, unique: true, index: true },
-    teacherId: { type: String, required: true, index: true },
+    teacherId: { type: String, index: true },
+    classId: { type: String, index: true },
+    studentId: { type: String, index: true },
     title: { type: String, required: true },
-    description: { type: String },
-    subject: { type: String, required: true },
-    topic: { type: String },
-    conceptIds: [{ type: String }],
-    classLevel: { type: String, required: true },
-    board: { type: String, required: true },
+    description: { type: String, default: '' },
+    subject: { type: String, required: true, index: true },
+    classLevel: { type: Number, required: true, index: true },
+    board: { type: String, default: 'CBSE', index: true },
     assessmentType: {
       type: String,
-      enum: ['assignment', 'quiz', 'subjective_test', 'coding_assessment', 'project', 'worksheet', 'mixed'],
-      default: 'assignment',
+      enum: ['diagnostic', 'practice', 'formative', 'summative', 'mock_exam', 'adaptive', 'revision', 'remedial'],
+      default: 'practice',
+      index: true,
     },
-    instructions: { type: String },
-    totalMarks: { type: Number, required: true, default: 100 },
-    passingMarks: { type: Number, required: true, default: 33 },
-    durationMinutes: { type: Number },
-    dueAt: { type: Date },
-    lateSubmissionAllowed: { type: Boolean, default: true },
-    latePenaltyPercent: { type: Number, default: 10 },
+    durationMinutes: { type: Number, default: 30 },
+    totalQuestions: { type: Number, default: 10 },
+    totalMarks: { type: Number, default: 100 },
+    passingMarks: { type: Number, default: 40 },
     status: {
       type: String,
-      enum: ['draft', 'published', 'closed', 'archived'],
+      enum: ['draft', 'published', 'active', 'completed', 'archived'],
       default: 'draft',
       index: true,
     },
-    rubricId: { type: String },
-    questionCount: { type: Number, default: 0 },
+    source: { type: String, enum: ['teacher', 'system', 'ai'], default: 'ai' },
+    publishedAt: { type: Date },
+    completedAt: { type: Date },
   },
   { timestamps: true }
 );
 
-export const Assessment =
-  mongoose.models.Assessment || mongoose.model<IAssessment>('Assessment', AssessmentSchema);
+AssessmentSchema.index({ teacherId: 1, classId: 1 });
+AssessmentSchema.index({ studentId: 1, status: 1 });
+
+export const Assessment = mongoose.models.Assessment || mongoose.model<IAssessment>('Assessment', AssessmentSchema);

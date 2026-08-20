@@ -1,64 +1,50 @@
 import React from 'react';
-import { CheckCircle2, Circle } from 'lucide-react';
+import { IAssessmentQuestionClient } from '../../types/assessment-engine';
+import { CheckCircle2 } from 'lucide-react';
 
-export interface QuestionOptionsProps {
-  questionType: string;
-  options: string[];
-  selectedAnswer: string;
-  onSelect: (ans: string) => void;
-  disabled?: boolean;
+interface Props {
+  question: IAssessmentQuestionClient;
+  selectedAnswer: any;
+  onSelect: (ans: any) => void;
 }
 
-export const QuestionOptions: React.FC<QuestionOptionsProps> = ({
-  questionType,
-  options,
-  selectedAnswer,
-  onSelect,
-  disabled,
-}) => {
-  if (questionType === 'numerical' || questionType === 'short_answer') {
+export const QuestionOptions: React.FC<Props> = ({ question, selectedAnswer, onSelect }) => {
+  if (question.questionType === 'mcq' && question.options) {
     return (
-      <div className="space-y-2">
-        <label className="text-xs font-bold text-slate-700">Enter your numeric / short answer:</label>
-        <input
-          type="text"
-          disabled={disabled}
-          placeholder="Type answer here..."
-          value={selectedAnswer}
-          onChange={(e) => onSelect(e.target.value)}
-          className="w-full p-3 rounded-xl border border-slate-300 font-semibold text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-100"
-        />
+      <div className="space-y-3">
+        {question.options.map((opt, idx) => {
+          const isSelected = selectedAnswer === opt;
+          return (
+            <button
+              key={idx}
+              onClick={() => onSelect(opt)}
+              className={`w-full text-left p-4 rounded-2xl border text-xs font-semibold flex items-center justify-between transition-all ${
+                isSelected
+                  ? 'bg-purple-950/60 border-purple-500 text-purple-200 ring-2 ring-purple-500/30'
+                  : 'bg-slate-900/40 border-slate-800 text-slate-300 hover:border-slate-700'
+              }`}
+            >
+              <span>{opt}</span>
+              {isSelected && <CheckCircle2 className="w-4 h-4 text-purple-400" />}
+            </button>
+          );
+        })}
       </div>
     );
   }
 
-  const choices = options && options.length > 0 ? options : questionType === 'true_false' ? ['True', 'False'] : [];
-
   return (
-    <div className="grid grid-cols-1 gap-2.5">
-      {choices.map((opt, idx) => {
-        const isSelected = selectedAnswer === opt;
-        return (
-          <button
-            key={idx}
-            type="button"
-            disabled={disabled}
-            onClick={() => onSelect(opt)}
-            className={`flex items-center justify-between p-3.5 rounded-2xl border-2 text-left text-xs font-bold transition-all ${
-              isSelected
-                ? 'border-indigo-600 bg-indigo-50/80 text-indigo-950 ring-2 ring-indigo-500/20'
-                : 'border-slate-200 bg-white hover:border-slate-300 text-slate-800'
-            } ${disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
-          >
-            <span>{opt}</span>
-            {isSelected ? (
-              <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
-            ) : (
-              <Circle className="w-4 h-4 text-slate-300 shrink-0" />
-            )}
-          </button>
-        );
-      })}
+    <div className="space-y-2 text-xs">
+      <label className="text-slate-400 font-semibold">Your Solution / Answer:</label>
+      <textarea
+        rows={4}
+        value={selectedAnswer || ''}
+        onChange={(e) => onSelect(e.target.value)}
+        placeholder="Type your response here..."
+        className="w-full p-4 bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500"
+      />
     </div>
   );
 };
+
+export default QuestionOptions;

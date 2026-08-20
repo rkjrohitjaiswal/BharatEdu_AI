@@ -1,31 +1,33 @@
 import React from 'react';
-import { Target, Zap } from 'lucide-react';
+import { IAssessmentClient } from '../../types/assessment-engine';
+import { Award, BookOpen, ShieldCheck } from 'lucide-react';
 
-export interface AssessmentHeaderProps {
-  conceptName: string;
-  subject: string;
-  assessmentType: string;
+interface Props {
+  assessment: IAssessmentClient;
 }
 
-export const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({ conceptName, subject, assessmentType }) => {
+export const AssessmentHeader: React.FC<Props> = ({ assessment }) => {
   return (
-    <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
-          <Target className="w-5 h-5" />
+    <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400">
+            <Award className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/30">
+              {assessment.subject} • Class {assessment.classLevel} ({assessment.board})
+            </span>
+            <h1 className="text-xl md:text-2xl font-extrabold text-white mt-1">{assessment.title}</h1>
+          </div>
         </div>
-        <div>
-          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-            {subject} • {assessmentType.replace('_', ' ')}
-          </span>
-          <h2 className="font-extrabold text-base text-slate-900 mt-0.5">{conceptName}</h2>
+        <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl">
+          <ShieldCheck className="w-4 h-4" /> Server Authoritative Scoring
         </div>
       </div>
-
-      <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-200">
-        <Zap className="w-4 h-4 text-indigo-600 animate-pulse" />
-        <span>Adaptive Real-time Difficulty</span>
-      </div>
+      <p className="text-xs text-slate-400 leading-relaxed">{assessment.description}</p>
     </div>
   );
 };
+
+export default AssessmentHeader;

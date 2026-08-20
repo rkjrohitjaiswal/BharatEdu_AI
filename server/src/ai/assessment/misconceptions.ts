@@ -17,9 +17,9 @@ export class MisconceptionEngine {
         if (!map.has(tag)) {
           map.set(tag, {
             misconceptionTag: tag,
-            description: `Identified gap in ${q?.topicId || 'concept topic'}: ${tag.replace(/_/g, ' ')}`,
-            prerequisiteConceptId: q?.conceptIds?.[0],
-            recommendedAction: `Review foundational concepts for ${q?.conceptIds?.[0] || 'this topic'} before re-attempting practice problems.`,
+            description: `Identified gap in ${(q as any)?.topic || (q as any)?.topicId || 'concept topic'}: ${tag.replace(/_/g, ' ')}`,
+            prerequisiteConceptId: (q as any)?.conceptId || (q as any)?.conceptIds?.[0],
+            recommendedAction: `Review foundational concepts for ${(q as any)?.conceptId || (q as any)?.conceptIds?.[0] || 'this topic'} before re-attempting practice problems.`,
           });
         }
       }

@@ -1,79 +1,62 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export type QuestionType =
-  | 'mcq'
-  | 'multiple_select'
-  | 'true_false'
-  | 'numerical'
-  | 'short_answer'
-  | 'long_answer'
-  | 'essay'
-  | 'coding'
-  | 'file_upload';
-
 export interface IAssessmentQuestion extends Document {
-  assessmentId: string;
   questionId: string;
-  order: number;
-  questionType: QuestionType;
-  question: string;
-  options?: string[];
-  marks: number;
-  correctAnswer?: string | string[] | number;
-  expectedPoints?: string[];
-  conceptIds: string[];
-  topicId?: string;
+  assessmentId: string;
+  conceptId: string;
+  subject: string;
+  topic: string;
+  questionType: 'mcq' | 'multiple_select' | 'true_false' | 'short_answer' | 'numerical' | 'coding' | 'assertion_reason' | 'case_based';
   difficulty: 'easy' | 'medium' | 'hard';
-  rubricCriteria?: {
-    criterionId: string;
-    maxMarks: number;
-  }[];
-  modelAnswer?: string;
-  hints?: string[];
-  attachments?: string[];
-  sourceType?: 'manual' | 'question_bank' | 'personalized_practice' | 'mock_exam';
-  verified: boolean;
+  questionText: string;
+  options?: string[];
+  correctAnswer: any;
+  explanation: string;
+  solutionSteps?: string[];
+  marks: number;
+  negativeMarks: number;
+  learningObjective?: string;
+  prerequisiteConcepts?: string[];
+  sourceReference?: string;
+  generationMethod?: 'manual' | 'template' | 'ai_draft' | 'ai_validated';
+  validationStatus: 'pending' | 'approved' | 'rejected';
+  isActive: boolean;
   createdAt: Date;
-  updatedAt: Date;
 }
 
 const AssessmentQuestionSchema = new Schema<IAssessmentQuestion>(
   {
-    assessmentId: { type: String, required: true, index: true },
     questionId: { type: String, required: true, unique: true, index: true },
-    order: { type: Number, required: true, default: 1 },
+    assessmentId: { type: String, required: true, index: true },
+    conceptId: { type: String, required: true, index: true },
+    subject: { type: String, required: true, index: true },
+    topic: { type: String, required: true },
     questionType: {
       type: String,
-      enum: ['mcq', 'multiple_select', 'true_false', 'numerical', 'short_answer', 'long_answer', 'essay', 'coding', 'file_upload'],
-      required: true,
+      enum: ['mcq', 'multiple_select', 'true_false', 'short_answer', 'numerical', 'coding', 'assertion_reason', 'case_based'],
+      default: 'mcq',
+      index: true,
     },
-    question: { type: String, required: true },
+    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium', index: true },
+    questionText: { type: String, required: true },
     options: [{ type: String }],
-    marks: { type: Number, required: true, default: 1 },
-    correctAnswer: { type: Schema.Types.Mixed },
-    expectedPoints: [{ type: String }],
-    conceptIds: [{ type: String }],
-    topicId: { type: String },
-    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
-    rubricCriteria: [
-      {
-        criterionId: { type: String },
-        maxMarks: { type: Number },
-      },
-    ],
-    modelAnswer: { type: String },
-    hints: [{ type: String }],
-    attachments: [{ type: String }],
-    sourceType: {
-      type: String,
-      enum: ['manual', 'question_bank', 'personalized_practice', 'mock_exam'],
-      default: 'manual',
-    },
-    verified: { type: Boolean, default: true },
+    correctAnswer: { type: Schema.Types.Mixed, required: true },
+    explanation: { type: String, default: '' },
+    solutionSteps: [{ type: String }],
+    marks: { type: Number, default: 4 },
+    negativeMarks: { type: Number, default: 0 },
+    learningObjective: { type: String },
+    prerequisiteConcepts: [{ type: String }],
+    sourceReference: { type: String, default: 'NCERT' },
+    generationMethod: { type: String, enum: ['manual', 'template', 'ai_draft', 'ai_validated'], default: 'ai_validated' },
+    validationStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
 
+AssessmentQuestionSchema.index({ assessmentId: 1, isActive: 1 });
+AssessmentQuestionSchema.index({ conceptId: 1, difficulty: 1 });
+
 export const AssessmentQuestion =
-  mongoose.models.AssessmentQuestion ||
-  mongoose.model<IAssessmentQuestion>('AssessmentQuestion', AssessmentQuestionSchema);
+  mongoose.models.AssessmentQuestion || mongoose.model<IAssessmentQuestion>('AssessmentQuestion', AssessmentQuestionSchema);

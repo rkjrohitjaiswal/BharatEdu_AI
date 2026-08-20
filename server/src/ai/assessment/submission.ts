@@ -6,11 +6,12 @@ export class AssessmentSubmissionManager {
     assessment: IAssessment,
     now: Date = new Date()
   ): { isLate: boolean; lateByMinutes: number; penaltyPercent: number } {
-    if (!assessment.dueAt) {
+    const dueAt = (assessment as any).dueAt;
+    if (!dueAt) {
       return { isLate: false, lateByMinutes: 0, penaltyPercent: 0 };
     }
 
-    const dueTime = new Date(assessment.dueAt).getTime();
+    const dueTime = new Date(dueAt).getTime();
     const currentTime = now.getTime();
 
     if (currentTime <= dueTime) {
@@ -19,14 +20,14 @@ export class AssessmentSubmissionManager {
 
     const lateByMinutes = Math.ceil((currentTime - dueTime) / (1000 * 60));
 
-    if (!assessment.lateSubmissionAllowed) {
-      throw new Error(`Submission deadline has passed by ${lateByMinutes} minutes. Late submissions are not allowed for this assessment.`);
+    if (!(assessment as any).lateSubmissionAllowed) {
+      return { isLate: true, lateByMinutes, penaltyPercent: 100 };
     }
 
     return {
       isLate: true,
       lateByMinutes,
-      penaltyPercent: assessment.latePenaltyPercent || 10,
+      penaltyPercent: (assessment as any).latePenaltyPercent || 10,
     };
   }
 

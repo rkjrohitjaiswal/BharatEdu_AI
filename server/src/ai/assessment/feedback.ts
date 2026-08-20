@@ -27,11 +27,12 @@ export class AssessmentFeedbackGenerator {
 
       if (q) {
         if (isFullMarks) {
-          strengths.push(`Mastered concept in ${q.topicId || 'question'} (${qg.score}/${qg.maxScore} marks)`);
+          strengths.push(`Mastered concept in ${(q as any).topic || (q as any).topicId || 'question'} (${qg.score}/${qg.maxScore} marks)`);
         } else {
-          weaknesses.push(`Needs review in ${q.topicId || 'question'} (${qg.score}/${qg.maxScore} marks)`);
-          if (q.topicId && !recommendedRevisionTopics.includes(q.topicId)) {
-            recommendedRevisionTopics.push(q.topicId);
+          weaknesses.push(`Needs review in ${(q as any).topic || (q as any).topicId || 'question'} (${qg.score}/${qg.maxScore} marks)`);
+          const top = (q as any).topic || (q as any).topicId;
+          if (top && !recommendedRevisionTopics.includes(top)) {
+            recommendedRevisionTopics.push(top);
           }
         }
 
@@ -41,7 +42,7 @@ export class AssessmentFeedbackGenerator {
 
         questionBreakdown.push({
           questionId: q.questionId,
-          questionText: q.question,
+          questionText: (q as any).questionText || (q as any).question || '',
           score: qg.score,
           maxMarks: qg.maxScore,
           studentAnswer: ans?.answer,

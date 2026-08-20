@@ -1,42 +1,28 @@
 import React from 'react';
-import { DifficultyBadge } from './DifficultyBadge';
-import { QuestionOptions } from './QuestionOptions';
+import { IAssessmentQuestionClient } from '../../types/assessment-engine';
+import { BookOpen } from 'lucide-react';
 
-export interface QuestionCardProps {
-  question: any;
-  selectedAnswer: string;
-  onSelectAnswer: (ans: string) => void;
-  disabled?: boolean;
+interface Props {
+  question: IAssessmentQuestionClient;
 }
 
-export const QuestionCard: React.FC<QuestionCardProps> = ({
-  question,
-  selectedAnswer,
-  onSelectAnswer,
-  disabled,
-}) => {
-  if (!question) return null;
-
-  const { stem, questionType, difficulty, options } = question;
-
+export const QuestionCard: React.FC<Props> = ({ question }) => {
   return (
-    <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+    <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-          Question Type: {questionType.replace('_', ' ')}
+        <span className="text-[10px] font-bold text-slate-400 uppercase bg-slate-800 px-2.5 py-1 rounded-xl">
+          {question.topic} • {question.difficulty.toUpperCase()} • {question.marks} Marks
         </span>
-        <DifficultyBadge difficulty={difficulty} />
+        <span className="text-xs font-semibold text-slate-400 flex items-center gap-1">
+          <BookOpen className="w-3.5 h-3.5 text-purple-400" /> {question.sourceReference || 'NCERT'}
+        </span>
       </div>
 
-      <h3 className="font-extrabold text-base text-slate-900 leading-relaxed">{stem}</h3>
-
-      <QuestionOptions
-        questionType={questionType}
-        options={options}
-        selectedAnswer={selectedAnswer}
-        onSelect={onSelectAnswer}
-        disabled={disabled}
-      />
+      <h2 className="text-base md:text-lg font-bold text-white leading-snug">
+        {question.questionText}
+      </h2>
     </div>
   );
 };
+
+export default QuestionCard;

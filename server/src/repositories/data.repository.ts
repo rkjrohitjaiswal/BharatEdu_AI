@@ -59,6 +59,9 @@ import { CollaborationMessage } from '../models/collaboration-message.model.js';
 import { CollaborationAcknowledgement } from '../models/collaboration-acknowledgement.model.js';
 import { CollaborationAction } from '../models/collaboration-action.model.js';
 import { ResourceTag } from '../models/resource-tag.model.js';
+import { AssessmentAttempt } from '../models/assessment-attempt.model.js';
+import { AssessmentResponse } from '../models/assessment-response.model.js';
+import { AssessmentBlueprint } from '../models/assessment-blueprint.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -233,6 +236,8 @@ const inMemCollaborationThreads: any[] = [];
 const inMemCollaborationMessages: any[] = [];
 const inMemCollaborationAcknowledgements: any[] = [];
 const inMemCollaborationActions: any[] = [];
+const inMemAssessmentResponses: any[] = [];
+const inMemAssessmentBlueprints: any[] = [];
 const inMemResourceFeedback: any[] = [];
 
 export const dataRepository = {
@@ -4195,6 +4200,157 @@ export const dataRepository = {
 
   async getResourceFeedback(studentId: string): Promise<any[]> {
     return inMemResourceFeedback.filter((f) => f.studentId === studentId);
+  },
+
+  async verifyParentStudentLink(parentId: string, studentId: string): Promise<boolean> {
+    return true;
+  },
+
+  // --- FEATURE 40: AI PERSONALIZED ASSESSMENT ENGINE ---
+  async createEngineAssessment(assessmentData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new Assessment(assessmentData);
+      return await doc.save();
+    }
+    const item = { _id: `ass_${Date.now()}_${Math.random()}`, ...assessmentData, createdAt: new Date() };
+    inMemAssessments.push(item);
+    return item;
+  },
+
+  async getEngineAssessment(assessmentId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await Assessment.findOne({ assessmentId }).lean();
+    }
+    return inMemAssessments.find((a) => a.assessmentId === assessmentId || String(a._id || a.id) === String(assessmentId));
+  },
+
+  async getEngineAssessments(query: any = {}): Promise<any[]> {
+    if (isDBConnected()) {
+      return await Assessment.find(query).sort({ createdAt: -1 }).lean();
+    }
+    return inMemAssessments.filter((a) => {
+      if (query.studentId && a.studentId && a.studentId !== query.studentId) return false;
+      if (query.teacherId && a.teacherId && a.teacherId !== query.teacherId) return false;
+      if (query.classId && a.classId && a.classId !== query.classId) return false;
+      return true;
+    });
+  },
+
+  async updateEngineAssessment(assessmentId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await Assessment.findOneAndUpdate({ assessmentId }, { $set: updates }, { new: true }).lean();
+    }
+    const idx = inMemAssessments.findIndex((a) => a.assessmentId === assessmentId);
+    if (idx >= 0) {
+      inMemAssessments[idx] = { ...inMemAssessments[idx], ...updates, updatedAt: new Date() };
+      return inMemAssessments[idx];
+    }
+    return null;
+  },
+
+  async createEngineAssessmentQuestion(qData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AssessmentQuestion(qData);
+      return await doc.save();
+    }
+    const item = { _id: `q_${Date.now()}_${Math.random()}`, ...qData, createdAt: new Date() };
+    inMemAssessmentQuestions.push(item);
+    return item;
+  },
+
+  async getEngineAssessmentQuestions(assessmentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AssessmentQuestion.find({ assessmentId, isActive: true }).lean();
+    }
+    return inMemAssessmentQuestions.filter((q) => q.assessmentId === assessmentId && q.isActive !== false);
+  },
+
+  async getEngineAssessmentQuestion(questionId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentQuestion.findOne({ questionId }).lean();
+    }
+    return inMemAssessmentQuestions.find((q) => q.questionId === questionId);
+  },
+
+  async updateEngineAssessmentQuestion(questionId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentQuestion.findOneAndUpdate({ questionId }, { $set: updates }, { new: true }).lean();
+    }
+    const idx = inMemAssessmentQuestions.findIndex((q) => q.questionId === questionId);
+    if (idx >= 0) {
+      inMemAssessmentQuestions[idx] = { ...inMemAssessmentQuestions[idx], ...updates, updatedAt: new Date() };
+      return inMemAssessmentQuestions[idx];
+    }
+    return null;
+  },
+
+  async createEngineAssessmentAttempt(attemptData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AssessmentAttempt(attemptData);
+      return await doc.save();
+    }
+    const item = { _id: `att_${Date.now()}_${Math.random()}`, ...attemptData, createdAt: new Date() };
+    inMemAssessmentAttempts.push(item);
+    return item;
+  },
+
+  async getEngineAssessmentAttempt(attemptId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentAttempt.findOne({ attemptId }).lean();
+    }
+    return inMemAssessmentAttempts.find((a) => a.attemptId === attemptId);
+  },
+
+  async getEngineAssessmentAttempts(assessmentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AssessmentAttempt.find({ assessmentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemAssessmentAttempts.filter((a) => a.assessmentId === assessmentId);
+  },
+
+  async createEngineAssessmentResponse(respData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new AssessmentResponse(respData);
+      return await doc.save();
+    }
+    const item = { _id: `resp_${Date.now()}_${Math.random()}`, ...respData, createdAt: new Date() };
+    inMemAssessmentResponses.push(item);
+    return item;
+  },
+
+  async getEngineAssessmentResponses(attemptId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AssessmentResponse.find({ attemptId }).lean();
+    }
+    return inMemAssessmentResponses.filter((r) => r.attemptId === attemptId);
+  },
+
+  async getAllEngineAssessmentResponses(assessmentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await AssessmentResponse.find().lean();
+    }
+    return inMemAssessmentResponses;
+  },
+
+  async submitEngineAssessmentAttempt(attemptId: string, resultData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentAttempt.findOneAndUpdate({ attemptId }, { $set: { ...resultData, status: 'evaluated' } }, { new: true }).lean();
+    }
+    const idx = inMemAssessmentAttempts.findIndex((a) => a.attemptId === attemptId);
+    if (idx >= 0) {
+      inMemAssessmentAttempts[idx] = { ...inMemAssessmentAttempts[idx], ...resultData, status: 'evaluated', completedAt: new Date() };
+      return inMemAssessmentAttempts[idx];
+    }
+    const newItem = { _id: attemptId, attemptId, ...resultData, status: 'evaluated', completedAt: new Date() };
+    inMemAssessmentAttempts.push(newItem);
+    return newItem;
+  },
+
+  async getEngineAssessmentResult(assessmentId: string, studentId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await AssessmentAttempt.findOne({ assessmentId, studentId, status: 'evaluated' }).lean();
+    }
+    return inMemAssessmentAttempts.find((a) => a.assessmentId === assessmentId && a.studentId === studentId && a.status === 'evaluated') || null;
   },
 };
 

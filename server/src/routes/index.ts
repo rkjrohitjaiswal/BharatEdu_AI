@@ -60,8 +60,11 @@ import {
   parentCollaborationRouter,
   studentCollaborationRouter,
 } from './collaboration.routes.js';
+import assessmentEngineRoutes from './assessment-engine.routes.js';
 
 const router = Router();
+
+router.use('/', assessmentEngineRoutes);
 
 router.use('/', healthRoutes);
 router.use('/auth', authRoutes);

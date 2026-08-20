@@ -30,7 +30,7 @@ export class SubjectiveEvaluator {
   ): SubjectiveEvalResult {
     const questionId = question.questionId;
     const maxScore = question.marks || 5;
-    const expectedPoints = question.expectedPoints || [];
+    const expectedPoints: string[] = (question as any).expectedPoints || (question as any).explanation?.split('.') || [];
     const answerText = String(studentAnswer || '').trim();
 
     if (!answerText) {
@@ -59,8 +59,8 @@ export class SubjectiveEvaluator {
     // Check expected points matches
     for (const pt of expectedPoints) {
       const lowerPt = pt.toLowerCase();
-      const keywords = lowerPt.split(' ').filter((w) => w.length > 3);
-      const matched = keywords.some((k) => lowerText.includes(k));
+      const keywords = lowerPt.split(' ').filter((w: string) => w.length > 3);
+      const matched = keywords.some((k: string) => lowerText.includes(k));
       if (matched) {
         matchesCount++;
         strengths.push(`Identified key concept point: "${pt}"`);

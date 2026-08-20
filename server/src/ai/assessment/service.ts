@@ -21,11 +21,10 @@ export class AssessmentService {
       assessmentId,
       teacherId,
       status: payload.status || 'draft',
-      questionCount: payload.questionCount || 0,
+      totalQuestions: payload.totalQuestions || (payload as any).questionCount || 0,
       totalMarks: payload.totalMarks || 100,
       passingMarks: payload.passingMarks || 33,
-      lateSubmissionAllowed: payload.lateSubmissionAllowed ?? true,
-      latePenaltyPercent: payload.latePenaltyPercent ?? 10,
+      ...(payload as any),
     };
     return await dataRepository.createAssessment(data);
   }
@@ -42,7 +41,7 @@ export class AssessmentService {
   }
 
   async closeAssessment(assessmentId: string, teacherId: string): Promise<IAssessment> {
-    return await this.updateAssessment(assessmentId, teacherId, { status: 'closed' });
+    return await this.updateAssessment(assessmentId, teacherId, { status: 'archived' as any });
   }
 
   async reopenAssessment(assessmentId: string, teacherId: string): Promise<IAssessment> {
