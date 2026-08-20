@@ -18,6 +18,7 @@ import {
   GitBranch,
   Home,
   Sparkles,
+  MessageSquare,
   LogIn,
   UserPlus,
   LogOut,
@@ -78,12 +79,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'Progress Tracker', path: '/progress', icon: LineChart },
     { name: 'Scholarships', path: '/scholarships', icon: Award },
     { name: 'Saved Scholarships', path: '/scholarships/saved', icon: Award },
+    { name: 'Teacher Guidance', path: '/collaboration', icon: MessageSquare, badge: 'Guidance' },
     { name: 'Parent Link', path: '/parent-link', icon: Users, badge: 'Access' },
   ];
 
   const teacherNav: NavGroupItem[] = [
     { name: 'Teacher Dashboard', path: '/teacher', icon: GraduationCap },
     { name: 'AI Class Intelligence', path: '/teacher/classroom-intelligence', icon: Users, badge: 'Intelligence' },
+    { name: 'Intervention Collaboration', path: '/teacher/collaboration', icon: MessageSquare, badge: 'Communication' },
     { name: 'AI Teacher Copilot', path: '/teacher/copilot', icon: Bot, badge: 'Copilot' },
     { name: 'AI Teacher Assessments', path: '/teacher/assessments', icon: Award, badge: 'Rubric' },
     { name: 'Remediation Portal', path: '/teacher/interventions', icon: Sparkles },
@@ -94,6 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
   const parentNav: NavGroupItem[] = [
     { name: 'Dashboard', path: '/parent/dashboard', icon: LayoutDashboard },
     { name: 'AI Parent Copilot', path: '/parent/copilot', icon: Bot, badge: 'Copilot' },
+    { name: 'Teacher Collaboration', path: '/parent/collaboration', icon: MessageSquare, badge: 'Updates' },
     { name: 'My Students', path: '/parent/dashboard', icon: Users },
     { name: 'Progress Overview', path: '/parent/dashboard', icon: LineChart },
     { name: 'Scholarships', path: '/scholarships', icon: Award },

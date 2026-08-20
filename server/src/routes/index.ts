@@ -55,6 +55,11 @@ import {
 
 import classroomIntelligenceRoutes from './classroom-intelligence.routes.js';
 import classroomInterventionRoutes from './intervention.routes.js';
+import {
+  teacherCollaborationRouter,
+  parentCollaborationRouter,
+  studentCollaborationRouter,
+} from './collaboration.routes.js';
 
 const router = Router();
 
@@ -62,6 +67,9 @@ router.use('/', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/teacher/classroom-intelligence', classroomIntelligenceRoutes);
 router.use('/teacher/interventions', classroomInterventionRoutes);
+router.use('/teacher/collaboration', teacherCollaborationRouter);
+router.use('/parent/collaboration', parentCollaborationRouter);
+router.use('/student/collaboration', studentCollaborationRouter);
 router.use('/teacher/copilot', teacherCopilotRoutes);
 router.use('/teacher/assessments', teacherTeacherAssessmentRouter);
 router.use('/teacher/submissions', teacherSubmissionsRouter);

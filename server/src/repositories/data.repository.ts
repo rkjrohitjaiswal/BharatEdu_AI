@@ -54,6 +54,10 @@ import { ClassroomIntelligence } from '../models/classroom-intelligence.model.js
 import { ClassAnalyticsSnapshot } from '../models/class-analytics-snapshot.model.js';
 import { ClassroomStudentProfile } from '../models/classroom-student-profile.model.js';
 import { ClassroomIntervention } from '../models/classroom-intervention.model.js';
+import { CollaborationThread } from '../models/collaboration-thread.model.js';
+import { CollaborationMessage } from '../models/collaboration-message.model.js';
+import { CollaborationAcknowledgement } from '../models/collaboration-acknowledgement.model.js';
+import { CollaborationAction } from '../models/collaboration-action.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -224,6 +228,10 @@ const inMemClassroomIntelligences: any[] = [];
 const inMemClassAnalyticsSnapshots: any[] = [];
 const inMemClassroomStudentProfiles: any[] = [];
 const inMemClassroomInterventions: any[] = [];
+const inMemCollaborationThreads: any[] = [];
+const inMemCollaborationMessages: any[] = [];
+const inMemCollaborationAcknowledgements: any[] = [];
+const inMemCollaborationActions: any[] = [];
 
 export const dataRepository = {
   // --- SCHOLARSHIP INTELLIGENCE ---
@@ -4023,6 +4031,109 @@ export const dataRepository = {
     if (idx >= 0) {
       inMemClassroomInterventions[idx] = { ...inMemClassroomInterventions[idx], ...updates, updatedAt: new Date() };
       return inMemClassroomInterventions[idx];
+    }
+    return null;
+  },
+
+  // --- FEATURE 38: COLLABORATION & INTERVENTION COMMUNICATION ---
+  async createCollaborationThread(threadData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new CollaborationThread(threadData);
+      return await doc.save();
+    }
+    const item = { _id: `th_${Date.now()}_${Math.random()}`, ...threadData, createdAt: new Date(), updatedAt: new Date(), lastMessageAt: new Date() };
+    inMemCollaborationThreads.push(item);
+    return item;
+  },
+
+  async getCollaborationThreads(query: any): Promise<any[]> {
+    if (isDBConnected()) {
+      return await CollaborationThread.find(query).sort({ lastMessageAt: -1 }).lean();
+    }
+    return inMemCollaborationThreads
+      .filter((t) => {
+        if (query.teacherId && t.teacherId !== query.teacherId) return false;
+        if (query.parentId && t.parentId !== query.parentId) return false;
+        if (query.studentId && t.studentId !== query.studentId) return false;
+        if (query.classId && t.classId !== query.classId) return false;
+        return true;
+      })
+      .sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime());
+  },
+
+  async getCollaborationThread(threadId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await CollaborationThread.findOne({ threadId }).lean();
+    }
+    return inMemCollaborationThreads.find((t) => t.threadId === threadId);
+  },
+
+  async createCollaborationMessage(messageData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new CollaborationMessage(messageData);
+      const saved = await doc.save();
+      await CollaborationThread.updateOne({ threadId: messageData.threadId }, { lastMessageAt: new Date() });
+      return saved;
+    }
+    const item = { _id: `msg_${Date.now()}_${Math.random()}`, ...messageData, createdAt: new Date() };
+    inMemCollaborationMessages.push(item);
+    const thIdx = inMemCollaborationThreads.findIndex((t) => t.threadId === messageData.threadId);
+    if (thIdx >= 0) inMemCollaborationThreads[thIdx].lastMessageAt = new Date();
+    return item;
+  },
+
+  async getCollaborationMessages(threadId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await CollaborationMessage.find({ threadId }).sort({ createdAt: 1 }).lean();
+    }
+    return inMemCollaborationMessages.filter((m) => m.threadId === threadId).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  },
+
+  async createAcknowledgement(ackData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new CollaborationAcknowledgement(ackData);
+      return await doc.save();
+    }
+    const existing = inMemCollaborationAcknowledgements.find((a) => a.messageId === ackData.messageId && a.userId === ackData.userId);
+    if (existing) return existing;
+
+    const item = { _id: `ack_${Date.now()}_${Math.random()}`, ...ackData, createdAt: new Date() };
+    inMemCollaborationAcknowledgements.push(item);
+    return item;
+  },
+
+  async getAcknowledgements(messageId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await CollaborationAcknowledgement.find({ messageId }).lean();
+    }
+    return inMemCollaborationAcknowledgements.filter((a) => a.messageId === messageId);
+  },
+
+  async createCollaborationAction(actionData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new CollaborationAction(actionData);
+      return await doc.save();
+    }
+    const item = { _id: `act_${Date.now()}_${Math.random()}`, ...actionData, createdAt: new Date() };
+    inMemCollaborationActions.push(item);
+    return item;
+  },
+
+  async getCollaborationActions(threadId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await CollaborationAction.find({ threadId }).lean();
+    }
+    return inMemCollaborationActions.filter((a) => a.threadId === threadId);
+  },
+
+  async updateCollaborationAction(actionId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await CollaborationAction.findOneAndUpdate({ actionId }, { $set: updates }, { new: true }).lean();
+    }
+    const idx = inMemCollaborationActions.findIndex((a) => a.actionId === actionId);
+    if (idx >= 0) {
+      inMemCollaborationActions[idx] = { ...inMemCollaborationActions[idx], ...updates, updatedAt: new Date() };
+      return inMemCollaborationActions[idx];
     }
     return null;
   },

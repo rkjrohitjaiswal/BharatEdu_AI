@@ -49,6 +49,9 @@ import { MockExamResultPage } from './pages/MockExamResultPage';
 import { MockExamHistoryPage } from './pages/MockExamHistoryPage';
 import { TeacherAssessmentsPage } from './pages/TeacherAssessmentsPage';
 import { TeacherClassroomIntelligencePage } from './pages/TeacherClassroomIntelligencePage';
+import { CollaborationTeacherPage } from './pages/CollaborationTeacherPage';
+import { ParentCollaborationPage } from './pages/ParentCollaborationPage';
+import { StudentCollaborationPage } from './pages/StudentCollaborationPage';
 import { CreateAssessmentPage } from './pages/CreateAssessmentPage';
 import { AssessmentAnalyticsPage } from './pages/AssessmentAnalyticsPage';
 import { StudentAssessmentsPage } from './pages/StudentAssessmentsPage';
@@ -108,14 +111,16 @@ export const App: React.FC = () => (
           <Route path="adaptive-assessment" element={<ProtectedRoute allowedRoles={['student']}><AdaptiveAssessmentPage /></ProtectedRoute>} />
           <Route path="teacher/copilot" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherCopilotPage /></ProtectedRoute>} />
           <Route path="teacher/classroom-intelligence" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherClassroomIntelligencePage /></ProtectedRoute>} />
+          <Route path="teacher/collaboration" element={<ProtectedRoute allowedRoles={['teacher']}><CollaborationTeacherPage /></ProtectedRoute>} />
           <Route path="teacher/assessments" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherAssessmentsPage /></ProtectedRoute>} />
-          <Route path="teacher/assessments/create" element={<ProtectedRoute allowedRoles={['teacher']}><CreateAssessmentPage /></ProtectedRoute>} />
+          <Route path="parent/copilot" element={<ProtectedRoute allowedRoles={['parent']}><ParentCopilotPage /></ProtectedRoute>} />
+          <Route path="parent/collaboration" element={<ProtectedRoute allowedRoles={['parent']}><ParentCollaborationPage /></ProtectedRoute>} />
+          <Route path="collaboration" element={<ProtectedRoute allowedRoles={['student']}><StudentCollaborationPage /></ProtectedRoute>} />
           <Route path="teacher/assessments/:assessmentId/submissions/:submissionId/review" element={<ProtectedRoute allowedRoles={['teacher']}><AssessmentReviewPage /></ProtectedRoute>} />
           <Route path="teacher/assessments/:assessmentId/analytics" element={<ProtectedRoute allowedRoles={['teacher']}><AssessmentAnalyticsPage /></ProtectedRoute>} />
           <Route path="student/assessments-portal" element={<ProtectedRoute allowedRoles={['student']}><StudentAssessmentsPage /></ProtectedRoute>} />
           <Route path="student/teacher-assessments/:assessmentId" element={<ProtectedRoute allowedRoles={['student']}><StudentAssessmentPage /></ProtectedRoute>} />
           <Route path="student/submissions/:submissionId/result" element={<ProtectedRoute allowedRoles={['student']}><StudentSubmissionPage /></ProtectedRoute>} />
-          <Route path="parent/copilot" element={<ProtectedRoute allowedRoles={['parent']}><ParentCopilotPage /></ProtectedRoute>} />
           <Route path="risk" element={<ProtectedRoute allowedRoles={['student', 'teacher']}><RiskPredictionDashboardPage /></ProtectedRoute>} />
           <Route path="parent/risk/:studentId" element={<ProtectedRoute allowedRoles={['parent']}><RiskPredictionDashboardPage /></ProtectedRoute>} />
           <Route path="analytics" element={<ProtectedRoute allowedRoles={['student', 'teacher']}><AnalyticsDashboardPage /></ProtectedRoute>} />

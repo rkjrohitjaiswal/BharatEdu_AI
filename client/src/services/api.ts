@@ -4462,6 +4462,152 @@ export const fetchInterventionEffectiveness = async (interventionId: string) => 
   }
 };
 
+// --- FEATURE 38: COLLABORATION & INTERVENTION COMMUNICATION APIs ---
+export const fetchTeacherCollaborationThreads = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/collaboration/threads`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher collaboration threads' };
+  }
+};
+
+export const fetchThreadDetails = async (role: 'teacher' | 'parent' | 'student', threadId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${role}/collaboration/${threadId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch thread details' };
+  }
+};
+
+export const sendCollaborationMessage = async (role: 'teacher' | 'parent' | 'student', threadId: string, body: string, recipientIds?: string[], requiresAck?: boolean) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${role}/collaboration/${threadId}/messages`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ body, recipientIds, requiresAcknowledgement: requiresAck }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to send message' };
+  }
+};
+
+export const generateCollaborationDraft = async (payload: any) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/collaboration/draft`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate message draft' };
+  }
+};
+
+export const fetchCollaborationFollowups = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/collaboration/followups`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch followup queue' };
+  }
+};
+
+export const createCollaborationAction = async (payload: any) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/collaboration/actions`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to create collaboration action' };
+  }
+};
+
+export const fetchParentCollaborationThreads = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/collaboration/threads`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent collaboration threads' };
+  }
+};
+
+export const acknowledgeCollaborationMessage = async (role: 'parent' | 'student', messageId: string, responseText?: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${role}/collaboration/messages/${messageId}/acknowledge`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ response: responseText }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to acknowledge message' };
+  }
+};
+
+export const completeCollaborationAction = async (role: 'parent' | 'student', actionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${role}/collaboration/actions/${actionId}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to complete action' };
+  }
+};
+
+export const startCollaborationAction = async (actionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/collaboration/actions/${actionId}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to start action' };
+  }
+};
+
+export const fetchStudentCollaborationThreads = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/collaboration/threads`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student collaboration threads' };
+  }
+};
+
+export const submitCollaborationHelpRequest = async (role: 'parent' | 'student', payload: any) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${role}/collaboration/request-help`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to submit help request' };
+  }
+};
+
+
 
 
 
