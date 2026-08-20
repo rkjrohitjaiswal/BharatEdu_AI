@@ -1950,3 +1950,168 @@ export const fetchResourceRecommendationSummary = async (): Promise<{
     return { success: false, message: 'Failed to fetch resource recommendation summary' };
   }
 };
+
+// --- FEATURE 20: SMART REVISION API HELPERS ---
+export const fetchTodayRevisionPlan = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/today`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch today revision plan' };
+  }
+};
+
+export const fetchWeeklyRevisionPlan = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/week`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch weekly revision plan' };
+  }
+};
+
+export const fetchRevisionSummary = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch revision summary' };
+  }
+};
+
+export const fetchDueRevisionItems = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/due`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch due revision items' };
+  }
+};
+
+export const fetchOverdueRevisionItems = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/overdue`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch overdue revision items' };
+  }
+};
+
+export const fetchRevisionItemById = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/${id}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch revision item details' };
+  }
+};
+
+export const generateRevisionPlan = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/generate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate revision items' };
+  }
+};
+
+export const refreshRevisionPlan = async (): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/refresh`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to refresh revision plan' };
+  }
+};
+
+export const startRevisionSession = async (
+  id: string
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/${id}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to start revision session' };
+  }
+};
+
+export const completeRevisionSession = async (
+  id: string,
+  questionsAttempted: number,
+  questionsCorrect: number
+): Promise<{
+  success: boolean;
+  data?: any;
+  message?: string;
+}> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/revision/${id}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ questionsAttempted, questionsCorrect }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to complete revision session' };
+  }
+};
+

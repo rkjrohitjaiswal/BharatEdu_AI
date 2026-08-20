@@ -26,6 +26,7 @@ import { StudentMentorCard } from '../components/dashboard/StudentMentorCard';
 import { LearningAnalyticsCard } from '../components/dashboard/LearningAnalyticsCard';
 import { StudyPlannerCard } from '../components/dashboard/StudyPlannerCard';
 import { RecommendedResourcesCard } from '../components/dashboard/RecommendedResourcesCard';
+import { RevisionCard } from '../components/dashboard/RevisionCard';
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -105,6 +106,9 @@ export const DashboardPage: React.FC = () => {
 
       {/* Recommended Resources Compact Card */}
       <RecommendedResourcesCard />
+
+      {/* Smart Revision Compact Card */}
+      <RevisionCard />
 
       {/* 2. Key Metrics Stats Overview */}
       <LearningOverview

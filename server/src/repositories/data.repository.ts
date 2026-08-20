@@ -29,6 +29,8 @@ import { StudentGoal, IStudentGoal } from '../models/student-goal.model.js';
 import { Achievement, IAchievement } from '../models/achievement.model.js';
 import { ExamPreparationModel } from '../models/exam-preparation.model.js';
 import { LearningResource } from '../models/learning-resource.model.js';
+import { RevisionItem } from '../models/revision-item.model.js';
+import { RevisionSession } from '../models/revision-session.model.js';
 import { ExamTopicProgressModel } from '../models/exam-topic-progress.model.js';
 import { CareerGoal, ICareerGoal } from '../models/career-goal.model.js';
 import { NotificationModel, INotification } from '../models/notification.model.js';
@@ -2013,5 +2015,19 @@ export const dataRepository = {
       return await LearningResource.find({ active: true }).lean();
     }
     return [];
+  },
+
+  async getRevisionItems(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await RevisionItem.find({ studentId }).lean();
+    }
+    return [];
+  },
+
+  async createRevisionSession(sessionData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await RevisionSession.create(sessionData);
+    }
+    return sessionData;
   },
 };

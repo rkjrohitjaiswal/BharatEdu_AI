@@ -46,6 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'AI Success Mentor', path: '/mentor', icon: Bot, badge: 'Mentor' },
     { name: 'AI Study Planner', path: '/study-planner', icon: Calendar, badge: 'Planner' },
+    { name: 'Smart Revision', path: '/revision', icon: BrainCircuit, badge: 'Spaced' },
     { name: 'Learning Resources', path: '/resources', icon: BookOpen, badge: 'Resources' },
     { name: 'Risk Assessment', path: '/risk', icon: AlertTriangle, badge: 'Early Warning' },
     { name: 'Analytics & Insights', path: '/analytics', icon: BarChart3, badge: 'Insights' },
