@@ -7,12 +7,18 @@ import { StudentAnalyticsView } from '../components/analytics/StudentAnalyticsVi
 import { TeacherAnalyticsView } from '../components/analytics/TeacherAnalyticsView';
 import { ParentAnalyticsView } from '../components/analytics/ParentAnalyticsView';
 
+import { LearningAnalyticsPage } from './LearningAnalyticsPage';
+
 export const AnalyticsDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { studentId } = useParams<{ studentId?: string }>();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+
+  if (user?.role === 'student') {
+    return <LearningAnalyticsPage />;
+  }
 
   const loadAnalytics = async () => {
     setLoading(true);
