@@ -44,8 +44,12 @@ export interface IMockExam extends Document {
     hard: number;
   };
   status: MockExamStatus;
+  type?: 'diagnostic' | 'sectional' | 'full_length' | 'weak_topic' | 'final_simulation';
+  questionCount?: number;
+  generatedAt?: Date;
   startedAt?: Date;
   submittedAt?: Date;
+  completedAt?: Date;
   expiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;

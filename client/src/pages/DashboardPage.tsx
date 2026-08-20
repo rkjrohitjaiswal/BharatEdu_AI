@@ -38,6 +38,7 @@ import { PersonalizedPracticeCard } from '../components/dashboard/PersonalizedPr
 import { ExamSimulatorCard } from '../components/dashboard/ExamSimulatorCard';
 import { ResourceRecommendationsCard } from '../components/dashboard/ResourceRecommendationsCard';
 import { AssessmentEngineCard } from '../components/dashboard/AssessmentEngineCard';
+import { ExamPrepEngineCard } from '../components/dashboard/ExamPrepEngineCard';
 import { TeacherGuidanceCard } from '../components/collaboration/TeacherGuidanceCard';
 import { TeacherAssessmentCard } from '../components/dashboard/TeacherAssessmentCard';
 import { StudyMaterialCard } from '../components/dashboard/StudyMaterialCard';
@@ -111,6 +112,9 @@ export const DashboardPage: React.FC = () => {
     <div className="space-y-6">
       {/* 1. Welcome Header */}
       <StudentWelcome user={user} profile={studentProfile} />
+
+      {/* Feature 41: AI Exam Prep Engine Card */}
+      <ExamPrepEngineCard />
 
       {/* AI Success Mentor Compact Card */}
       <StudentMentorCard />

@@ -82,12 +82,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'Saved Scholarships', path: '/scholarships/saved', icon: Award },
     { name: 'Teacher Guidance', path: '/collaboration', icon: MessageSquare, badge: 'Guidance' },
     { name: 'Resource Catalog', path: '/resources', icon: BookOpen, badge: 'AI Verified' },
-    { name: 'Diagnostic Tests', path: '/assessments', icon: Award, badge: 'Adaptive' },
+    { name: 'AI Personalized Assessment', path: '/assessments', icon: Award, badge: 'Engine' },
+    { name: 'AI Exam Prep Engine', path: '/exam-preparation', icon: Target, badge: 'Prep' },
     { name: 'Parent Link', path: '/parent-link', icon: Users, badge: 'Access' },
   ];
 
   const teacherNav: NavGroupItem[] = [
     { name: 'Teacher Dashboard', path: '/teacher', icon: GraduationCap },
+    { name: 'AI Exam Prep Class Intelligence', path: '/teacher/exam-preparation', icon: Target, badge: 'Prep' },
     { name: 'AI Class Intelligence', path: '/teacher/classroom-intelligence', icon: Users, badge: 'Intelligence' },
     { name: 'Intervention Collaboration', path: '/teacher/collaboration', icon: MessageSquare, badge: 'Communication' },
     { name: 'Class Resource Analytics', path: '/teacher/resources', icon: BookOpen, badge: 'Resources' },
@@ -105,6 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'Teacher Collaboration', path: '/parent/collaboration', icon: MessageSquare, badge: 'Updates' },
     { name: 'Child Resources', path: '/parent/resources', icon: BookOpen, badge: 'Verified' },
     { name: 'Child Assessments', path: '/parent/assessments/student/student_1', icon: Award, badge: 'Evaluated' },
+    { name: 'Child Exam Readiness', path: '/parent/exam-preparation/student/student_1', icon: Target, badge: 'Prep' },
     { name: 'My Students', path: '/parent/dashboard', icon: Users },
     { name: 'Progress Overview', path: '/parent/dashboard', icon: LineChart },
     { name: 'Scholarships', path: '/scholarships', icon: Award },

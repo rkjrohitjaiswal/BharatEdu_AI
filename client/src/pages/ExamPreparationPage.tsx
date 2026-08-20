@@ -1,77 +1,150 @@
 import React, { useEffect, useState } from 'react';
-import { PageHeader } from '../components/PageHeader';
-import { Card } from '../components/Card';
-import { Button } from '../components/Button';
-import { SkeletonLoader } from '../components/SkeletonLoader';
-import { fetchStudentExams, createExam, deleteExam } from '../services/api';
-import { ExamCard } from '../components/exams/ExamCard';
-import { ExamEmptyState } from '../components/exams/ExamEmptyState';
-import { CreateExamModal } from '../components/exams/CreateExamModal';
-import { Plus, GraduationCap } from 'lucide-react';
+import { fetchStudentExamPreparation, generateStudentExamMock } from '../services/api';
+import { ExamHeader } from '../components/exam-preparation/ExamHeader';
+import { ExamCountdown } from '../components/exam-preparation/ExamCountdown';
+import { ExamReadinessMeter } from '../components/exam-preparation/ExamReadinessMeter';
+import { ExamProgress } from '../components/exam-preparation/ExamProgress';
+import { ExamCoverage } from '../components/exam-preparation/ExamCoverage';
+import { ExamPriorityList } from '../components/exam-preparation/ExamPriorityList';
+import { ExamTodayPlan } from '../components/exam-preparation/ExamTodayPlan';
+import { ExamWeeklyPlan } from '../components/exam-preparation/ExamWeeklyPlan';
+import { ExamRiskCard } from '../components/exam-preparation/ExamRiskCard';
+import { ExamGapAnalysis } from '../components/exam-preparation/ExamGapAnalysis';
+import { MockExamCard } from '../components/exam-preparation/MockExamCard';
+import { MockExamHistory } from '../components/exam-preparation/MockExamHistory';
+import { ExamStrategyCard } from '../components/exam-preparation/ExamStrategyCard';
+import { ExamImprovementPlan } from '../components/exam-preparation/ExamImprovementPlan';
+import { ExamRevisionPlan } from '../components/exam-preparation/ExamRevisionPlan';
+import { ExamResourceRecommendations } from '../components/exam-preparation/ExamResourceRecommendations';
+import { ExamAIInsight } from '../components/exam-preparation/ExamAIInsight';
+import { ExamEmptyState } from '../components/exam-preparation/ExamEmptyState';
+import { useNavigate } from 'react-router-dom';
 
 export const ExamPreparationPage: React.FC = () => {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [exams, setExams] = useState<any[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    loadExams();
+    loadExamData();
   }, []);
 
-  const loadExams = async () => {
+  const loadExamData = async () => {
     setLoading(true);
-    const res = await fetchStudentExams();
+    const res = await fetchStudentExamPreparation();
     if (res.success && res.data) {
-      setExams(res.data);
+      setData(res.data);
     }
     setLoading(false);
   };
 
-  const handleCreateExam = async (input: any) => {
-    const res = await createExam(input);
-    if (res.success) {
-      await loadExams();
+  const handleStartMock = async () => {
+    const res = await generateStudentExamMock('sectional', 'Mathematics');
+    if (res.success && res.data?.assessmentId) {
+      navigate(`/assessments/${res.data.assessmentId}`);
+    } else {
+      navigate('/assessments');
     }
   };
 
-  const handleDeleteExam = async (id: string) => {
-    const res = await deleteExam(id);
-    if (res.success) {
-      await loadExams();
-    }
-  };
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-gray-500 font-semibold flex items-center justify-center space-x-2">
+        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <span>Loading AI Exam Preparation Dashboard...</span>
+      </div>
+    );
+  }
 
-  if (loading) return <SkeletonLoader />;
+  if (!data || !data.plan) {
+    return <ExamEmptyState onSetupPlan={loadExamData} />;
+  }
+
+  const { plan, profile, readiness, priorities, todayPlan, weeklyPlan, gaps, risks, prediction, coach } = data;
 
   return (
-    <div className="space-y-6 text-xs max-w-5xl mx-auto">
-      <PageHeader
-        title="Exam Preparation & Readiness"
-        description="Set upcoming exam targets, evaluate weighted readiness scores, and track your daily study preparation."
-        actions={
-          <Button onClick={() => setIsModalOpen(true)} icon={<Plus className="w-4 h-4" />}>
-            Set New Exam Target
-          </Button>
-        }
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <ExamHeader
+        examName={profile.examName}
+        board={profile.board}
+        classLevel={profile.classLevel}
+        subject={profile.subject}
+        targetScore={plan.targetScore}
       />
 
-      {exams.length === 0 ? (
-        <ExamEmptyState onOpenCreate={() => setIsModalOpen(true)} />
-      ) : (
-        <Card title="Upcoming & Active Exams" subtitle="Your target exam timeline">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {exams.map((exam) => (
-              <ExamCard key={exam._id || exam.id} exam={exam} onDelete={handleDeleteExam} />
-            ))}
-          </div>
-        </Card>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <ExamCountdown daysRemaining={readiness.daysRemaining} examDateStr={new Date(plan.targetExamDate).toLocaleDateString()} />
+        <ExamReadinessMeter score={readiness.readinessScore} status={readiness.status} />
+        <ExamCoverage coveragePct={readiness.topicCoveragePct} />
+      </div>
 
-      <CreateExamModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateExam}
+      {coach && <ExamAIInsight coach={coach} />}
+
+      <ExamProgress
+        conceptMasteryPct={readiness.conceptMasteryPct}
+        topicCoveragePct={readiness.topicCoveragePct}
+        practiceAccuracyPct={readiness.practiceAccuracyPct}
+        mockPerformancePct={readiness.mockPerformancePct}
       />
+
+      <MockExamCard
+        mockType="sectional"
+        targetTopics={['Quadratic Equations', 'Polynomials']}
+        durationMinutes={45}
+        totalQuestions={15}
+        reason="Targeted sectional simulation to evaluate time allocation and core concept accuracy."
+        onStartMock={handleStartMock}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ExamTodayPlan todayPlan={todayPlan} />
+        <ExamPriorityList priorities={priorities} />
+      </div>
+
+      <ExamRiskCard risks={risks} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ExamGapAnalysis gaps={gaps} />
+        <ExamImprovementPlan prediction={prediction} />
+      </div>
+
+      <ExamWeeklyPlan weeklyPlan={weeklyPlan} />
+
+      <ExamStrategyCard
+        strategy={{
+          questionOrdering: [
+            'Phase 1: Attempt direct high-confidence MCQs.',
+            'Phase 2: Solve mandatory numerical and formula-based short questions.',
+            'Phase 3: Tackle complex case-based long answers.',
+          ],
+          sectionTimeAllocation: {
+            'Section A (MCQs)': 45,
+            'Section B (Short Answer)': 60,
+            'Section C (Long Answer)': 60,
+            'Final Revision': 15,
+          },
+          skipStrategy: 'If a question takes >2.5 minutes without progress, flag it and move forward immediately.',
+          reviewStrategy: 'Prioritize reviewing flagged high-confidence questions first.',
+          confidenceManagement: 'Re-verify questions flagged with low confidence during final 15 mins.',
+          finalCheckMinutes: 15,
+        }}
+      />
+
+      <ExamRevisionPlan overdueConcepts={['math_quadratic']} />
+
+      <ExamResourceRecommendations
+        resources={[
+          {
+            resourceId: 'res_ncert_ch4',
+            title: 'NCERT Class 10 Chapter 4: Quadratic Equations',
+            type: 'Official Textbook Chapter',
+            officialSourceUrl: 'https://ncert.nic.in',
+            publisher: 'NCERT Official',
+          },
+        ]}
+      />
+
+      <MockExamHistory history={[]} />
     </div>
   );
 };

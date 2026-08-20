@@ -62,6 +62,9 @@ import { ResourceTag } from '../models/resource-tag.model.js';
 import { AssessmentAttempt } from '../models/assessment-attempt.model.js';
 import { AssessmentResponse } from '../models/assessment-response.model.js';
 import { AssessmentBlueprint } from '../models/assessment-blueprint.model.js';
+import { ExamProfile } from '../models/exam-profile.model.js';
+import { StudentExamPlan } from '../models/student-exam-plan.model.js';
+import { ExamSyllabusItem } from '../models/exam-syllabus-item.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -239,6 +242,9 @@ const inMemCollaborationActions: any[] = [];
 const inMemAssessmentResponses: any[] = [];
 const inMemAssessmentBlueprints: any[] = [];
 const inMemResourceFeedback: any[] = [];
+const inMemExamProfiles: any[] = [];
+const inMemStudentExamPlans: any[] = [];
+const inMemExamSyllabusItems: any[] = [];
 
 export const dataRepository = {
   // --- SCHOLARSHIP INTELLIGENCE ---
@@ -4351,6 +4357,102 @@ export const dataRepository = {
       return await AssessmentAttempt.findOne({ assessmentId, studentId, status: 'evaluated' }).lean();
     }
     return inMemAssessmentAttempts.find((a) => a.assessmentId === assessmentId && a.studentId === studentId && a.status === 'evaluated') || null;
+  },
+
+  // --- FEATURE 41: AI PERSONALIZED EXAM PREPARATION ---
+  async createExamProfile(profileData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ExamProfile(profileData);
+      return await doc.save();
+    }
+    const item = { _id: `ep_${Date.now()}`, ...profileData, createdAt: new Date() };
+    inMemExamProfiles.push(item);
+    return item;
+  },
+
+  async getExamProfile(examId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await ExamProfile.findOne({ examId }).lean();
+    }
+    return inMemExamProfiles.find((e) => e.examId === examId);
+  },
+
+  async getExamProfiles(): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ExamProfile.find({ status: 'active' }).lean();
+    }
+    return inMemExamProfiles;
+  },
+
+  async createStudentExamPlan(planData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new StudentExamPlan(planData);
+      return await doc.save();
+    }
+    const item = { _id: `plan_${Date.now()}`, ...planData, createdAt: new Date() };
+    inMemStudentExamPlans.push(item);
+    return item;
+  },
+
+  async getStudentExamPlan(studentId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await StudentExamPlan.findOne({ studentId, status: 'active' }).lean();
+    }
+    return inMemStudentExamPlans.find((p) => p.studentId === studentId && p.status === 'active');
+  },
+
+  async updateStudentExamPlan(planId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await StudentExamPlan.findOneAndUpdate({ planId }, { $set: updates }, { new: true }).lean();
+    }
+    const idx = inMemStudentExamPlans.findIndex((p) => p.planId === planId);
+    if (idx >= 0) {
+      inMemStudentExamPlans[idx] = { ...inMemStudentExamPlans[idx], ...updates, updatedAt: new Date() };
+      return inMemStudentExamPlans[idx];
+    }
+    return null;
+  },
+
+  async getExamSyllabus(examId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ExamSyllabusItem.find({ examId, isActive: true }).sort({ weightage: -1 }).lean();
+    }
+    return inMemExamSyllabusItems.filter((s) => s.examId === examId && s.isActive !== false);
+  },
+
+  async getExamPreparationSummary(studentId: string): Promise<any> {
+    const plan = (await this.getStudentExamPlan(studentId)) || {
+      planId: `plan_seed_${studentId}`,
+      studentId,
+      examId: 'exam_cbse_10_math',
+      targetScore: 90,
+      currentReadinessScore: 68,
+      currentRiskLevel: 'low',
+      targetExamDate: new Date(Date.now() + 30 * 86400000),
+      availableDailyMinutes: 120,
+      status: 'active',
+    };
+
+    const profile = (await this.getExamProfile(plan.examId)) || {
+      examId: 'exam_cbse_10_math',
+      examName: 'Class 10 CBSE Mathematics Board Exam',
+      board: 'CBSE',
+      classLevel: 10,
+      subject: 'Mathematics',
+      examDate: plan.targetExamDate,
+      durationMinutes: 180,
+      totalMarks: 80,
+      passingMarks: 26,
+      questionCount: 30,
+      status: 'active',
+      officialSourceUrl: 'https://cbse.gov.in',
+    };
+
+    return {
+      plan,
+      profile,
+      summaryGeneratedAt: new Date(),
+    };
   },
 };
 

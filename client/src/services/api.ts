@@ -4964,6 +4964,143 @@ export const fetchParentChildAssessmentEngineDetail = async (studentId: string, 
   }
 };
 
+// --- FEATURE 41: AI PERSONALIZED EXAM PREPARATION APIs ---
+export const fetchStudentExamPreparation = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-preparation`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam preparation' };
+  }
+};
+
+export const updateStudentExamPlan = async (planData: any) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-preparation/plan`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(planData),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to update exam plan' };
+  }
+};
+
+export const fetchStudentExamReadiness = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-preparation/readiness`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam readiness' };
+  }
+};
+
+export const fetchStudentExamPriorities = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-preparation/priorities`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam priorities' };
+  }
+};
+
+export const fetchStudentExamTodayPlan = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-preparation/today`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch today plan' };
+  }
+};
+
+export const fetchStudentExamWeeklyPlan = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-preparation/week`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch weekly plan' };
+  }
+};
+
+export const fetchStudentExamMockRecommendation = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-preparation/mock-recommendation`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch mock recommendation' };
+  }
+};
+
+export const generateStudentExamMock = async (mockType?: string, subject?: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-preparation/mock/generate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ mockType, subject }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate mock exam' };
+  }
+};
+
+export const fetchStudentExamStrategy = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-preparation/strategy`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam strategy' };
+  }
+};
+
+export const fetchTeacherExamOverview = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/exam-preparation`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher exam overview' };
+  }
+};
+
+export const fetchTeacherClassExamPreparation = async (classId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/exam-preparation/class/${classId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch class exam preparation' };
+  }
+};
+
+export const fetchParentChildExamPreparation = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/exam-preparation/student/${studentId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch child exam preparation' };
+  }
+};
+
 
 
 

@@ -59,6 +59,10 @@ import { ParentResourceRecommendationsPage } from './pages/ParentResourceRecomme
 import { AssessmentPage } from './pages/AssessmentPage';
 import { AssessmentBuilderPage } from './pages/AssessmentBuilderPage';
 import { ParentAssessmentPage } from './pages/ParentAssessmentPage';
+import { MockExamPage as Feature41MockExamPage } from './pages/MockExamPage';
+import { MockExamResultPage as Feature41MockExamResultPage } from './pages/MockExamResultPage';
+import { TeacherExamPreparationPage } from './pages/TeacherExamPreparationPage';
+import { ParentExamPreparationPage } from './pages/ParentExamPreparationPage';
 import { CreateAssessmentPage } from './pages/CreateAssessmentPage';
 import { AssessmentAnalyticsPage } from './pages/AssessmentAnalyticsPage';
 import { StudentAssessmentsPage } from './pages/StudentAssessmentsPage';
@@ -129,6 +133,11 @@ export const App: React.FC = () => (
           <Route path="parent/resources" element={<ProtectedRoute allowedRoles={['parent']}><ParentResourceRecommendationsPage /></ProtectedRoute>} />
           <Route path="assessments" element={<ProtectedRoute allowedRoles={['student']}><AssessmentPage /></ProtectedRoute>} />
           <Route path="assessments/:assessmentId" element={<ProtectedRoute allowedRoles={['student']}><AssessmentPage /></ProtectedRoute>} />
+          <Route path="exam-preparation" element={<ProtectedRoute allowedRoles={['student']}><ExamPreparationPage /></ProtectedRoute>} />
+          <Route path="mock-exam/:assessmentId" element={<ProtectedRoute allowedRoles={['student']}><Feature41MockExamPage /></ProtectedRoute>} />
+          <Route path="mock-exam/:assessmentId/result" element={<ProtectedRoute allowedRoles={['student']}><Feature41MockExamResultPage /></ProtectedRoute>} />
+          <Route path="teacher/exam-preparation" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherExamPreparationPage /></ProtectedRoute>} />
+          <Route path="parent/exam-preparation/student/:studentId" element={<ProtectedRoute allowedRoles={['parent']}><ParentExamPreparationPage /></ProtectedRoute>} />
           <Route path="teacher/assessments/create" element={<ProtectedRoute allowedRoles={['teacher']}><AssessmentBuilderPage /></ProtectedRoute>} />
           <Route path="parent/assessments/student/:studentId" element={<ProtectedRoute allowedRoles={['parent']}><ParentAssessmentPage /></ProtectedRoute>} />
           <Route path="teacher/assessments/:assessmentId/submissions/:submissionId/review" element={<ProtectedRoute allowedRoles={['teacher']}><AssessmentReviewPage /></ProtectedRoute>} />
