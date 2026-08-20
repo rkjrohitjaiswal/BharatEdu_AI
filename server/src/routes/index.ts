@@ -53,10 +53,15 @@ import {
   parentTeacherAssessmentRouter,
 } from './assessment.routes.js';
 
+import classroomIntelligenceRoutes from './classroom-intelligence.routes.js';
+import classroomInterventionRoutes from './intervention.routes.js';
+
 const router = Router();
 
 router.use('/', healthRoutes);
 router.use('/auth', authRoutes);
+router.use('/teacher/classroom-intelligence', classroomIntelligenceRoutes);
+router.use('/teacher/interventions', classroomInterventionRoutes);
 router.use('/teacher/copilot', teacherCopilotRoutes);
 router.use('/teacher/assessments', teacherTeacherAssessmentRouter);
 router.use('/teacher/submissions', teacherSubmissionsRouter);

@@ -83,6 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
 
   const teacherNav: NavGroupItem[] = [
     { name: 'Teacher Dashboard', path: '/teacher', icon: GraduationCap },
+    { name: 'AI Class Intelligence', path: '/teacher/classroom-intelligence', icon: Users, badge: 'Intelligence' },
     { name: 'AI Teacher Copilot', path: '/teacher/copilot', icon: Bot, badge: 'Copilot' },
     { name: 'AI Teacher Assessments', path: '/teacher/assessments', icon: Award, badge: 'Rubric' },
     { name: 'Remediation Portal', path: '/teacher/interventions', icon: Sparkles },

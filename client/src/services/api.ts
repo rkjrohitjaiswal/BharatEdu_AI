@@ -4347,6 +4347,122 @@ export const fetchStudentSubmissionResult = async (submissionId: string) => {
   }
 };
 
+// --- FEATURE 37: CLASSROOM INTELLIGENCE & TEACHER INTERVENTION APIs ---
+export const fetchClassroomTeacherClasses = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/classroom-intelligence/classes`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher classes' };
+  }
+};
+
+export const fetchClassroomOverview = async (classId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/classroom-intelligence/${classId}/overview`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch classroom overview' };
+  }
+};
+
+export const fetchClassroomStudents = async (classId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/classroom-intelligence/${classId}/students`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch classroom students' };
+  }
+};
+
+export const fetchClassroomTopics = async (classId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/classroom-intelligence/${classId}/topics`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch classroom topics' };
+  }
+};
+
+export const fetchClassroomGaps = async (classId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/classroom-intelligence/${classId}/gaps`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch classroom gaps' };
+  }
+};
+
+export const fetchClassroomInterventions = async (classId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/classroom-intelligence/${classId}/interventions`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch classroom interventions' };
+  }
+};
+
+export const startClassroomIntervention = async (interventionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/interventions/${interventionId}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to start intervention' };
+  }
+};
+
+export const completeClassroomIntervention = async (interventionId: string, teacherNotes?: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/interventions/${interventionId}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ teacherNotes }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to complete intervention' };
+  }
+};
+
+export const dismissClassroomIntervention = async (interventionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/interventions/${interventionId}/dismiss`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to dismiss intervention' };
+  }
+};
+
+export const fetchInterventionEffectiveness = async (interventionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/interventions/${interventionId}/effectiveness`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch intervention effectiveness' };
+  }
+};
+
+
 
 
 

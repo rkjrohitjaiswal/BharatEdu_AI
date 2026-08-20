@@ -48,6 +48,7 @@ import { MockExamPage } from './pages/MockExamPage';
 import { MockExamResultPage } from './pages/MockExamResultPage';
 import { MockExamHistoryPage } from './pages/MockExamHistoryPage';
 import { TeacherAssessmentsPage } from './pages/TeacherAssessmentsPage';
+import { TeacherClassroomIntelligencePage } from './pages/TeacherClassroomIntelligencePage';
 import { CreateAssessmentPage } from './pages/CreateAssessmentPage';
 import { AssessmentAnalyticsPage } from './pages/AssessmentAnalyticsPage';
 import { StudentAssessmentsPage } from './pages/StudentAssessmentsPage';
@@ -106,6 +107,7 @@ export const App: React.FC = () => (
           <Route path="exam-evaluations/:id" element={<ProtectedRoute allowedRoles={['student']}><ExamEvaluationDetailPage /></ProtectedRoute>} />
           <Route path="adaptive-assessment" element={<ProtectedRoute allowedRoles={['student']}><AdaptiveAssessmentPage /></ProtectedRoute>} />
           <Route path="teacher/copilot" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherCopilotPage /></ProtectedRoute>} />
+          <Route path="teacher/classroom-intelligence" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherClassroomIntelligencePage /></ProtectedRoute>} />
           <Route path="teacher/assessments" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherAssessmentsPage /></ProtectedRoute>} />
           <Route path="teacher/assessments/create" element={<ProtectedRoute allowedRoles={['teacher']}><CreateAssessmentPage /></ProtectedRoute>} />
           <Route path="teacher/assessments/:assessmentId/submissions/:submissionId/review" element={<ProtectedRoute allowedRoles={['teacher']}><AssessmentReviewPage /></ProtectedRoute>} />

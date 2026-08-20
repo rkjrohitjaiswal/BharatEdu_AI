@@ -50,6 +50,10 @@ import { AssessmentAnswer } from '../models/assessment-answer.model.js';
 import { AIEvaluation } from '../models/ai-evaluation.model.js';
 import { AssessmentGrade } from '../models/assessment-grade.model.js';
 import { AssessmentAudit } from '../models/assessment-audit.model.js';
+import { ClassroomIntelligence } from '../models/classroom-intelligence.model.js';
+import { ClassAnalyticsSnapshot } from '../models/class-analytics-snapshot.model.js';
+import { ClassroomStudentProfile } from '../models/classroom-student-profile.model.js';
+import { ClassroomIntervention } from '../models/classroom-intervention.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -216,6 +220,10 @@ const inMemAssessmentAnswers: any[] = [];
 const inMemAIEvaluations: any[] = [];
 const inMemAssessmentGrades: any[] = [];
 const inMemAssessmentAudits: any[] = [];
+const inMemClassroomIntelligences: any[] = [];
+const inMemClassAnalyticsSnapshots: any[] = [];
+const inMemClassroomStudentProfiles: any[] = [];
+const inMemClassroomInterventions: any[] = [];
 
 export const dataRepository = {
   // --- SCHOLARSHIP INTELLIGENCE ---
@@ -3890,5 +3898,132 @@ export const dataRepository = {
     return inMemAssessmentAudits
       .filter((a) => a.submissionId === submissionId)
       .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
+  },
+
+  // --- FEATURE 37: CLASSROOM INTELLIGENCE & INTERVENTIONS ---
+  async createClassroomIntelligence(classData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ClassroomIntelligence(classData);
+      return await doc.save();
+    }
+    const item = { _id: `cls_${Date.now()}_${Math.random()}`, ...classData, createdAt: new Date(), updatedAt: new Date() };
+    inMemClassroomIntelligences.push(item);
+    return item;
+  },
+
+  async getClassroomIntelligence(classId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await ClassroomIntelligence.findOne({ classId }).lean();
+    }
+    return inMemClassroomIntelligences.find((c) => c.classId === classId);
+  },
+
+  async getClassroomsByTeacher(teacherId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ClassroomIntelligence.find({ teacherId }).lean();
+    }
+    return inMemClassroomIntelligences.filter((c) => c.teacherId === teacherId);
+  },
+
+  async updateClassroomIntelligence(classId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await ClassroomIntelligence.findOneAndUpdate({ classId }, { $set: updates }, { new: true }).lean();
+    }
+    const idx = inMemClassroomIntelligences.findIndex((c) => c.classId === classId);
+    if (idx >= 0) {
+      inMemClassroomIntelligences[idx] = { ...inMemClassroomIntelligences[idx], ...updates, updatedAt: new Date() };
+      return inMemClassroomIntelligences[idx];
+    }
+    return null;
+  },
+
+  async saveClassAnalyticsSnapshot(snapshotData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await ClassAnalyticsSnapshot.findOneAndUpdate(
+        { classId: snapshotData.classId, date: snapshotData.date },
+        { $set: snapshotData },
+        { upsert: true, new: true }
+      ).lean();
+    }
+    const idx = inMemClassAnalyticsSnapshots.findIndex((s) => s.classId === snapshotData.classId && s.date === snapshotData.date);
+    if (idx >= 0) {
+      inMemClassAnalyticsSnapshots[idx] = { ...inMemClassAnalyticsSnapshots[idx], ...snapshotData, updatedAt: new Date() };
+      return inMemClassAnalyticsSnapshots[idx];
+    }
+    const item = { _id: `snp_${Date.now()}_${Math.random()}`, ...snapshotData, createdAt: new Date() };
+    inMemClassAnalyticsSnapshots.push(item);
+    return item;
+  },
+
+  async getClassAnalyticsSnapshots(classId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ClassAnalyticsSnapshot.find({ classId }).sort({ date: 1 }).lean();
+    }
+    return inMemClassAnalyticsSnapshots.filter((s) => s.classId === classId).sort((a, b) => a.date.localeCompare(b.date));
+  },
+
+  async createClassroomStudentProfile(profileData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ClassroomStudentProfile(profileData);
+      return await doc.save();
+    }
+    const item = { _id: `csp_${Date.now()}_${Math.random()}`, ...profileData, createdAt: new Date(), updatedAt: new Date() };
+    inMemClassroomStudentProfiles.push(item);
+    return item;
+  },
+
+  async getClassroomStudentProfiles(classId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ClassroomStudentProfile.find({ classId }).lean();
+    }
+    return inMemClassroomStudentProfiles.filter((sp) => sp.classId === classId);
+  },
+
+  async updateClassroomStudentProfile(classId: string, studentId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await ClassroomStudentProfile.findOneAndUpdate({ classId, studentId }, { $set: updates }, { new: true }).lean();
+    }
+    const idx = inMemClassroomStudentProfiles.findIndex((sp) => sp.classId === classId && sp.studentId === studentId);
+    if (idx >= 0) {
+      inMemClassroomStudentProfiles[idx] = { ...inMemClassroomStudentProfiles[idx], ...updates, updatedAt: new Date() };
+      return inMemClassroomStudentProfiles[idx];
+    }
+    return null;
+  },
+
+  async createClassroomIntervention(intvData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ClassroomIntervention(intvData);
+      return await doc.save();
+    }
+    const item = { _id: `int_${Date.now()}_${Math.random()}`, ...intvData, createdAt: new Date() };
+    inMemClassroomInterventions.push(item);
+    return item;
+  },
+
+  async getClassroomInterventions(classId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ClassroomIntervention.find({ classId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemClassroomInterventions.filter((i) => i.classId === classId);
+  },
+
+  async getInterventionById(interventionId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await ClassroomIntervention.findOne({ interventionId }).lean();
+    }
+    return inMemClassroomInterventions.find((i) => i.interventionId === interventionId);
+  },
+
+  async updateClassroomIntervention(interventionId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await ClassroomIntervention.findOneAndUpdate({ interventionId }, { $set: updates }, { new: true }).lean();
+    }
+    const idx = inMemClassroomInterventions.findIndex((i) => i.interventionId === interventionId);
+    if (idx >= 0) {
+      inMemClassroomInterventions[idx] = { ...inMemClassroomInterventions[idx], ...updates, updatedAt: new Date() };
+      return inMemClassroomInterventions[idx];
+    }
+    return null;
   },
 };
