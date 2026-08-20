@@ -37,7 +37,7 @@ import { TeacherCopilotPage } from './pages/TeacherCopilotPage';
 import { ParentCopilotPage } from './pages/ParentCopilotPage';
 import { StudentMentorPage } from './pages/StudentMentorPage';
 import { StudyPlannerPage } from './pages/StudyPlannerPage';
-import { LearningResourcesPage } from './pages/LearningResourcesPage';
+import { ResourceRecommendationsPage } from './pages/ResourceRecommendationsPage';
 import { RevisionPage } from './pages/RevisionPage';
 import { KnowledgeGraphPage } from './pages/KnowledgeGraphPage';
 import { AdaptiveAssessmentPage } from './pages/AdaptiveAssessmentPage';
@@ -52,7 +52,7 @@ export const App: React.FC = () => (
           <Route path="register" element={<RegisterPage />} />
           <Route path="mentor" element={<ProtectedRoute allowedRoles={['student']}><StudentMentorPage /></ProtectedRoute>} />
           <Route path="study-planner" element={<ProtectedRoute allowedRoles={['student']}><StudyPlannerPage /></ProtectedRoute>} />
-          <Route path="resources" element={<ProtectedRoute allowedRoles={['student']}><LearningResourcesPage /></ProtectedRoute>} />
+          <Route path="resources" element={<ProtectedRoute allowedRoles={['student']}><ResourceRecommendationsPage /></ProtectedRoute>} />
           <Route path="revision" element={<ProtectedRoute allowedRoles={['student']}><RevisionPage /></ProtectedRoute>} />
           <Route path="knowledge-graph" element={<ProtectedRoute allowedRoles={['student']}><KnowledgeGraphPage /></ProtectedRoute>} />
           <Route path="adaptive-assessment" element={<ProtectedRoute allowedRoles={['student']}><AdaptiveAssessmentPage /></ProtectedRoute>} />

@@ -1852,22 +1852,6 @@ export const fetchAllResources = async (): Promise<{
   }
 };
 
-export const fetchRecommendedResources = async (): Promise<{
-  success: boolean;
-  data?: any;
-  aiExplanation?: string;
-  message?: string;
-}> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/student/resources/recommended`, {
-      headers: getAuthHeaders(),
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    return { success: false, message: 'Failed to fetch recommended resources' };
-  }
-};
-
 export const fetchResourceById = async (
   id: string
 ): Promise<{
@@ -1898,23 +1882,6 @@ export const generateResourceRecommendations = async (): Promise<{
     return await handleResponse(response);
   } catch (error) {
     return { success: false, message: 'Failed to generate recommendations' };
-  }
-};
-
-export const refreshResourceRecommendations = async (): Promise<{
-  success: boolean;
-  data?: any;
-  aiExplanation?: string;
-  message?: string;
-}> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/student/resources/refresh`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    return { success: false, message: 'Failed to refresh recommendations' };
   }
 };
 
@@ -2537,21 +2504,6 @@ export const completeResourceTracking = async (
   }
 };
 
-export const fetchResourceHistory = async (): Promise<{
-  success: boolean;
-  data?: any;
-  message?: string;
-}> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/student/resources/history`, {
-      headers: getAuthHeaders(),
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    return { success: false, message: 'Failed to fetch resource history' };
-  }
-};
-
 export const fetchTeacherResourceSummary = async (
   studentId: string
 ): Promise<{
@@ -2977,6 +2929,124 @@ export const fetchLearningPathAdvice = async (pathId: string = 'default') => {
     return await handleResponse(response);
   } catch (error) {
     return { success: false, message: 'Failed to fetch learning path advice' };
+  }
+};
+
+// ===================================================
+// FEATURE 26: AI RESOURCE RECOMMENDATION ENGINE
+// ===================================================
+
+export const fetchRecommendedResources = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/recommended`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch recommended resources' };
+  }
+};
+
+export const fetchTodayResources = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/today`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch today resources' };
+  }
+};
+
+export const fetchNextResource = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/next`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch next resource' };
+  }
+};
+
+export const refreshResourceRecommendations = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/refresh`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to refresh resource recommendations' };
+  }
+};
+
+export const startResourceRecommendation = async (recId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${recId}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to start resource recommendation' };
+  }
+};
+
+export const completeResourceRecommendation = async (recId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${recId}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to complete resource recommendation' };
+  }
+};
+
+export const dismissResourceRecommendation = async (recId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${recId}/dismiss`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to dismiss resource recommendation' };
+  }
+};
+
+export const fetchResourceHistory = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/history`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch resource history' };
+  }
+};
+
+export const fetchResourceSummary = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch resource summary' };
+  }
+};
+
+export const fetchResourceExplanation = async (recId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${recId}/explanation`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch resource explanation' };
   }
 };
 

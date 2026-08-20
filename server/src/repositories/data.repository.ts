@@ -36,7 +36,7 @@ import { KnowledgeConcept } from '../models/knowledge-concept.model.js';
 import { ConceptDependency } from '../models/concept-dependency.model.js';
 import { StudentConceptMastery } from '../models/student-concept-mastery.model.js';
 import { AdaptiveAssessment } from '../models/adaptive-assessment.model.js';
-import { QuestionAttempt } from '../models/question-attempt.model.js';
+import { StudentResourceRecommendation } from '../models/student-resource-recommendation.model.js';
 import { StudentResourceProgress } from '../models/student-resource-progress.model.js';
 import { LearningPath } from '../models/learning-path.model.js';
 import { LearningPathStage } from '../models/learning-path-stage.model.js';
@@ -61,6 +61,8 @@ const inMemParentInvitations: any[] = [];
 const inMemSavedScholarships: any[] = [];
 const inMemInterventions: any[] = [];
 const inMemResourceProgress: any[] = [];
+const inMemLearningResources: any[] = [];
+const inMemResourceRecommendations: any[] = [];
 const inMemRevisionHistory: any[] = [];
 const inMemRevisionItems: any[] = [];
 const inMemLearningPaths: any[] = [];
@@ -2028,13 +2030,6 @@ export const dataRepository = {
     return getInMemStudents();
   },
 
-  async getLearningResources(): Promise<any[]> {
-    if (isDBConnected()) {
-      return await LearningResource.find({ active: true }).lean();
-    }
-    return [];
-  },
-
   async getRevisionItems(studentId: string): Promise<any[]> {
     if (isDBConnected()) {
       return await RevisionItem.find({ studentId }).lean();
@@ -2307,5 +2302,135 @@ export const dataRepository = {
     return await this.updateLearningPathItem(itemId, {
       status: 'skipped',
     });
+  },
+
+  async createLearningResource(resourceData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningResource.findOneAndUpdate(
+        { resourceId: resourceData.resourceId },
+        { $set: resourceData },
+        { upsert: true, new: true }
+      );
+    }
+    const idx = inMemLearningResources.findIndex((r) => r.resourceId === resourceData.resourceId);
+    const item = { _id: `res_${Date.now()}_${Math.random()}`, ...resourceData, updatedAt: new Date() };
+    if (idx >= 0) {
+      inMemLearningResources[idx] = { ...inMemLearningResources[idx], ...item };
+    } else {
+      inMemLearningResources.push(item);
+    }
+    return item;
+  },
+
+  async getLearningResource(resourceId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningResource.findOne({ resourceId }).lean();
+    }
+    return inMemLearningResources.find((r) => r.resourceId === resourceId);
+  },
+
+  async getLearningResources(filter: any = {}): Promise<any[]> {
+    if (isDBConnected()) {
+      return await LearningResource.find(filter).lean();
+    }
+    return inMemLearningResources;
+  },
+
+  async createRecommendation(recData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await StudentResourceRecommendation.findOneAndUpdate(
+        { studentId: recData.studentId, dedupeKey: recData.dedupeKey },
+        { $set: recData },
+        { upsert: true, new: true }
+      );
+    }
+    const idx = inMemResourceRecommendations.findIndex(
+      (r) => String(r.studentId) === String(recData.studentId) && r.dedupeKey === recData.dedupeKey
+    );
+    const item = { _id: `rec_${Date.now()}_${Math.random()}`, ...recData, updatedAt: new Date() };
+    if (idx >= 0) {
+      inMemResourceRecommendations[idx] = { ...inMemResourceRecommendations[idx], ...item };
+      return inMemResourceRecommendations[idx];
+    }
+    inMemResourceRecommendations.push(item);
+    return item;
+  },
+
+  async getStudentRecommendations(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await StudentResourceRecommendation.find({ studentId }).sort({ relevanceScore: -1 }).lean();
+    }
+    return inMemResourceRecommendations
+      .filter((r) => String(r.studentId) === String(studentId))
+      .sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
+  },
+
+  async getTodayRecommendations(studentId: string): Promise<any[]> {
+    const recs = await this.getStudentRecommendations(studentId);
+    return recs.filter((r) => r.status === 'recommended' || r.status === 'started').slice(0, 5);
+  },
+
+  async getNextRecommendation(studentId: string): Promise<any> {
+    const recs = await this.getTodayRecommendations(studentId);
+    return recs[0] || null;
+  },
+
+  async updateRecommendation(recId: string, studentId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await StudentResourceRecommendation.findOneAndUpdate(
+        { _id: recId, studentId },
+        { $set: updateData },
+        { new: true }
+      );
+    }
+    const idx = inMemResourceRecommendations.findIndex(
+      (r) => String(r._id || r.id) === String(recId) && String(r.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemResourceRecommendations[idx] = {
+        ...inMemResourceRecommendations[idx],
+        ...updateData,
+        updatedAt: new Date(),
+      };
+      return inMemResourceRecommendations[idx];
+    }
+    return null;
+  },
+
+  async startRecommendation(recId: string, studentId: string): Promise<any> {
+    return await this.updateRecommendation(recId, studentId, {
+      status: 'started',
+      startedAt: new Date(),
+    });
+  },
+
+  async completeRecommendation(recId: string, studentId: string): Promise<any> {
+    return await this.updateRecommendation(recId, studentId, {
+      status: 'completed',
+      completedAt: new Date(),
+    });
+  },
+
+  async dismissRecommendation(recId: string, studentId: string): Promise<any> {
+    return await this.updateRecommendation(recId, studentId, {
+      status: 'dismissed',
+      dismissedAt: new Date(),
+    });
+  },
+
+  async getRecommendationHistory(studentId: string): Promise<any[]> {
+    const recs = await this.getStudentRecommendations(studentId);
+    return recs.filter((r) => r.status === 'completed' || r.status === 'dismissed');
+  },
+
+  async getRecommendationSummary(studentId: string): Promise<any> {
+    const recs = await this.getStudentRecommendations(studentId);
+    const active = recs.filter((r) => r.status !== 'dismissed');
+    return {
+      studentId,
+      totalRecommended: active.length,
+      completed: recs.filter((r) => r.status === 'completed').length,
+      topRecommendation: active[0] || null,
+    };
   },
 };

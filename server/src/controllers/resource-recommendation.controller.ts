@@ -1,180 +1,198 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
 import {
-  completeResource,
+  completeResourceRecommendation,
+  dismissResourceRecommendation,
+  getNextResource,
   getParentStudentResourceSummary,
   getRecommendedResources,
-  getResourceDetails,
-  getStudentResourceHistory,
+  getResourceExplanation,
+  getResourceHistory,
+  getResourceSummary,
   getTeacherStudentResourceSummary,
-  searchResources,
-  startResource,
-  updateResourceProgress,
-} from '../ai/resource-recommendations/service.js';
+  getTodayResources,
+  refreshResourceRecommendations,
+  startResourceRecommendation,
+} from '../ai/resource-recommendation/service.js';
 
-export const getRecommendedResourcesController = async (req: Request, res: Response): Promise<void> => {
+export const handleGetRecommended = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const data = await getRecommendedResources(user.id);
-    res.status(200).json({ success: true, data: data.recommendations, aiExplanation: data.aiExplanation });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch recommendations' });
+    const recs = await getRecommendedResources(studentId);
+    res.status(200).json({ success: true, data: recs });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch recommended resources' });
   }
 };
 
-export const searchResourcesController = async (req: Request, res: Response): Promise<void> => {
+export const handleGetToday = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { query, subject, topic, type } = req.query;
-    const resources = await searchResources(
-      query ? String(query) : undefined,
-      subject ? String(subject) : undefined,
-      topic ? String(topic) : undefined,
-      type ? String(type) : undefined
-    );
-    res.status(200).json({ success: true, data: resources });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to search resources' });
-  }
-};
-
-export const getResourceDetailsController = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const resource = await getResourceDetails(id);
-    if (!resource) {
-      res.status(404).json({ success: false, message: 'Resource not found' });
-      return;
-    }
-    res.status(200).json({ success: true, data: resource });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch resource details' });
-  }
-};
-
-export const startResourceController = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = (req as any).user;
-    const { id } = req.params;
-
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const result = await startResource(user.id, id);
-    res.status(200).json({ success: true, data: result });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to start resource' });
+    const recs = await getTodayResources(studentId);
+    res.status(200).json({ success: true, data: recs });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch today recommendations' });
   }
 };
 
-export const updateResourceProgressController = async (req: Request, res: Response): Promise<void> => {
+export const handleGetNext = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    const { id } = req.params;
-    const { progressPercent = 50 } = req.body;
-
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const result = await updateResourceProgress(user.id, id, Number(progressPercent));
-    res.status(200).json({ success: true, data: result });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to update resource progress' });
+    const nextRec = await getNextResource(studentId);
+    res.status(200).json({ success: true, data: nextRec });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch next resource' });
   }
 };
 
-export const completeResourceController = async (req: Request, res: Response): Promise<void> => {
+export const handleRefresh = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    const { id } = req.params;
-
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const result = await completeResource(user.id, id);
-    res.status(200).json({ success: true, data: result });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to complete resource' });
+    const recs = await refreshResourceRecommendations(studentId);
+    res.status(200).json({ success: true, data: recs });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to refresh recommendations' });
   }
 };
 
-export const getStudentResourceHistoryController = async (req: Request, res: Response): Promise<void> => {
+export const handleStart = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const history = await getStudentResourceHistory(user.id);
+    const rec = await startResourceRecommendation(studentId, req.params.id);
+    res.status(200).json({ success: true, data: rec });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to start resource recommendation' });
+  }
+};
+
+export const handleComplete = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const rec = await completeResourceRecommendation(studentId, req.params.id);
+    res.status(200).json({ success: true, data: rec });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to complete resource recommendation' });
+  }
+};
+
+export const handleDismiss = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const rec = await dismissResourceRecommendation(studentId, req.params.id);
+    res.status(200).json({ success: true, data: rec });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to dismiss resource recommendation' });
+  }
+};
+
+export const handleGetHistory = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const history = await getResourceHistory(studentId);
     res.status(200).json({ success: true, data: history });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch resource history' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch recommendation history' });
   }
 };
 
-export const refreshRecommendationsController = async (req: Request, res: Response): Promise<void> => {
+export const handleGetSummary = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const data = await getRecommendedResources(user.id);
-    res.status(200).json({ success: true, data: data.recommendations, aiExplanation: data.aiExplanation });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to refresh recommendations' });
-  }
-};
-
-export const getTeacherStudentResourceSummaryController = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = (req as any).user;
-    const { studentId } = req.params;
-
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (user.role !== 'teacher') {
-      res.status(403).json({ success: false, message: 'Only teachers can access student resource analytics' });
-      return;
-    }
-
-    const summary = await getTeacherStudentResourceSummary(user.id, studentId);
+    const summary = await getResourceSummary(studentId);
     res.status(200).json({ success: true, data: summary });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error?.message || 'Failed to fetch teacher resource summary' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch resource summary' });
   }
 };
 
-export const getParentStudentResourceSummaryController = async (req: Request, res: Response): Promise<void> => {
+export const handleGetExplanation = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const user = (req as any).user;
+    const studentId = req.user?.id;
+    if (!studentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const explanation = await getResourceExplanation(studentId, req.params.id);
+    res.status(200).json({ success: true, data: explanation });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch resource explanation' });
+  }
+};
+
+export const handleGetTeacherStudentSummary = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const teacherId = req.user?.id;
+    if (!teacherId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
     const { studentId } = req.params;
-
-    if (!user || !user.id) {
-      res.status(401).json({ success: false, message: 'Authentication required' });
-      return;
-    }
-    if (user.role !== 'parent') {
-      res.status(403).json({ success: false, message: 'Only parents can access student resource analytics' });
-      return;
-    }
-
-    const summary = await getParentStudentResourceSummary(user.id, studentId);
+    const summary = await getTeacherStudentResourceSummary(teacherId, studentId);
     res.status(200).json({ success: true, data: summary });
-  } catch (error: any) {
-    res.status(403).json({ success: false, message: error?.message || 'Access denied for parent resource summary' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to fetch teacher student resource summary' });
+  }
+};
+
+export const handleGetParentStudentSummary = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const parentId = req.user?.id;
+    if (!parentId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { studentId } = req.params;
+    const summary = await getParentStudentResourceSummary(parentId, studentId);
+    res.status(200).json({ success: true, data: summary });
+  } catch (err: any) {
+    res.status(403).json({ error: err.message || 'Access denied' });
   }
 };

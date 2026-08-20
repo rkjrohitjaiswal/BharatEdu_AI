@@ -30,6 +30,7 @@ import { RevisionCard } from '../components/dashboard/RevisionCard';
 import { KnowledgeGraphCard } from '../components/dashboard/KnowledgeGraphCard';
 import { AdaptiveAssessmentCard } from '../components/dashboard/AdaptiveAssessmentCard';
 import { ResourceHubCard } from '../components/dashboard/ResourceHubCard';
+import { ResourceRecommendationCard } from '../components/dashboard/ResourceRecommendationCard';
 import { SmartRevisionCard } from '../components/dashboard/SmartRevisionCard';
 import { LearningPathCard } from '../components/dashboard/LearningPathCard';
 
@@ -140,6 +141,9 @@ export const DashboardPage: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* AI Learning Coach & Daily Recommendations */}
           <LearningCoachCard />
+
+          {/* AI Resource Recommendations Card */}
+          <ResourceRecommendationCard />
 
           {/* Overall Learning Mastery */}
           <MasteryCard learningProfile={learningProfile} />
