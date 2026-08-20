@@ -3584,6 +3584,174 @@ export const fetchParentExamSummary = async (studentId: string) => {
   }
 };
 
+// --- FEATURE 31: AI EXAM EVALUATION, ANSWER ANALYSIS & PERSONALIZED FEEDBACK ENGINE ---
+export const fetchExamEvaluations = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-evaluations`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam evaluations' };
+  }
+};
+
+export const fetchExamEvaluation = async (evaluationId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-evaluations/${evaluationId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch evaluation details' };
+  }
+};
+
+export const evaluateExamPaper = async (paperId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-evaluations/${paperId}/evaluate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to evaluate exam paper' };
+  }
+};
+
+export const fetchEvaluationResults = async (evaluationId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-evaluations/${evaluationId}/results`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch evaluation results' };
+  }
+};
+
+export const fetchEvaluationQuestions = async (evaluationId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-evaluations/${evaluationId}/questions`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch question evaluations' };
+  }
+};
+
+export const fetchEvaluationTopics = async (evaluationId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-evaluations/${evaluationId}/topics`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch topic evaluations' };
+  }
+};
+
+export const fetchEvaluationConcepts = async (evaluationId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-evaluations/${evaluationId}/concepts`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch concept evaluations' };
+  }
+};
+
+export const fetchEvaluationMisconceptions = async (evaluationId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-evaluations/${evaluationId}/misconceptions`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch evaluation misconceptions' };
+  }
+};
+
+export const fetchEvaluationRecommendations = async (evaluationId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-evaluations/${evaluationId}/recommendations`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch evaluation recommendations' };
+  }
+};
+
+export const fetchEvaluationFeedback = async (evaluationId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-evaluations/${evaluationId}/feedback`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch evaluation feedback' };
+  }
+};
+
+export const recalculateEvaluation = async (evaluationId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/exam-evaluations/${evaluationId}/recalculate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to recalculate evaluation' };
+  }
+};
+
+export const fetchTeacherEvaluationSummary = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/exam-evaluations/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher evaluation summary' };
+  }
+};
+
+export const fetchTeacherMisconceptions = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/exam-evaluations/student/${studentId}/misconceptions`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher misconceptions' };
+  }
+};
+
+export const fetchTeacherEvaluationRecommendations = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/exam-evaluations/student/${studentId}/recommendations`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher evaluation recommendations' };
+  }
+};
+
+export const fetchParentEvaluationSummary = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/exam-evaluations/student/${studentId}/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch parent evaluation summary' };
+  }
+};
+
 
 
 

@@ -44,6 +44,11 @@ import { ExamPaperSection } from '../models/exam-paper-section.model.js';
 import { ExamPaperQuestion } from '../models/exam-paper-question.model.js';
 import { ExamPaperAttempt } from '../models/exam-paper-attempt.model.js';
 import { ExamPaperBlueprint } from '../models/exam-paper-blueprint.model.js';
+import { ExamEvaluation } from '../models/exam-evaluation.model.js';
+import { QuestionEvaluation } from '../models/question-evaluation.model.js';
+import { TopicEvaluation } from '../models/topic-evaluation.model.js';
+import { ConceptEvaluation } from '../models/concept-evaluation.model.js';
+import { StudentMisconception } from '../models/student-misconception.model.js';
 import { StudyMaterial } from '../models/study-material.model.js';
 import { StudyFlashcard } from '../models/study-flashcard.model.js';
 import { DoubtSession } from '../models/doubt-session.model.js';
@@ -90,6 +95,11 @@ const inMemExamPaperSections: any[] = [];
 const inMemExamPaperQuestions: any[] = [];
 const inMemExamPaperAttempts: any[] = [];
 const inMemExamPaperBlueprints: any[] = [];
+const inMemExamEvaluations: any[] = [];
+const inMemQuestionEvaluations: any[] = [];
+const inMemTopicEvaluations: any[] = [];
+const inMemConceptEvaluations: any[] = [];
+const inMemStudentMisconceptions: any[] = [];
 const inMemRevisionHistory: any[] = [];
 const inMemRevisionItems: any[] = [];
 const inMemLearningPaths: any[] = [];
@@ -3037,5 +3047,168 @@ export const dataRepository = {
 
   async getParentExamPaperSummary(studentId: string): Promise<any> {
     return await this.getTeacherExamPaperSummary(studentId);
+  },
+
+  async createExamEvaluation(evalData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ExamEvaluation(evalData);
+      return await doc.save();
+    }
+    const item = { _id: `eval_${Date.now()}_${Math.random()}`, ...evalData, createdAt: new Date(), updatedAt: new Date() };
+    inMemExamEvaluations.push(item);
+    return item;
+  },
+
+  async getExamEvaluation(evaluationId: string, studentId?: string): Promise<any> {
+    if (isDBConnected()) {
+      const query: any = { _id: evaluationId };
+      if (studentId) query.studentId = studentId;
+      return await ExamEvaluation.findOne(query).lean();
+    }
+    return inMemExamEvaluations.find(
+      (e) => (String(e._id || e.id) === String(evaluationId) || e.evaluationId === evaluationId) && (!studentId || String(e.studentId) === String(studentId))
+    );
+  },
+
+  async getStudentExamEvaluations(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ExamEvaluation.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemExamEvaluations
+      .filter((e) => String(e.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  async updateExamEvaluation(evaluationId: string, studentId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await ExamEvaluation.findOneAndUpdate({ _id: evaluationId, studentId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemExamEvaluations.findIndex(
+      (e) => (String(e._id || e.id) === String(evaluationId) || e.evaluationId === evaluationId) && String(e.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemExamEvaluations[idx] = { ...inMemExamEvaluations[idx], ...updateData, updatedAt: new Date() };
+      return inMemExamEvaluations[idx];
+    }
+    return null;
+  },
+
+  async createQuestionEvaluation(qEvalData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new QuestionEvaluation(qEvalData);
+      return await doc.save();
+    }
+    const item = { _id: `qeval_${Date.now()}_${Math.random()}`, ...qEvalData, createdAt: new Date() };
+    inMemQuestionEvaluations.push(item);
+    return item;
+  },
+
+  async getQuestionEvaluations(evaluationId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await QuestionEvaluation.find({ evaluationId }).lean();
+    }
+    return inMemQuestionEvaluations.filter((q) => String(q.evaluationId) === String(evaluationId));
+  },
+
+  async createTopicEvaluation(tEvalData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new TopicEvaluation(tEvalData);
+      return await doc.save();
+    }
+    const item = { _id: `teval_${Date.now()}_${Math.random()}`, ...tEvalData, createdAt: new Date() };
+    inMemTopicEvaluations.push(item);
+    return item;
+  },
+
+  async getTopicEvaluations(evaluationId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await TopicEvaluation.find({ evaluationId }).lean();
+    }
+    return inMemTopicEvaluations.filter((t) => String(t.evaluationId) === String(evaluationId));
+  },
+
+  async createConceptEvaluation(cEvalData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new ConceptEvaluation(cEvalData);
+      return await doc.save();
+    }
+    const item = { _id: `ceval_${Date.now()}_${Math.random()}`, ...cEvalData, createdAt: new Date() };
+    inMemConceptEvaluations.push(item);
+    return item;
+  },
+
+  async getConceptEvaluations(evaluationId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ConceptEvaluation.find({ evaluationId }).lean();
+    }
+    return inMemConceptEvaluations.filter((c) => String(c.evaluationId) === String(evaluationId));
+  },
+
+  async createStudentMisconception(mData: any): Promise<any> {
+    if (isDBConnected()) {
+      const existingDoc = await StudentMisconception.findOne({
+        studentId: mData.studentId,
+        conceptId: mData.conceptId,
+        misconceptionType: mData.misconceptionType,
+        status: 'active',
+      });
+      if (existingDoc) {
+        existingDoc.evidenceCount += 1;
+        existingDoc.lastDetectedAt = new Date();
+        return await existingDoc.save();
+      }
+      const doc = new StudentMisconception(mData);
+      return await doc.save();
+    }
+    const idx = inMemStudentMisconceptions.findIndex(
+      (m) =>
+        String(m.studentId) === String(mData.studentId) &&
+        m.conceptId === mData.conceptId &&
+        m.misconceptionType === mData.misconceptionType &&
+        m.status === 'active'
+    );
+    if (idx >= 0) {
+      inMemStudentMisconceptions[idx].evidenceCount += 1;
+      inMemStudentMisconceptions[idx].lastDetectedAt = new Date();
+      return inMemStudentMisconceptions[idx];
+    }
+
+    const item = { _id: `misc_${Date.now()}_${Math.random()}`, ...mData, createdAt: new Date(), updatedAt: new Date() };
+    inMemStudentMisconceptions.push(item);
+    return item;
+  },
+
+  async getStudentMisconceptions(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await StudentMisconception.find({ studentId }).sort({ lastDetectedAt: -1 }).lean();
+    }
+    return inMemStudentMisconceptions.filter((m) => String(m.studentId) === String(studentId));
+  },
+
+  async updateStudentMisconception(misconceptionId: string, studentId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await StudentMisconception.findOneAndUpdate({ _id: misconceptionId, studentId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemStudentMisconceptions.findIndex(
+      (m) => (String(m._id || m.id) === String(misconceptionId)) && String(m.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemStudentMisconceptions[idx] = { ...inMemStudentMisconceptions[idx], ...updateData, updatedAt: new Date() };
+      return inMemStudentMisconceptions[idx];
+    }
+    return null;
+  },
+
+  async getTeacherEvaluationSummary(studentId: string): Promise<any> {
+    const list = await this.getStudentExamEvaluations(studentId);
+    return {
+      studentId,
+      totalEvaluations: list.length,
+      averagePercentage: list.length > 0 ? Math.round(list.reduce((a, b) => a + (b.percentage || 0), 0) / list.length) : 0,
+    };
+  },
+
+  async getParentEvaluationSummary(studentId: string): Promise<any> {
+    return await this.getTeacherEvaluationSummary(studentId);
   },
 };

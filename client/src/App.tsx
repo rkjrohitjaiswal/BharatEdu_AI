@@ -50,6 +50,8 @@ import { ExamPaperPage } from './pages/ExamPaperPage';
 import { ExamPaperRunnerPage } from './pages/ExamPaperRunnerPage';
 import { ExamPaperResultsPage } from './pages/ExamPaperResultsPage';
 import { ExamPaperReviewPage } from './pages/ExamPaperReviewPage';
+import { ExamEvaluationPage } from './pages/ExamEvaluationPage';
+import { ExamEvaluationDetailPage } from './pages/ExamEvaluationDetailPage';
 
 export const App: React.FC = () => (
   <AuthProvider>
@@ -74,6 +76,8 @@ export const App: React.FC = () => (
           <Route path="exam-papers/:id/run" element={<ProtectedRoute allowedRoles={['student']}><ExamPaperRunnerPage /></ProtectedRoute>} />
           <Route path="exam-papers/:id/results" element={<ProtectedRoute allowedRoles={['student']}><ExamPaperResultsPage /></ProtectedRoute>} />
           <Route path="exam-papers/:id/review" element={<ProtectedRoute allowedRoles={['student']}><ExamPaperReviewPage /></ProtectedRoute>} />
+          <Route path="exam-evaluations" element={<ProtectedRoute allowedRoles={['student']}><ExamEvaluationPage /></ProtectedRoute>} />
+          <Route path="exam-evaluations/:id" element={<ProtectedRoute allowedRoles={['student']}><ExamEvaluationDetailPage /></ProtectedRoute>} />
           <Route path="adaptive-assessment" element={<ProtectedRoute allowedRoles={['student']}><AdaptiveAssessmentPage /></ProtectedRoute>} />
           <Route path="teacher/copilot" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherCopilotPage /></ProtectedRoute>} />
           <Route path="parent/copilot" element={<ProtectedRoute allowedRoles={['parent']}><ParentCopilotPage /></ProtectedRoute>} />

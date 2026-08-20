@@ -51,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'Learning Map', path: '/knowledge-graph', icon: GitBranch, badge: 'Graph' },
     { name: 'Adaptive Assessment', path: '/assessments', icon: Target, badge: 'Adaptive' },
     { name: 'Mock Exams', path: '/exam-papers', icon: Award, badge: 'Mock' },
+    { name: 'Exam Evaluations', path: '/exam-evaluations', icon: BarChart3, badge: 'Analysis' },
     { name: 'Smart Revision', path: '/revision', icon: BrainCircuit, badge: 'Spaced' },
     { name: 'AI Resource Recommendations', path: '/resources', icon: BookOpen, badge: 'Resources' },
     { name: 'AI Study Material', path: '/study-material', icon: BookOpen, badge: 'Notes' },
