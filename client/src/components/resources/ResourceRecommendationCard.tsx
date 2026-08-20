@@ -1,83 +1,80 @@
 import React from 'react';
-import { ExternalLink, CheckCircle2 } from 'lucide-react';
-import { ResourceDifficultyBadge } from './ResourceDifficultyBadge';
+import { IResourceRecommendationClient } from '../../types/resource-recommendation';
 import { ResourcePriorityBadge } from './ResourcePriorityBadge';
+import { ResourceSourceBadge } from './ResourceSourceBadge';
+import { ResourceDuration } from './ResourceDuration';
 import { ResourceReason } from './ResourceReason';
-import { ResourceTimeBadge } from './ResourceTimeBadge';
-import { ResourceTrustBadge } from './ResourceTrustBadge';
+import { ExternalLink, Play, BookOpen, Bookmark, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-export interface ResourceRecommendationCardProps {
-  recommendation: any;
-  onUpdateStatus: (id: string, status: string) => void;
+interface Props {
+  recommendation: IResourceRecommendationClient;
+  onStart?: () => void;
+  onSave?: () => void;
 }
 
-export const ResourceRecommendationCard: React.FC<ResourceRecommendationCardProps> = ({
-  recommendation,
-  onUpdateStatus,
-}) => {
-  const { recommendationId, resource, topic, reason, priority, relevanceScore, trustScore, sourceFeature, status } =
-    recommendation;
-
-  const isCompleted = status === 'completed';
+export const ResourceRecommendationCard: React.FC<Props> = ({ recommendation, onStart, onSave }) => {
+  const resource = recommendation.resource;
+  if (!resource) return null;
 
   return (
-    <div
-      className={`p-5 rounded-2xl border transition-all ${
-        isCompleted
-          ? 'bg-slate-50/70 border-slate-200 opacity-75'
-          : 'bg-white border-slate-200 hover:border-indigo-300 shadow-sm'
-      }`}
-    >
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-        <div className="space-y-2 max-w-2xl">
-          <div className="flex items-center gap-2 flex-wrap">
-            <ResourcePriorityBadge priority={priority} />
-            <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase rounded bg-purple-50 text-purple-700 border border-purple-200">
-              {relevanceScore}% Match
-            </span>
-            <ResourceTrustBadge verified={resource?.verified} official={resource?.official} trustScore={trustScore} />
-          </div>
+    <div className="p-5 bg-slate-900/60 border border-slate-800 hover:border-purple-500/40 rounded-2xl space-y-4 text-xs transition-all shadow-lg">
+      <div className="flex items-center justify-between gap-2">
+        <ResourceSourceBadge provider={resource.provider} isVerified={resource.isVerified} />
+        <div className="flex items-center gap-2">
+          <ResourcePriorityBadge priority={recommendation.priority} />
+          <span className="text-[10px] font-extrabold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+            Score: {recommendation.recommendationScore}
+          </span>
+        </div>
+      </div>
 
-          <h4 className="font-extrabold text-slate-900 text-sm">{resource?.title || topic}</h4>
-          <p className="text-xs text-slate-500 line-clamp-2">{resource?.description}</p>
+      <div>
+        <h4 className="text-base font-bold text-white leading-snug">{resource.title}</h4>
+        <p className="text-slate-300 line-clamp-2 mt-1">{resource.description}</p>
+      </div>
 
-          <ResourceReason reason={reason} sourceFeature={sourceFeature} />
+      <ResourceReason reason={recommendation.reason} />
+
+      <div className="flex items-center justify-between text-slate-400 pt-2 border-t border-slate-800/60">
+        <div className="flex items-center gap-3">
+          <span className="capitalize font-semibold text-slate-300">{resource.resourceType.replace(/_/g, ' ')}</span>
+          <ResourceDuration minutes={resource.estimatedMinutes} />
         </div>
 
-        <div className="flex flex-col sm:items-end gap-2 shrink-0 self-start sm:self-auto">
-          <div className="flex items-center gap-2">
-            <ResourceDifficultyBadge difficulty={resource?.difficulty || 'intermediate'} />
-            <ResourceTimeBadge estimatedMinutes={resource?.estimatedMinutes || 15} />
-          </div>
+        <div className="flex items-center gap-2">
+          {onSave && (
+            <button
+              onClick={onSave}
+              className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs"
+              title="Save Resource"
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+            </button>
+          )}
 
-          <div className="flex items-center gap-2 pt-2">
-            {!isCompleted ? (
-              <button
-                onClick={() => onUpdateStatus(recommendationId || resource?.id, 'completed')}
-                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition inline-flex items-center gap-1"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Mark Done</span>
-              </button>
-            ) : (
-              <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center gap-1 border border-emerald-200">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Completed
-              </span>
-            )}
-
+          {resource.sourceUrl && (
             <a
-              href={resource?.url || '#'}
+              href={resource.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => onUpdateStatus(recommendationId || resource?.id, 'started')}
-              className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs transition inline-flex items-center gap-1"
+              className="py-1.5 px-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg flex items-center gap-1 text-[11px]"
             >
-              <span>Study Now</span>
-              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Open Source</span>
+              <ExternalLink className="w-3 h-3" />
             </a>
-          </div>
+          )}
+
+          <Link
+            to={`/resources/${resource.resourceId}`}
+            className="py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold rounded-lg text-[11px]"
+          >
+            Details
+          </Link>
         </div>
       </div>
     </div>
   );
 };
+
+export default ResourceRecommendationCard;

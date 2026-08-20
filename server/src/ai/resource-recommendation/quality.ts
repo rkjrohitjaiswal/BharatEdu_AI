@@ -1,60 +1,52 @@
-import { ResourceCandidate } from './types.js';
+import { LearningResource } from './types.js';
 
-export function isUrlSafeAndVerified(url?: string | null): { safe: boolean; verified: boolean } {
-  if (!url) {
-    return { safe: true, verified: false };
-  }
-
-  const trimmed = url.trim().toLowerCase();
-
-  // Reject unsafe schemes
-  if (
-    trimmed.startsWith('javascript:') ||
-    trimmed.startsWith('data:') ||
-    trimmed.startsWith('file:') ||
-    trimmed.startsWith('ftp:') ||
-    trimmed.startsWith('http:')
-  ) {
-    return { safe: false, verified: false };
-  }
-
-  if (trimmed.startsWith('https://')) {
-    return { safe: true, verified: true };
-  }
-
-  return { safe: false, verified: false };
+export interface QualityValidationResult {
+  isValid: boolean;
+  isVerified: boolean;
+  flags: string[];
 }
 
-export function validateResourceQuality(resource: ResourceCandidate): { isValid: boolean; qualityScore: number; reason?: string } {
-  if (!resource.title || resource.title.trim().length < 3) {
-    return { isValid: false, qualityScore: 0, reason: 'Invalid or missing title' };
-  }
+export class ResourceQualityValidator {
+  static validateResource(resource: LearningResource): QualityValidationResult {
+    const flags: string[] = [];
 
-  if (!resource.description || resource.description.trim().length < 5) {
-    return { isValid: false, qualityScore: 0, reason: 'Invalid or missing description' };
-  }
-
-  if (!resource.subject || !resource.topicId || !resource.conceptId) {
-    return { isValid: false, qualityScore: 0, reason: 'Missing educational taxonomy (subject/topic/concept)' };
-  }
-
-  if (resource.url) {
-    const urlCheck = isUrlSafeAndVerified(resource.url);
-    if (!urlCheck.safe) {
-      return { isValid: false, qualityScore: 0, reason: 'Unsafe or unencrypted URL scheme' };
+    if (!resource.isActive) {
+      flags.push('inactive_resource');
     }
+
+    if (!resource.isVerified) {
+      flags.push('unverified_source');
+    }
+
+    if (!resource.title || resource.title.trim().length < 5) {
+      flags.push('missing_or_short_title');
+    }
+
+    if (!resource.description || resource.description.trim().length < 10) {
+      flags.push('missing_or_short_description');
+    }
+
+    if (resource.sourceUrl) {
+      try {
+        const url = new URL(resource.sourceUrl);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+          flags.push('invalid_url_protocol');
+        }
+      } catch (e) {
+        flags.push('malformed_source_url');
+      }
+    }
+
+    if (!resource.provider || !resource.officialSource) {
+      flags.push('missing_provider_metadata');
+    }
+
+    const isValid = !flags.includes('inactive_resource') && !flags.includes('unverified_source') && !flags.includes('malformed_source_url');
+
+    return {
+      isValid,
+      isVerified: resource.isVerified && !flags.includes('unverified_source'),
+      flags,
+    };
   }
-
-  let calculatedScore = resource.qualityScore || 75;
-
-  if (resource.official) calculatedScore += 5;
-  if (resource.verified) calculatedScore += 5;
-  if (resource.provider && resource.provider.length > 2) calculatedScore += 5;
-
-  calculatedScore = Math.min(100, Math.max(0, calculatedScore));
-
-  return {
-    isValid: true,
-    qualityScore: calculatedScore,
-  };
 }

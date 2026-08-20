@@ -1,49 +1,38 @@
 import { Router } from 'express';
-import {
-  bookmarkResource,
-  dismissRecommendation,
-  getAllResources,
-  getBookmarks,
-  getHistory,
-  getParentStudentSummary,
-  getRecommendationById,
-  getRecommendations,
-  getResourceById,
-  getTeacherStudentSummary,
-  recordInteraction,
-  refreshRecommendations,
-  removeBookmark,
-} from '../controllers/resource-recommendation.controller.js';
 import { authenticateJWT } from '../middleware/auth.middleware.js';
 import { requireRole } from '../middleware/role.middleware.js';
+import { ResourceRecommendationController } from '../controllers/resource-recommendation.controller.js';
 
-const studentRouter = Router();
-const teacherRouter = Router();
-const parentRouter = Router();
+export const studentResourceRouter = Router();
+export const teacherResourceRouter = Router();
+export const parentResourceRouter = Router();
 
-// Student Routes
-studentRouter.use(authenticateJWT, requireRole('student'));
+// --- STUDENT RESOURCE ROUTES ---
+studentResourceRouter.use(authenticateJWT, requireRole('student'));
 
-studentRouter.get('/recommendations', getRecommendations);
-studentRouter.get('/recommendations/:id', getRecommendationById);
-studentRouter.post('/recommendations/refresh', refreshRecommendations);
-studentRouter.post('/recommendations/:id/dismiss', dismissRecommendation);
+studentResourceRouter.get('/recommended', ResourceRecommendationController.getRecommendedResources);
+studentResourceRouter.get('/today', ResourceRecommendationController.getTodayRecommendations);
+studentResourceRouter.get('/exam', ResourceRecommendationController.getExamResources);
+studentResourceRouter.get('/gaps', ResourceRecommendationController.getGapResources);
+studentResourceRouter.get('/prerequisites', ResourceRecommendationController.getPrerequisiteResources);
+studentResourceRouter.get('/career', ResourceRecommendationController.getCareerResources);
+studentResourceRouter.get('/revision', ResourceRecommendationController.getRevisionResources);
+studentResourceRouter.get('/search', ResourceRecommendationController.searchResources);
 
-studentRouter.get('/bookmarks', getBookmarks);
-studentRouter.get('/history', getHistory);
+studentResourceRouter.get('/:resourceId', ResourceRecommendationController.getResourceById);
+studentResourceRouter.post('/:resourceId/start', ResourceRecommendationController.startResource);
+studentResourceRouter.post('/:resourceId/complete', ResourceRecommendationController.completeResource);
+studentResourceRouter.post('/:resourceId/save', ResourceRecommendationController.saveResource);
+studentResourceRouter.post('/:resourceId/dismiss', ResourceRecommendationController.dismissResource);
+studentResourceRouter.post('/:resourceId/feedback', ResourceRecommendationController.submitFeedback);
 
-studentRouter.get('/', getAllResources);
-studentRouter.get('/:resourceId', getResourceById);
-studentRouter.post('/:resourceId/interaction', recordInteraction);
-studentRouter.post('/:resourceId/bookmark', bookmarkResource);
-studentRouter.delete('/:resourceId/bookmark', removeBookmark);
+// --- TEACHER RESOURCE ROUTES ---
+teacherResourceRouter.use(authenticateJWT, requireRole('teacher'));
 
-// Teacher Routes
-teacherRouter.use(authenticateJWT, requireRole('teacher'));
-teacherRouter.get('/student/:studentId/summary', getTeacherStudentSummary);
+teacherResourceRouter.get('/class/:classId', ResourceRecommendationController.getClassResources);
+teacherResourceRouter.get('/class/:classId/analytics', ResourceRecommendationController.getClassResourceAnalytics);
 
-// Parent Routes
-parentRouter.use(authenticateJWT, requireRole('parent'));
-parentRouter.get('/student/:studentId/summary', getParentStudentSummary);
+// --- PARENT RESOURCE ROUTES ---
+parentResourceRouter.use(authenticateJWT, requireRole('parent'));
 
-export { studentRouter as studentResourceRouter, teacherRouter as teacherResourceRouter, parentRouter as parentResourceRouter };
+parentResourceRouter.get('/student/:studentId', ResourceRecommendationController.getParentChildResources);

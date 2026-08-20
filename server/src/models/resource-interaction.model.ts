@@ -1,43 +1,34 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export type InteractionType =
-  | 'viewed'
-  | 'started'
-  | 'completed'
-  | 'bookmarked'
-  | 'skipped'
-  | 'helpful'
-  | 'not_helpful'
-  | 'opened';
-
 export interface IResourceInteraction extends Document {
-  resourceId: string;
   studentId: string;
-  interactionType: InteractionType;
-  progressPercent: number;
-  durationSeconds: number;
+  resourceId: string;
+  action: 'viewed' | 'started' | 'completed' | 'skipped' | 'saved' | 'rated';
+  durationSeconds?: number;
+  rating?: number;
+  helpful?: boolean;
   createdAt: Date;
-  updatedAt: Date;
+  completedAt?: Date;
 }
 
-const ResourceInteractionSchema: Schema = new Schema(
+const ResourceInteractionSchema = new Schema<IResourceInteraction>(
   {
-    resourceId: { type: String, required: true, index: true },
     studentId: { type: String, required: true, index: true },
-    interactionType: {
+    resourceId: { type: String, required: true, index: true },
+    action: {
       type: String,
       required: true,
-      enum: ['viewed', 'started', 'completed', 'bookmarked', 'skipped', 'helpful', 'not_helpful', 'opened'],
+      enum: ['viewed', 'started', 'completed', 'skipped', 'saved', 'rated'],
+      index: true,
     },
-    progressPercent: { type: Number, default: 0, min: 0, max: 100 },
-    durationSeconds: { type: Number, default: 0, min: 0 },
+    durationSeconds: { type: Number, default: 0 },
+    rating: { type: Number, min: 1, max: 5 },
+    helpful: { type: Boolean },
+    completedAt: { type: Date },
   },
   { timestamps: true }
 );
 
-ResourceInteractionSchema.index({ studentId: 1, resourceId: 1 });
+ResourceInteractionSchema.index({ studentId: 1, resourceId: 1, action: 1 });
 
-export const ResourceInteraction = mongoose.model<IResourceInteraction>(
-  'ResourceInteraction',
-  ResourceInteractionSchema
-);
+export const ResourceInteraction = mongoose.models.ResourceInteraction || mongoose.model<IResourceInteraction>('ResourceInteraction', ResourceInteractionSchema);

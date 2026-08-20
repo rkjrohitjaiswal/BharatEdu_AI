@@ -1,94 +1,101 @@
 import React from 'react';
-import { ArrowRight, CheckCircle2, Clock, ExternalLink, ShieldCheck, X } from 'lucide-react';
-import { ResourceReasonCard } from './ResourceReasonCard';
+import { ILearningResourceClient } from '../../types/resource-recommendation';
+import { ResourceSourceBadge } from './ResourceSourceBadge';
+import { ResourceDuration } from './ResourceDuration';
+import { ExternalLink, CheckCircle2, Play, Bookmark, ThumbsUp, ThumbsDown } from 'lucide-react';
 
-export interface ResourceDetailsProps {
-  resource: any;
-  onClose: () => void;
-  onStart: (resourceId: string) => void;
-  onComplete: (resourceId: string) => void;
+interface Props {
+  resource: ILearningResourceClient;
+  onStart?: () => void;
+  onComplete?: () => void;
+  onSave?: () => void;
+  onFeedback?: (type: string) => void;
 }
 
-export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
-  resource,
-  onClose,
-  onStart,
-  onComplete,
-}) => {
-  if (!resource) return null;
-
-  const { title, description, subject, topic, resourceType, estimatedMinutes, provider, officialSourceUrl, reason, isVerified } =
-    resource;
-
+export const ResourceDetails: React.FC<Props> = ({ resource, onStart, onComplete, onSave, onFeedback }) => {
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 border border-slate-200 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div>
-            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-              {subject} • {resourceType}
-            </span>
-            <h3 className="font-extrabold text-lg text-slate-900 mt-1">{title}</h3>
-          </div>
-
-          <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition">
-            <X className="w-5 h-5" />
-          </button>
+    <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 text-xs shadow-2xl">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+        <div className="space-y-2">
+          <ResourceSourceBadge provider={resource.provider} isVerified={resource.isVerified} />
+          <h1 className="text-2xl md:text-3xl font-extrabold text-white">{resource.title}</h1>
+          <p className="text-slate-300 text-sm leading-relaxed max-w-3xl">{resource.description}</p>
         </div>
 
-        <p className="text-xs text-slate-600 leading-relaxed">{description}</p>
-
-        {reason && <ResourceReasonCard reason={reason} />}
-
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-0.5">
-            <span className="text-slate-400 font-medium text-[11px]">Provider</span>
-            <div className="font-bold text-slate-900 flex items-center gap-1">
-              <span>{provider || 'BharatEdu Library'}</span>
-              {isVerified && <ShieldCheck className="w-4 h-4 text-emerald-600" />}
-            </div>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-0.5">
-            <span className="text-slate-400 font-medium text-[11px]">Estimated Study Time</span>
-            <div className="font-bold text-slate-900 flex items-center gap-1">
-              <Clock className="w-4 h-4 text-indigo-600" />
-              <span>{estimatedMinutes || 15} minutes</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-          <button
-            onClick={() => onComplete(resource.resourceId)}
-            className="px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs border border-emerald-200 transition inline-flex items-center gap-1.5"
-          >
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>Mark as Completed</span>
-          </button>
-
-          {officialSourceUrl ? (
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {onSave && (
+            <button onClick={onSave} className="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-bold flex items-center gap-1.5">
+              <Bookmark className="w-4 h-4" /> Save
+            </button>
+          )}
+          {resource.sourceUrl && (
             <a
-              href={officialSourceUrl}
+              href={resource.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => onStart(resource.resourceId)}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition inline-flex items-center gap-1.5"
+              className="py-2 px-4 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl flex items-center gap-1.5"
             >
-              <span>Open Study Material</span>
+              <span>Visit Official Source</span>
               <ExternalLink className="w-4 h-4" />
             </a>
-          ) : (
-            <button
-              onClick={() => onStart(resource.resourceId)}
-              className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition inline-flex items-center gap-1.5"
-            >
-              <span>Start Studying</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
           )}
         </div>
       </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+        <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-2xl">
+          <div className="text-slate-400 font-medium">Type</div>
+          <div className="font-bold text-white capitalize mt-1">{resource.resourceType.replace(/_/g, ' ')}</div>
+        </div>
+        <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-2xl">
+          <div className="text-slate-400 font-medium">Difficulty</div>
+          <div className="font-bold text-purple-400 capitalize mt-1">{resource.difficulty}</div>
+        </div>
+        <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-2xl">
+          <div className="text-slate-400 font-medium">Estimated Time</div>
+          <div className="font-bold text-emerald-400 mt-1">{resource.estimatedMinutes} Mins</div>
+        </div>
+        <div className="p-3 bg-slate-950/60 border border-slate-800 rounded-2xl">
+          <div className="text-slate-400 font-medium">Board & Grade</div>
+          <div className="font-bold text-amber-400 mt-1">{resource.board} • Class {resource.classLevel}</div>
+        </div>
+      </div>
+
+      {resource.learningObjectives && resource.learningObjectives.length > 0 && (
+        <div className="space-y-2 p-4 bg-slate-950/40 border border-slate-800 rounded-2xl">
+          <h4 className="font-bold text-white text-sm">Learning Objectives</h4>
+          <ul className="space-y-1 text-slate-300">
+            {resource.learningObjectives.map((obj, i) => (
+              <li key={i} className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>{obj}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {onFeedback && (
+        <div className="flex items-center justify-between pt-4 border-t border-slate-800/60">
+          <span className="text-slate-400 font-semibold">Was this recommendation helpful?</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onFeedback('helpful')}
+              className="py-1.5 px-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg font-bold flex items-center gap-1"
+            >
+              <ThumbsUp className="w-3.5 h-3.5" /> Helpful
+            </button>
+            <button
+              onClick={() => onFeedback('not_helpful')}
+              className="py-1.5 px-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg font-bold flex items-center gap-1"
+            >
+              <ThumbsDown className="w-3.5 h-3.5" /> Not Helpful
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+export default ResourceDetails;

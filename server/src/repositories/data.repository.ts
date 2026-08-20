@@ -58,6 +58,7 @@ import { CollaborationThread } from '../models/collaboration-thread.model.js';
 import { CollaborationMessage } from '../models/collaboration-message.model.js';
 import { CollaborationAcknowledgement } from '../models/collaboration-acknowledgement.model.js';
 import { CollaborationAction } from '../models/collaboration-action.model.js';
+import { ResourceTag } from '../models/resource-tag.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -232,6 +233,7 @@ const inMemCollaborationThreads: any[] = [];
 const inMemCollaborationMessages: any[] = [];
 const inMemCollaborationAcknowledgements: any[] = [];
 const inMemCollaborationActions: any[] = [];
+const inMemResourceFeedback: any[] = [];
 
 export const dataRepository = {
   // --- SCHOLARSHIP INTELLIGENCE ---
@@ -2399,38 +2401,6 @@ export const dataRepository = {
     });
   },
 
-  async createLearningResource(resourceData: any): Promise<any> {
-    if (isDBConnected()) {
-      return await LearningResource.findOneAndUpdate(
-        { resourceId: resourceData.resourceId },
-        { $set: resourceData },
-        { upsert: true, new: true }
-      );
-    }
-    const idx = inMemLearningResources.findIndex((r) => r.resourceId === resourceData.resourceId);
-    const item = { _id: `res_${Date.now()}_${Math.random()}`, ...resourceData, updatedAt: new Date() };
-    if (idx >= 0) {
-      inMemLearningResources[idx] = { ...inMemLearningResources[idx], ...item };
-    } else {
-      inMemLearningResources.push(item);
-    }
-    return item;
-  },
-
-  async getLearningResource(resourceId: string): Promise<any> {
-    if (isDBConnected()) {
-      return await LearningResource.findOne({ resourceId }).lean();
-    }
-    return inMemLearningResources.find((r) => r.resourceId === resourceId);
-  },
-
-  async getLearningResources(filter: any = {}): Promise<any[]> {
-    if (isDBConnected()) {
-      return await LearningResource.find(filter).lean();
-    }
-    return inMemLearningResources;
-  },
-
   async createRecommendation(recData: any): Promise<any> {
     if (isDBConnected()) {
       return await StudentResourceRecommendation.findOneAndUpdate(
@@ -4137,4 +4107,94 @@ export const dataRepository = {
     }
     return null;
   },
+
+  // --- FEATURE 39: AI ACADEMIC RESOURCE RECOMMENDATION ENGINE ---
+  async createLearningResource(resData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new LearningResource(resData);
+      return await doc.save();
+    }
+    const item = { _id: `res_${Date.now()}_${Math.random()}`, ...resData, createdAt: new Date(), updatedAt: new Date() };
+    inMemLearningResources.push(item);
+    return item;
+  },
+
+  async getLearningResource(resourceId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningResource.findOne({ resourceId }).lean();
+    }
+    return inMemLearningResources.find((r) => r.resourceId === resourceId);
+  },
+
+  async getLearningResources(query: any = {}): Promise<any[]> {
+    if (isDBConnected()) {
+      return await LearningResource.find({ isActive: true, ...query }).lean();
+    }
+    return inMemLearningResources.filter((r) => {
+      if (r.isActive === false) return false;
+      if (query.subject && r.subject !== query.subject) return false;
+      if (query.topic && r.topic !== query.topic) return false;
+      if (query.language && r.language !== query.language) return false;
+      if (query.classLevel && r.classLevel !== Number(query.classLevel)) return false;
+      return true;
+    });
+  },
+
+  async searchLearningResources(query: any): Promise<any[]> {
+    if (isDBConnected()) {
+      const filter: any = { isActive: true };
+      if (query.subject) filter.subject = new RegExp(query.subject, 'i');
+      if (query.topic) filter.topic = new RegExp(query.topic, 'i');
+      if (query.conceptId) filter.conceptId = query.conceptId;
+      if (query.language) filter.language = query.language;
+      if (query.difficulty) filter.difficulty = query.difficulty;
+      if (query.resourceType) filter.resourceType = query.resourceType;
+      return await LearningResource.find(filter).lean();
+    }
+    return inMemLearningResources.filter((r) => {
+      if (r.isActive === false) return false;
+      if (query.subject && !r.subject.toLowerCase().includes(String(query.subject).toLowerCase())) return false;
+      if (query.topic && !r.topic.toLowerCase().includes(String(query.topic).toLowerCase())) return false;
+      if (query.conceptId && r.conceptId !== query.conceptId) return false;
+      if (query.language && r.language !== query.language) return false;
+      if (query.difficulty && r.difficulty !== query.difficulty) return false;
+      if (query.resourceType && r.resourceType !== query.resourceType) return false;
+      return true;
+    });
+  },
+
+  async getAllResourceInteractions(): Promise<any[]> {
+    if (isDBConnected()) {
+      return await ResourceInteraction.find().lean();
+    }
+    return inMemResourceInteractions;
+  },
+
+  async updateResourceRecommendation(recommendationId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await ResourceRecommendation.findOneAndUpdate({ recommendationId }, { $set: updates }, { new: true }).lean();
+    }
+    const idx = inMemResourceRecommendations.findIndex((r) => r.recommendationId === recommendationId);
+    if (idx >= 0) {
+      inMemResourceRecommendations[idx] = { ...inMemResourceRecommendations[idx], ...updates };
+      return inMemResourceRecommendations[idx];
+    }
+    return null;
+  },
+
+  async createResourceFeedback(fbData: any): Promise<any> {
+    if (isDBConnected()) {
+      // In DB fallback store in inMem or custom schema
+      inMemResourceFeedback.push({ _id: `fb_${Date.now()}_${Math.random()}`, ...fbData, createdAt: new Date() });
+      return fbData;
+    }
+    const item = { _id: `fb_${Date.now()}_${Math.random()}`, ...fbData, createdAt: new Date() };
+    inMemResourceFeedback.push(item);
+    return item;
+  },
+
+  async getResourceFeedback(studentId: string): Promise<any[]> {
+    return inMemResourceFeedback.filter((f) => f.studentId === studentId);
+  },
 };
+

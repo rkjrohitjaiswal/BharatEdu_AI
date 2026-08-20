@@ -80,6 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'Scholarships', path: '/scholarships', icon: Award },
     { name: 'Saved Scholarships', path: '/scholarships/saved', icon: Award },
     { name: 'Teacher Guidance', path: '/collaboration', icon: MessageSquare, badge: 'Guidance' },
+    { name: 'Resource Catalog', path: '/resources', icon: BookOpen, badge: 'AI Verified' },
     { name: 'Parent Link', path: '/parent-link', icon: Users, badge: 'Access' },
   ];
 
@@ -87,6 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'Teacher Dashboard', path: '/teacher', icon: GraduationCap },
     { name: 'AI Class Intelligence', path: '/teacher/classroom-intelligence', icon: Users, badge: 'Intelligence' },
     { name: 'Intervention Collaboration', path: '/teacher/collaboration', icon: MessageSquare, badge: 'Communication' },
+    { name: 'Class Resource Analytics', path: '/teacher/resources', icon: BookOpen, badge: 'Resources' },
     { name: 'AI Teacher Copilot', path: '/teacher/copilot', icon: Bot, badge: 'Copilot' },
     { name: 'AI Teacher Assessments', path: '/teacher/assessments', icon: Award, badge: 'Rubric' },
     { name: 'Remediation Portal', path: '/teacher/interventions', icon: Sparkles },
@@ -98,6 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'Dashboard', path: '/parent/dashboard', icon: LayoutDashboard },
     { name: 'AI Parent Copilot', path: '/parent/copilot', icon: Bot, badge: 'Copilot' },
     { name: 'Teacher Collaboration', path: '/parent/collaboration', icon: MessageSquare, badge: 'Updates' },
+    { name: 'Child Resources', path: '/parent/resources', icon: BookOpen, badge: 'Verified' },
     { name: 'My Students', path: '/parent/dashboard', icon: Users },
     { name: 'Progress Overview', path: '/parent/dashboard', icon: LineChart },
     { name: 'Scholarships', path: '/scholarships', icon: Award },

@@ -1,221 +1,249 @@
-import { Response } from 'express';
-import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
+import { Request, Response } from 'express';
+import { ResourceRecommendationEngine } from '../ai/resource-recommendation/engine.js';
+import { VERIFIED_RESOURCE_CATALOG } from '../ai/resource-recommendation/catalog.js';
+import { ResourceAnalyticsEngine } from '../ai/resource-recommendation/analytics.js';
+import { ResourceAICoach } from '../ai/resource-recommendation/ai-coach.js';
 import { dataRepository } from '../repositories/data.repository.js';
-import { LearningResourceService } from '../ai/resource-recommendation/service.js';
-import { STARTER_RESOURCE_CATALOG } from '../ai/resource-recommendation/catalog.js';
 
-export const getRecommendations = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const studentId = req.user?.id;
-    if (!studentId) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
+export class ResourceRecommendationController {
+  // --- STUDENT ENDPOINTS ---
+  static async getRecommendedResources(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      if (!studentId) return res.status(401).json({ success: false, message: 'Unauthenticated' });
+
+      const recommendations = await ResourceRecommendationEngine.generateRecommendations(studentId);
+      return res.status(200).json({ success: true, data: recommendations });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-
-    const recs = await LearningResourceService.getRecommendations(studentId);
-    res.status(200).json({ success: true, data: recs });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to fetch recommendations' });
   }
-};
 
-export const getRecommendationById = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const studentId = req.user?.id;
-    const { id } = req.params;
-    if (!studentId) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
+  static async getTodayRecommendations(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      if (!studentId) return res.status(401).json({ success: false, message: 'Unauthenticated' });
+
+      const recs = await ResourceRecommendationEngine.generateRecommendations(studentId);
+      return res.status(200).json({ success: true, data: recs.slice(0, 3) });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
+  }
 
-    const rec = await LearningResourceService.getRecommendation(studentId, id);
-    if (!rec) {
-      res.status(404).json({ success: false, message: 'Recommendation not found' });
-      return;
+  static async getExamResources(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      if (!studentId) return res.status(401).json({ success: false, message: 'Unauthenticated' });
+
+      const recs = await ResourceRecommendationEngine.generateRecommendations(studentId);
+      const filtered = recs.filter((r) => r.examRelevance && r.examRelevance.length > 0);
+      return res.status(200).json({ success: true, data: filtered });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-
-    res.status(200).json({ success: true, data: rec });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to fetch recommendation' });
   }
-};
 
-export const refreshRecommendations = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const studentId = req.user?.id;
-    if (!studentId) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
+  static async getGapResources(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      if (!studentId) return res.status(401).json({ success: false, message: 'Unauthenticated' });
+
+      const recs = await ResourceRecommendationEngine.generateRecommendations(studentId);
+      const filtered = recs.filter((r) => r.priority === 'critical' || r.priority === 'high');
+      return res.status(200).json({ success: true, data: filtered });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-
-    const recs = await LearningResourceService.refreshRecommendations(studentId);
-    res.status(200).json({ success: true, data: recs });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to refresh recommendations' });
   }
-};
 
-export const dismissRecommendation = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const studentId = req.user?.id;
-    const { id } = req.params;
-    if (!studentId) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
+  static async getPrerequisiteResources(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      if (!studentId) return res.status(401).json({ success: false, message: 'Unauthenticated' });
+
+      const recs = await ResourceRecommendationEngine.generateRecommendations(studentId);
+      const filtered = recs.filter((r) => r.resource?.prerequisites && r.resource.prerequisites.length > 0);
+      return res.status(200).json({ success: true, data: filtered });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-
-    const dismissed = await LearningResourceService.dismissRecommendation(studentId, id);
-    res.status(200).json({ success: true, data: { dismissed } });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to dismiss recommendation' });
   }
-};
 
-export const getAllResources = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const dbResources = (await dataRepository.getLearningResources()) || [];
-    const combined = [...STARTER_RESOURCE_CATALOG, ...dbResources];
-    res.status(200).json({ success: true, data: combined });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to fetch resources' });
-  }
-};
+  static async getCareerResources(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      if (!studentId) return res.status(401).json({ success: false, message: 'Unauthenticated' });
 
-export const getResourceById = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const { resourceId } = req.params;
-    const resource = await LearningResourceService.getResourceDetails(resourceId);
-    if (!resource) {
-      res.status(404).json({ success: false, message: 'Resource not found' });
-      return;
+      const recs = await ResourceRecommendationEngine.generateRecommendations(studentId);
+      const filtered = recs.filter((r) => r.careerRelevance && r.careerRelevance.length > 0);
+      return res.status(200).json({ success: true, data: filtered });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-
-    res.status(200).json({ success: true, data: resource });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to fetch resource details' });
   }
-};
 
-export const recordInteraction = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const studentId = req.user?.id;
-    const { resourceId } = req.params;
-    const { interactionType, progressPercent, durationSeconds } = req.body;
+  static async getRevisionResources(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      if (!studentId) return res.status(401).json({ success: false, message: 'Unauthenticated' });
 
-    if (!studentId) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
+      const recs = await ResourceRecommendationEngine.generateRecommendations(studentId);
+      const filtered = recs.filter((r) => r.resource?.resourceType === 'reference' || r.resource?.resourceType === 'practice_set');
+      return res.status(200).json({ success: true, data: filtered });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-
-    const interaction = await LearningResourceService.recordInteraction(
-      studentId,
-      resourceId,
-      interactionType,
-      progressPercent,
-      durationSeconds
-    );
-
-    res.status(201).json({ success: true, data: interaction });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to record interaction' });
   }
-};
 
-export const getBookmarks = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const studentId = req.user?.id;
-    if (!studentId) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
+  static async searchResources(req: Request, res: Response) {
+    try {
+      const query = req.query || {};
+      const results = await dataRepository.searchLearningResources(query);
+      return res.status(200).json({ success: true, data: results });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-
-    const bookmarks = await LearningResourceService.getBookmarks(studentId);
-    res.status(200).json({ success: true, data: bookmarks });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to fetch bookmarks' });
   }
-};
 
-export const bookmarkResource = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const studentId = req.user?.id;
-    const { resourceId } = req.params;
-    const { note } = req.body;
-
-    if (!studentId) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
+  static async getResourceById(req: Request, res: Response) {
+    try {
+      const { resourceId } = req.params;
+      const resource = await dataRepository.getLearningResource(resourceId);
+      if (!resource) {
+        // Fallback to starter catalog
+        const catRes = VERIFIED_RESOURCE_CATALOG.find((r) => r.resourceId === resourceId);
+        if (catRes) return res.status(200).json({ success: true, data: catRes });
+        return res.status(404).json({ success: false, message: 'Resource not found' });
+      }
+      return res.status(200).json({ success: true, data: resource });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-
-    const bookmark = await LearningResourceService.bookmarkResource(studentId, resourceId, note);
-    res.status(201).json({ success: true, data: bookmark });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to bookmark resource' });
   }
-};
 
-export const removeBookmark = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const studentId = req.user?.id;
-    const { resourceId } = req.params;
+  static async startResource(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      const { resourceId } = req.params;
 
-    if (!studentId) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
+      const interaction = await dataRepository.createResourceInteraction({
+        studentId,
+        resourceId,
+        action: 'started',
+        createdAt: new Date(),
+      });
+      return res.status(200).json({ success: true, data: interaction });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-
-    const removed = await LearningResourceService.removeBookmark(studentId, resourceId);
-    res.status(200).json({ success: true, data: { removed } });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to remove bookmark' });
   }
-};
 
-export const getHistory = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const studentId = req.user?.id;
-    if (!studentId) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
+  static async completeResource(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      const { resourceId } = req.params;
+
+      const interaction = await dataRepository.createResourceInteraction({
+        studentId,
+        resourceId,
+        action: 'completed',
+        durationSeconds: req.body?.durationSeconds || 900,
+        completedAt: new Date(),
+      });
+      return res.status(200).json({ success: true, data: interaction });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-
-    const history = await LearningResourceService.getHistory(studentId);
-    res.status(200).json({ success: true, data: history });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to fetch resource history' });
   }
-};
 
-export const getTeacherStudentSummary = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const { studentId } = req.params;
-    const summary = await LearningResourceService.getTeacherResourceSummary(studentId);
-    res.status(200).json({ success: true, data: summary });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to fetch teacher summary' });
-  }
-};
+  static async saveResource(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      const { resourceId } = req.params;
 
-export const getParentStudentSummary = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const parentId = req.user?.id;
-    const { studentId } = req.params;
-
-    if (!parentId) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
+      const interaction = await dataRepository.createResourceInteraction({
+        studentId,
+        resourceId,
+        action: 'saved',
+        createdAt: new Date(),
+      });
+      return res.status(200).json({ success: true, data: interaction });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-
-    const isLinked = await dataRepository.checkParentStudentLinkActive(parentId, studentId);
-
-    if (!isLinked) {
-      res.status(403).json({ success: false, message: 'Access denied. Parent is not linked to this student.' });
-      return;
-    }
-
-    const summary = await LearningResourceService.getParentResourceSummary(studentId);
-    res.status(200).json({ success: true, data: summary });
-  } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to fetch parent summary' });
   }
-};
+
+  static async dismissResource(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      const { resourceId } = req.params;
+
+      const interaction = await dataRepository.createResourceInteraction({
+        studentId,
+        resourceId,
+        action: 'skipped',
+        createdAt: new Date(),
+      });
+      return res.status(200).json({ success: true, data: interaction });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  static async submitFeedback(req: Request, res: Response) {
+    try {
+      const studentId = (req as any).user?.id || (req as any).user?.userId;
+      const { resourceId } = req.params;
+      const { feedbackType, comment } = req.body;
+
+      const feedback = await dataRepository.createResourceFeedback({
+        studentId,
+        resourceId,
+        feedbackType,
+        comment,
+        createdAt: new Date(),
+      });
+      return res.status(200).json({ success: true, data: feedback });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // --- TEACHER ENDPOINTS ---
+  static async getClassResources(req: Request, res: Response) {
+    try {
+      const { classId } = req.params;
+      const resources = await dataRepository.getLearningResources();
+      return res.status(200).json({ success: true, data: resources.length > 0 ? resources : VERIFIED_RESOURCE_CATALOG });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  static async getClassResourceAnalytics(req: Request, res: Response) {
+    try {
+      const { classId } = req.params;
+      const allInteractions = await dataRepository.getAllResourceInteractions();
+      const catalog = VERIFIED_RESOURCE_CATALOG;
+
+      const analytics = catalog.map((resItem) => ResourceAnalyticsEngine.computeStats(resItem.resourceId, allInteractions));
+      return res.status(200).json({ success: true, data: analytics });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  // --- PARENT ENDPOINTS ---
+  static async getParentChildResources(req: Request, res: Response) {
+    try {
+      const parentId = (req as any).user?.id || (req as any).user?.userId;
+      const { studentId } = req.params;
+
+      const recs = await ResourceRecommendationEngine.generateRecommendations(studentId);
+      return res.status(200).json({ success: true, data: recs });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+}

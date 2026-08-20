@@ -1,54 +1,34 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export type ResourceType =
-  | 'video'
-  | 'article'
-  | 'textbook'
-  | 'ncert'
-  | 'worksheet'
-  | 'practice'
-  | 'quiz'
-  | 'assessment'
-  | 'documentation'
-  | 'coding_exercise'
-  | 'simulation'
-  | 'notes'
-  | 'course';
-
-export type ResourceDifficulty = 'beginner' | 'easy' | 'medium' | 'hard' | 'advanced';
-export type ResourceLanguage = 'en' | 'hi' | 'gu';
-
 export interface ILearningResource extends Document {
   resourceId: string;
   title: string;
   description: string;
-  resourceType: ResourceType;
+  resourceType: 'textbook' | 'chapter' | 'article' | 'video' | 'course' | 'practice_set' | 'worksheet' | 'assessment' | 'simulation' | 'documentation' | 'reference';
   subject: string;
-  topicId: string;
+  topic: string;
   conceptId: string;
-  classLevel: string;
+  classLevel: number;
   board: string;
-  language: ResourceLanguage;
-  difficulty: ResourceDifficulty;
+  language: 'en' | 'hi' | 'gu';
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
   estimatedMinutes: number;
   provider: string;
-  author?: string;
-  url?: string | null;
-  thumbnailUrl?: string | null;
-  official: boolean;
-  verified: boolean;
+  officialSource: string;
+  sourceUrl?: string;
+  thumbnailUrl?: string;
   tags: string[];
   prerequisites: string[];
-  careerTags: string[];
-  examTags: string[];
-  qualityScore: number;
-  popularityScore: number;
-  freshnessScore: number;
+  learningObjectives: string[];
+  careerRelevance?: string[];
+  examRelevance?: string[];
+  isVerified: boolean;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const LearningResourceSchema: Schema = new Schema(
+const LearningResourceSchema = new Schema<ILearningResource>(
   {
     resourceId: { type: String, required: true, unique: true, index: true },
     title: { type: String, required: true },
@@ -56,54 +36,33 @@ const LearningResourceSchema: Schema = new Schema(
     resourceType: {
       type: String,
       required: true,
-      enum: [
-        'video',
-        'article',
-        'textbook',
-        'ncert',
-        'worksheet',
-        'practice',
-        'quiz',
-        'assessment',
-        'documentation',
-        'coding_exercise',
-        'simulation',
-        'notes',
-        'course',
-      ],
+      enum: ['textbook', 'chapter', 'article', 'video', 'course', 'practice_set', 'worksheet', 'assessment', 'simulation', 'documentation', 'reference'],
       index: true,
     },
     subject: { type: String, required: true, index: true },
-    topicId: { type: String, required: true, index: true },
+    topic: { type: String, required: true, index: true },
     conceptId: { type: String, required: true, index: true },
-    classLevel: { type: String, required: true, index: true },
-    board: { type: String, required: true, index: true },
+    classLevel: { type: Number, required: true, index: true },
+    board: { type: String, required: true, default: 'CBSE', index: true },
     language: { type: String, required: true, enum: ['en', 'hi', 'gu'], default: 'en', index: true },
-    difficulty: {
-      type: String,
-      required: true,
-      enum: ['beginner', 'easy', 'medium', 'hard', 'advanced'],
-      default: 'medium',
-    },
+    difficulty: { type: String, required: true, enum: ['beginner', 'intermediate', 'advanced'], default: 'intermediate' },
     estimatedMinutes: { type: Number, required: true, default: 15 },
     provider: { type: String, required: true },
-    author: { type: String },
-    url: { type: String, default: null },
-    thumbnailUrl: { type: String, default: null },
-    official: { type: Boolean, default: false },
-    verified: { type: Boolean, default: false, index: true },
-    tags: { type: [String], default: [] },
-    prerequisites: { type: [String], default: [] },
-    careerTags: { type: [String], default: [] },
-    examTags: { type: [String], default: [] },
-    qualityScore: { type: Number, default: 80, min: 0, max: 100 },
-    popularityScore: { type: Number, default: 50, min: 0, max: 100 },
-    freshnessScore: { type: Number, default: 90, min: 0, max: 100 },
+    officialSource: { type: String, required: true },
+    sourceUrl: { type: String },
+    thumbnailUrl: { type: String },
+    tags: [{ type: String }],
+    prerequisites: [{ type: String }],
+    learningObjectives: [{ type: String }],
+    careerRelevance: [{ type: String }],
+    examRelevance: [{ type: String }],
+    isVerified: { type: Boolean, required: true, default: true },
+    isActive: { type: Boolean, required: true, default: true },
   },
   { timestamps: true }
 );
 
-LearningResourceSchema.index({ conceptId: 1, topicId: 1, subject: 1 });
-LearningResourceSchema.index({ board: 1, classLevel: 1 });
+LearningResourceSchema.index({ subject: 1, topic: 1, conceptId: 1 });
+LearningResourceSchema.index({ classLevel: 1, board: 1, language: 1 });
 
-export const LearningResource = mongoose.model<ILearningResource>('LearningResource', LearningResourceSchema);
+export const LearningResource = mongoose.models.LearningResource || mongoose.model<ILearningResource>('LearningResource', LearningResourceSchema);

@@ -4607,6 +4607,169 @@ export const submitCollaborationHelpRequest = async (role: 'parent' | 'student',
   }
 };
 
+// --- FEATURE 39: AI ACADEMIC RESOURCE RECOMMENDATION APIs ---
+export const fetchExamResources = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/exam`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch exam resources' };
+  }
+};
+
+export const fetchGapResources = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/gaps`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch gap resources' };
+  }
+};
+
+export const fetchPrerequisiteResources = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/prerequisites`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch prerequisite resources' };
+  }
+};
+
+export const fetchCareerResources = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/career`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch career resources' };
+  }
+};
+
+export const fetchRevisionResources = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/revision`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch revision resources' };
+  }
+};
+
+export const searchResources = async (query: any) => {
+  try {
+    const params = new URLSearchParams(query).toString();
+    const response = await fetch(`${API_BASE_URL}/student/resources/search?${params}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to search resources' };
+  }
+};
+
+export const startResource = async (resourceId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${resourceId}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to start resource' };
+  }
+};
+
+export const completeResource = async (resourceId: string, durationSeconds?: number) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${resourceId}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ durationSeconds }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to complete resource' };
+  }
+};
+
+export const saveResource = async (resourceId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${resourceId}/save`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to save resource' };
+  }
+};
+
+export const dismissResource = async (resourceId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${resourceId}/dismiss`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to dismiss resource' };
+  }
+};
+
+export const submitResourceFeedback = async (resourceId: string, feedbackType: string, comment?: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/resources/${resourceId}/feedback`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ feedbackType, comment }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to submit feedback' };
+  }
+};
+
+export const fetchTeacherClassResources = async (classId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/resources/class/${classId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch class resources' };
+  }
+};
+
+export const fetchTeacherClassResourceAnalytics = async (classId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/resources/class/${classId}/analytics`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch resource analytics' };
+  }
+};
+
+export const fetchParentChildResources = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/resources/student/${studentId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch child resources' };
+  }
+};
+
 
 
 
