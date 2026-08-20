@@ -51,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     { name: 'Adaptive Assessment', path: '/adaptive-assessment', icon: Target, badge: 'Adaptive' },
     { name: 'Smart Revision', path: '/revision', icon: BrainCircuit, badge: 'Spaced' },
     { name: 'AI Resource Recommendations', path: '/resources', icon: BookOpen, badge: 'Resources' },
+    { name: 'AI Study Material', path: '/study-material', icon: BookOpen, badge: 'Notes' },
     { name: 'Risk Assessment', path: '/risk', icon: AlertTriangle, badge: 'Early Warning' },
     { name: 'Analytics & Insights', path: '/analytics', icon: BarChart3, badge: 'Insights' },
     { name: 'Notifications', path: '/notifications', icon: Bell, badge: 'Alerts' },

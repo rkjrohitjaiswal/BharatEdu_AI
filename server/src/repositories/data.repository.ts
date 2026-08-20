@@ -36,6 +36,8 @@ import { KnowledgeConcept } from '../models/knowledge-concept.model.js';
 import { ConceptDependency } from '../models/concept-dependency.model.js';
 import { StudentConceptMastery } from '../models/student-concept-mastery.model.js';
 import { AdaptiveAssessment } from '../models/adaptive-assessment.model.js';
+import { StudyMaterial } from '../models/study-material.model.js';
+import { StudyFlashcard } from '../models/study-flashcard.model.js';
 import { StudentResourceRecommendation } from '../models/student-resource-recommendation.model.js';
 import { StudentResourceProgress } from '../models/student-resource-progress.model.js';
 import { LearningPath } from '../models/learning-path.model.js';
@@ -63,6 +65,8 @@ const inMemInterventions: any[] = [];
 const inMemResourceProgress: any[] = [];
 const inMemLearningResources: any[] = [];
 const inMemResourceRecommendations: any[] = [];
+const inMemStudyMaterials: any[] = [];
+const inMemStudyFlashcards: any[] = [];
 const inMemRevisionHistory: any[] = [];
 const inMemRevisionItems: any[] = [];
 const inMemLearningPaths: any[] = [];
@@ -2431,6 +2435,107 @@ export const dataRepository = {
       totalRecommended: active.length,
       completed: recs.filter((r) => r.status === 'completed').length,
       topRecommendation: active[0] || null,
+    };
+  },
+
+  async createStudyMaterial(materialData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new StudyMaterial(materialData);
+      return await doc.save();
+    }
+    const item = { _id: `mat_${Date.now()}_${Math.random()}`, ...materialData, createdAt: new Date(), updatedAt: new Date() };
+    inMemStudyMaterials.push(item);
+    return item;
+  },
+
+  async getStudyMaterial(materialId: string, studentId?: string): Promise<any> {
+    if (isDBConnected()) {
+      const query: any = { _id: materialId };
+      if (studentId) query.studentId = studentId;
+      return await StudyMaterial.findOne(query).lean();
+    }
+    return inMemStudyMaterials.find(
+      (m) => (String(m._id || m.id) === String(materialId) || m.materialId === materialId) && (!studentId || String(m.studentId) === String(studentId))
+    );
+  },
+
+  async getStudentStudyMaterials(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await StudyMaterial.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemStudyMaterials
+      .filter((m) => String(m.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  },
+
+  async getRecommendedStudyMaterials(studentId: string): Promise<any[]> {
+    return await this.getStudentStudyMaterials(studentId);
+  },
+
+  async updateStudyMaterial(materialId: string, studentId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await StudyMaterial.findOneAndUpdate({ _id: materialId, studentId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemStudyMaterials.findIndex(
+      (m) => (String(m._id || m.id) === String(materialId) || m.materialId === materialId) && String(m.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemStudyMaterials[idx] = { ...inMemStudyMaterials[idx], ...updateData, updatedAt: new Date() };
+      return inMemStudyMaterials[idx];
+    }
+    return null;
+  },
+
+  async archiveStudyMaterial(materialId: string, studentId: string): Promise<any> {
+    return await this.updateStudyMaterial(materialId, studentId, { status: 'archived' });
+  },
+
+  async createFlashcard(flashcardData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new StudyFlashcard(flashcardData);
+      return await doc.save();
+    }
+    const item = { _id: `fc_${Date.now()}_${Math.random()}`, ...flashcardData, createdAt: new Date() };
+    inMemStudyFlashcards.push(item);
+    return item;
+  },
+
+  async getFlashcards(materialId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await StudyFlashcard.find({ materialId }).sort({ order: 1 }).lean();
+    }
+    return inMemStudyFlashcards
+      .filter((fc) => String(fc.materialId) === String(materialId))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  },
+
+  async reviewFlashcard(flashcardId: string, studentId: string, outcome: string): Promise<any> {
+    const nextStatus = outcome === 'again' ? 'due' : outcome === 'easy' ? 'mastered' : 'active';
+    if (isDBConnected()) {
+      return await StudyFlashcard.findOneAndUpdate({ _id: flashcardId, studentId }, { $set: { status: nextStatus } }, { new: true });
+    }
+    const idx = inMemStudyFlashcards.findIndex(
+      (fc) => String(fc._id || fc.id) === String(flashcardId) && String(fc.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemStudyFlashcards[idx] = { ...inMemStudyFlashcards[idx], status: nextStatus, updatedAt: new Date() };
+      return inMemStudyFlashcards[idx];
+    }
+    return null;
+  },
+
+  async getStudyMaterialHistory(studentId: string): Promise<any[]> {
+    const materials = await this.getStudentStudyMaterials(studentId);
+    return materials.filter((m) => m.status === 'archived');
+  },
+
+  async getStudyMaterialSummary(studentId: string): Promise<any> {
+    const materials = await this.getStudentStudyMaterials(studentId);
+    const ready = materials.filter((m) => m.status === 'ready');
+    return {
+      studentId,
+      totalMaterials: ready.length,
+      topMaterial: ready[0] || null,
     };
   },
 };

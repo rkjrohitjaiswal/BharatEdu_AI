@@ -30,6 +30,7 @@ import revisionRoutes from './revision.routes.js';
 import knowledgeGraphRoutes from './knowledge-graph.routes.js';
 import adaptiveAssessmentRoutes from './adaptive-assessment.routes.js';
 import learningPathRoutes from './learning-path.routes.js';
+import studyMaterialRoutes from './study-material.routes.js';
 
 const router = Router();
 
@@ -44,6 +45,7 @@ router.use('/student/resources', resourceRecommendationRoutes);
 router.use('/student/revision', revisionRoutes);
 router.use('/student/assessments', adaptiveAssessmentRoutes);
 router.use('/student/learning-path', learningPathRoutes);
+router.use('/student/study-material', studyMaterialRoutes);
 router.use('/knowledge-graph', knowledgeGraphRoutes);
 router.use('/risk', riskRoutes);
 router.use('/analytics', analyticsRoutes);

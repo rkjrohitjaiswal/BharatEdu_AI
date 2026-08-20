@@ -3039,14 +3039,135 @@ export const fetchResourceSummary = async () => {
   }
 };
 
-export const fetchResourceExplanation = async (recId: string) => {
+// ===================================================
+// FEATURE 27: AI STUDY MATERIAL & PERSONALIZED NOTES GENERATOR
+// ===================================================
+
+export const generateStudyMaterial = async (options?: any) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/student/resources/${recId}/explanation`, {
+    const response = await fetch(`${API_BASE_URL}/student/study-material/generate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(options || {}),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate study material' };
+  }
+};
+
+export const fetchRecommendedStudyMaterials = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-material/recommended`, {
       headers: getAuthHeaders(),
     });
     return await handleResponse(response);
   } catch (error) {
-    return { success: false, message: 'Failed to fetch resource explanation' };
+    return { success: false, message: 'Failed to fetch recommended study materials' };
+  }
+};
+
+export const fetchTodayStudyMaterials = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-material/today`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch today study materials' };
+  }
+};
+
+export const fetchStudyMaterial = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-material/${id}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch study material details' };
+  }
+};
+
+export const regenerateStudyMaterial = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-material/${id}/regenerate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to regenerate study material' };
+  }
+};
+
+export const archiveStudyMaterial = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-material/${id}/archive`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to archive study material' };
+  }
+};
+
+export const fetchStudyMaterialFlashcards = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-material/${id}/flashcards`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch study material flashcards' };
+  }
+};
+
+export const generateStudyMaterialFlashcards = async (id: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-material/${id}/flashcards/generate`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to generate flashcards' };
+  }
+};
+
+export const reviewStudyFlashcard = async (flashcardId: string, outcome: 'again' | 'hard' | 'good' | 'easy') => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-material/flashcards/${flashcardId}/review`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ outcome }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to review flashcard' };
+  }
+};
+
+export const fetchStudyMaterialHistory = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-material/history`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch study material history' };
+  }
+};
+
+export const fetchStudyMaterialSummary = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/study-material/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch study material summary' };
   }
 };
 
