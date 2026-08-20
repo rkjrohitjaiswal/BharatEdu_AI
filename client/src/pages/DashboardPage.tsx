@@ -32,6 +32,7 @@ import { AdaptiveAssessmentCard } from '../components/dashboard/AdaptiveAssessme
 import { ResourceHubCard } from '../components/dashboard/ResourceHubCard';
 import { ResourceRecommendationCard } from '../components/dashboard/ResourceRecommendationCard';
 import { StudyMaterialCard } from '../components/dashboard/StudyMaterialCard';
+import { DoubtSolverCard } from '../components/dashboard/DoubtSolverCard';
 import { SmartRevisionCard } from '../components/dashboard/SmartRevisionCard';
 import { LearningPathCard } from '../components/dashboard/LearningPathCard';
 
@@ -148,6 +149,9 @@ export const DashboardPage: React.FC = () => {
 
           {/* AI Personalized Study Material Card */}
           <StudyMaterialCard />
+
+          {/* AI Doubt Solver Card */}
+          <DoubtSolverCard />
 
           {/* Overall Learning Mastery */}
           <MasteryCard learningProfile={learningProfile} />

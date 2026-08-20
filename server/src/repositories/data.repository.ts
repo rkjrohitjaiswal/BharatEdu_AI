@@ -38,6 +38,9 @@ import { StudentConceptMastery } from '../models/student-concept-mastery.model.j
 import { AdaptiveAssessment } from '../models/adaptive-assessment.model.js';
 import { StudyMaterial } from '../models/study-material.model.js';
 import { StudyFlashcard } from '../models/study-flashcard.model.js';
+import { DoubtSession } from '../models/doubt-session.model.js';
+import { DoubtMessage } from '../models/doubt-message.model.js';
+import { DoubtContext } from '../models/doubt-context.model.js';
 import { StudentResourceRecommendation } from '../models/student-resource-recommendation.model.js';
 import { StudentResourceProgress } from '../models/student-resource-progress.model.js';
 import { LearningPath } from '../models/learning-path.model.js';
@@ -67,6 +70,9 @@ const inMemLearningResources: any[] = [];
 const inMemResourceRecommendations: any[] = [];
 const inMemStudyMaterials: any[] = [];
 const inMemStudyFlashcards: any[] = [];
+const inMemDoubtSessions: any[] = [];
+const inMemDoubtMessages: any[] = [];
+const inMemDoubtContexts: any[] = [];
 const inMemRevisionHistory: any[] = [];
 const inMemRevisionItems: any[] = [];
 const inMemLearningPaths: any[] = [];
@@ -2537,5 +2543,131 @@ export const dataRepository = {
       totalMaterials: ready.length,
       topMaterial: ready[0] || null,
     };
+  },
+
+  async createDoubtSession(sessionData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new DoubtSession(sessionData);
+      return await doc.save();
+    }
+    const item = { _id: `ds_${Date.now()}_${Math.random()}`, ...sessionData, createdAt: new Date(), updatedAt: new Date(), lastActivityAt: new Date() };
+    inMemDoubtSessions.push(item);
+    return item;
+  },
+
+  async getDoubtSession(sessionId: string, studentId?: string): Promise<any> {
+    if (isDBConnected()) {
+      const query: any = { _id: sessionId };
+      if (studentId) query.studentId = studentId;
+      return await DoubtSession.findOne(query).lean();
+    }
+    return inMemDoubtSessions.find(
+      (s) => (String(s._id || s.id) === String(sessionId) || s.sessionId === sessionId) && (!studentId || String(s.studentId) === String(studentId))
+    );
+  },
+
+  async getStudentDoubtSessions(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await DoubtSession.find({ studentId }).sort({ lastActivityAt: -1 }).lean();
+    }
+    return inMemDoubtSessions
+      .filter((s) => String(s.studentId) === String(studentId))
+      .sort((a, b) => new Date(b.lastActivityAt || 0).getTime() - new Date(a.lastActivityAt || 0).getTime());
+  },
+
+  async updateDoubtSession(sessionId: string, studentId: string, updateData: any): Promise<any> {
+    if (isDBConnected()) {
+      return await DoubtSession.findOneAndUpdate({ _id: sessionId, studentId }, { $set: updateData }, { new: true });
+    }
+    const idx = inMemDoubtSessions.findIndex(
+      (s) => (String(s._id || s.id) === String(sessionId) || s.sessionId === sessionId) && String(s.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemDoubtSessions[idx] = { ...inMemDoubtSessions[idx], ...updateData, updatedAt: new Date() };
+      return inMemDoubtSessions[idx];
+    }
+    return null;
+  },
+
+  async deleteDoubtSession(sessionId: string, studentId: string): Promise<boolean> {
+    if (isDBConnected()) {
+      const res = await DoubtSession.deleteOne({ _id: sessionId, studentId });
+      return res.deletedCount > 0;
+    }
+    const idx = inMemDoubtSessions.findIndex(
+      (s) => (String(s._id || s.id) === String(sessionId) || s.sessionId === sessionId) && String(s.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemDoubtSessions.splice(idx, 1);
+      return true;
+    }
+    return false;
+  },
+
+  async createDoubtMessage(messageData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new DoubtMessage(messageData);
+      return await doc.save();
+    }
+    const item = { _id: `msg_${Date.now()}_${Math.random()}`, ...messageData, createdAt: new Date() };
+    inMemDoubtMessages.push(item);
+    return item;
+  },
+
+  async getDoubtMessages(sessionId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await DoubtMessage.find({ sessionId }).sort({ createdAt: 1 }).lean();
+    }
+    return inMemDoubtMessages
+      .filter((m) => String(m.sessionId) === String(sessionId))
+      .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+  },
+
+  async saveDoubtContext(contextData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new DoubtContext(contextData);
+      return await doc.save();
+    }
+    const item = { _id: `ctx_${Date.now()}_${Math.random()}`, ...contextData, capturedAt: new Date() };
+    inMemDoubtContexts.push(item);
+    return item;
+  },
+
+  async getDoubtContext(sessionId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await DoubtContext.findOne({ sessionId }).sort({ capturedAt: -1 }).lean();
+    }
+    return inMemDoubtContexts.find((c) => String(c.sessionId) === String(sessionId)) || null;
+  },
+
+  async addDoubtFeedback(messageId: string, studentId: string, isHelpful: boolean): Promise<any> {
+    if (isDBConnected()) {
+      return await DoubtMessage.findOneAndUpdate({ _id: messageId, studentId }, { $set: { isHelpful } }, { new: true });
+    }
+    const idx = inMemDoubtMessages.findIndex(
+      (m) => (String(m._id || m.id) === String(messageId) || m.messageId === messageId) && String(m.studentId) === String(studentId)
+    );
+    if (idx >= 0) {
+      inMemDoubtMessages[idx] = { ...inMemDoubtMessages[idx], isHelpful };
+      return inMemDoubtMessages[idx];
+    }
+    return null;
+  },
+
+  async getDoubtSummary(studentId: string): Promise<any> {
+    const sessions = await this.getStudentDoubtSessions(studentId);
+    return {
+      studentId,
+      totalSessions: sessions.length,
+      activeSessions: sessions.filter((s) => s.status === 'active').length,
+    };
+  },
+
+  async getTeacherDoubtSummary(studentId: string): Promise<any> {
+    return await this.getDoubtSummary(studentId);
+  },
+
+  async getParentDoubtSummary(studentId: string): Promise<any> {
+    return await this.getDoubtSummary(studentId);
   },
 };

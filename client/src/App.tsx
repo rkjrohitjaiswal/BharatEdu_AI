@@ -39,6 +39,7 @@ import { StudentMentorPage } from './pages/StudentMentorPage';
 import { StudyPlannerPage } from './pages/StudyPlannerPage';
 import { ResourceRecommendationsPage } from './pages/ResourceRecommendationsPage';
 import { StudyMaterialPage } from './pages/StudyMaterialPage';
+import { DoubtSolverPage } from './pages/DoubtSolverPage';
 import { RevisionPage } from './pages/RevisionPage';
 import { KnowledgeGraphPage } from './pages/KnowledgeGraphPage';
 import { AdaptiveAssessmentPage } from './pages/AdaptiveAssessmentPage';
@@ -55,6 +56,7 @@ export const App: React.FC = () => (
           <Route path="study-planner" element={<ProtectedRoute allowedRoles={['student']}><StudyPlannerPage /></ProtectedRoute>} />
           <Route path="resources" element={<ProtectedRoute allowedRoles={['student']}><ResourceRecommendationsPage /></ProtectedRoute>} />
           <Route path="study-material" element={<ProtectedRoute allowedRoles={['student']}><StudyMaterialPage /></ProtectedRoute>} />
+          <Route path="doubts" element={<ProtectedRoute allowedRoles={['student']}><DoubtSolverPage /></ProtectedRoute>} />
           <Route path="revision" element={<ProtectedRoute allowedRoles={['student']}><RevisionPage /></ProtectedRoute>} />
           <Route path="knowledge-graph" element={<ProtectedRoute allowedRoles={['student']}><KnowledgeGraphPage /></ProtectedRoute>} />
           <Route path="adaptive-assessment" element={<ProtectedRoute allowedRoles={['student']}><AdaptiveAssessmentPage /></ProtectedRoute>} />
