@@ -2,56 +2,62 @@ export interface ILearningResourceClient {
   resourceId: string;
   title: string;
   description: string;
-  resourceType: 'textbook' | 'chapter' | 'article' | 'video' | 'course' | 'practice_set' | 'worksheet' | 'assessment' | 'simulation' | 'documentation' | 'reference';
+  resourceType: string;
   subject: string;
   topic: string;
   conceptId: string;
   classLevel: number;
   board: string;
-  language: 'en' | 'hi' | 'gu';
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  estimatedMinutes: number;
+  language: string;
+  difficulty: string;
+  durationMinutes: number;
+  estimatedMinutes?: number;
   provider: string;
-  officialSource: string;
+  url: string;
   sourceUrl?: string;
-  thumbnailUrl?: string;
-  tags: string[];
-  prerequisites: string[];
-  learningObjectives: string[];
-  careerRelevance?: string[];
-  examRelevance?: string[];
-  isVerified: boolean;
-  isActive: boolean;
+  officialSource?: string;
+  verified: boolean;
+  isVerified?: boolean;
+  status: string;
+  learningObjectives?: string[];
+  prerequisites?: string[];
+}
+
+export interface IResourceRecommendationReasonClient {
+  primaryReason: string;
+  details: string;
+  prerequisitePath?: string[];
+  examRelevance?: string;
 }
 
 export interface IResourceRecommendationClient {
-  recommendationId?: string;
-  studentId: string;
-  resourceId: string;
-  resource?: ILearningResourceClient;
-  reason: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
+  resource: ILearningResourceClient;
   recommendationScore: number;
-  sourceSignals: string[];
-  targetConcepts: string[];
-  targetGaps: string[];
-  targetGoals?: string[];
+  rank: number;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  actionType: 'watch' | 'read' | 'practice' | 'revise' | 'solve_doubt' | 'explore';
+  reason: IResourceRecommendationReasonClient;
+  recommendationId?: string;
+  resourceId?: string;
   examRelevance?: string[];
   careerRelevance?: string[];
-  status: 'recommended' | 'viewed' | 'started' | 'completed' | 'dismissed';
-  generatedAt: string;
+}
+
+export interface IResourceRankingResultClient {
+  topRecommendation: IResourceRecommendationClient;
+  recommendations: IResourceRecommendationClient[];
+  contextSummary: string;
 }
 
 export interface IResourceAnalyticsClient {
-  resourceId: string;
-  views: number;
-  starts: number;
-  completions: number;
-  completionRate: number;
-  averageDurationSeconds: number;
-  helpfulCount: number;
-  notHelpfulCount: number;
-  helpfulRate: number;
-  dismisses: number;
-  dismissRate: number;
+  resourceId?: string;
+  totalViews: number;
+  totalCompletions: number;
+  completionRatePct: number;
+  completionRate?: number;
+  starts?: number;
+  helpfulRate?: number;
+  averageRating: number;
+  averageTimeSpentMinutes: number;
+  effectivenessSummary: string;
 }

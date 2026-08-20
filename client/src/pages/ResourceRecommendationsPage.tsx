@@ -103,7 +103,14 @@ export const ResourceRecommendationsPage: React.FC = () => {
         </div>
 
         {/* AI Insight Banner */}
-        <ResourceAIInsight />
+        <ResourceAIInsight
+          coach={{
+            headline: 'Personalized Learning Recommendations',
+            explanation: 'Verified NCERT curriculum aligned resources for active learning gaps.',
+            prerequisiteTip: 'Master prerequisite topics before proceeding to advanced concepts.',
+            nextStepAdvice: 'Complete practice sets to reinforce concept understanding.',
+          }}
+        />
 
         {/* Recommended Collections */}
         {filteredRecs.length === 0 ? (

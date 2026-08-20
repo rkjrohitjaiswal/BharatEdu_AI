@@ -61,11 +61,13 @@ import {
   studentCollaborationRouter,
 } from './collaboration.routes.js';
 import assessmentEngineRoutes from './assessment-engine.routes.js';
+import resourceRecommendationRoutes from './resource-recommendation.routes.js';
 
 const router = Router();
 
 router.use('/', assessmentEngineRoutes);
 router.use('/', examPreparationRoutes);
+router.use('/', resourceRecommendationRoutes);
 
 router.use('/', healthRoutes);
 router.use('/auth', authRoutes);

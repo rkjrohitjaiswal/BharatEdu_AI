@@ -1,29 +1,44 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+export type ResourceType =
+  | 'video'
+  | 'article'
+  | 'textbook'
+  | 'notes'
+  | 'worksheet'
+  | 'quiz'
+  | 'practice'
+  | 'simulation'
+  | 'coding'
+  | 'course';
+
+export type ResourceLanguage = 'en' | 'hi' | 'gu';
+export type ResourceDifficulty = 'beginner' | 'standard' | 'advanced';
+export type ResourceStatus = 'active' | 'inactive' | 'pending_review';
+
 export interface ILearningResource extends Document {
   resourceId: string;
   title: string;
   description: string;
-  resourceType: 'textbook' | 'chapter' | 'article' | 'video' | 'course' | 'practice_set' | 'worksheet' | 'assessment' | 'simulation' | 'documentation' | 'reference';
+  resourceType: ResourceType;
   subject: string;
   topic: string;
   conceptId: string;
   classLevel: number;
   board: string;
-  language: 'en' | 'hi' | 'gu';
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  estimatedMinutes: number;
+  language: ResourceLanguage;
+  difficulty: ResourceDifficulty;
+  durationMinutes: number;
   provider: string;
-  officialSource: string;
-  sourceUrl?: string;
+  url: string;
   thumbnailUrl?: string;
+  author?: string;
+  officialSource?: string;
+  verified: boolean;
+  verificationDate?: Date;
   tags: string[];
-  prerequisites: string[];
-  learningObjectives: string[];
-  careerRelevance?: string[];
-  examRelevance?: string[];
-  isVerified: boolean;
-  isActive: boolean;
+  syllabusVersion?: string;
+  status: ResourceStatus;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,33 +51,31 @@ const LearningResourceSchema = new Schema<ILearningResource>(
     resourceType: {
       type: String,
       required: true,
-      enum: ['textbook', 'chapter', 'article', 'video', 'course', 'practice_set', 'worksheet', 'assessment', 'simulation', 'documentation', 'reference'],
+      enum: ['video', 'article', 'textbook', 'notes', 'worksheet', 'quiz', 'practice', 'simulation', 'coding', 'course'],
+      default: 'article',
       index: true,
     },
     subject: { type: String, required: true, index: true },
-    topic: { type: String, required: true, index: true },
+    topic: { type: String, required: true },
     conceptId: { type: String, required: true, index: true },
-    classLevel: { type: Number, required: true, index: true },
-    board: { type: String, required: true, default: 'CBSE', index: true },
-    language: { type: String, required: true, enum: ['en', 'hi', 'gu'], default: 'en', index: true },
-    difficulty: { type: String, required: true, enum: ['beginner', 'intermediate', 'advanced'], default: 'intermediate' },
-    estimatedMinutes: { type: Number, required: true, default: 15 },
-    provider: { type: String, required: true },
-    officialSource: { type: String, required: true },
-    sourceUrl: { type: String },
+    classLevel: { type: Number, required: true, default: 10 },
+    board: { type: String, required: true, default: 'CBSE' },
+    language: { type: String, enum: ['en', 'hi', 'gu'], default: 'en' },
+    difficulty: { type: String, enum: ['beginner', 'standard', 'advanced'], default: 'standard' },
+    durationMinutes: { type: Number, required: true, default: 15 },
+    provider: { type: String, required: true, default: 'NCERT Official' },
+    url: { type: String, required: true },
     thumbnailUrl: { type: String },
+    author: { type: String, default: 'NCERT' },
+    officialSource: { type: String, default: 'https://ncert.nic.in' },
+    verified: { type: Boolean, default: true, index: true },
+    verificationDate: { type: Date, default: Date.now },
     tags: [{ type: String }],
-    prerequisites: [{ type: String }],
-    learningObjectives: [{ type: String }],
-    careerRelevance: [{ type: String }],
-    examRelevance: [{ type: String }],
-    isVerified: { type: Boolean, required: true, default: true },
-    isActive: { type: Boolean, required: true, default: true },
+    syllabusVersion: { type: String, default: '2026' },
+    status: { type: String, enum: ['active', 'inactive', 'pending_review'], default: 'active', index: true },
   },
   { timestamps: true }
 );
 
-LearningResourceSchema.index({ subject: 1, topic: 1, conceptId: 1 });
-LearningResourceSchema.index({ classLevel: 1, board: 1, language: 1 });
-
-export const LearningResource = mongoose.models.LearningResource || mongoose.model<ILearningResource>('LearningResource', LearningResourceSchema);
+export const LearningResource = mongoose.model<ILearningResource>('LearningResource', LearningResourceSchema);
+export default LearningResource;

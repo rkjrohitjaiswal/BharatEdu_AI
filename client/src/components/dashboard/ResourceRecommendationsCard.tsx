@@ -56,7 +56,9 @@ export const ResourceRecommendationsCard: React.FC = () => {
                 </span>
               </div>
 
-              <p className="text-slate-300 text-[11px] line-clamp-1">{rec.reason}</p>
+              <p className="text-slate-300 text-[11px] line-clamp-1">
+                {typeof rec.reason === 'string' ? rec.reason : rec.reason?.primaryReason}
+              </p>
 
               <div className="flex items-center justify-between text-slate-400 text-[10px] pt-1">
                 <span className="flex items-center gap-1">

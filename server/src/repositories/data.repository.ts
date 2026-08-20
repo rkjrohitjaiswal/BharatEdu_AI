@@ -65,6 +65,8 @@ import { AssessmentBlueprint } from '../models/assessment-blueprint.model.js';
 import { ExamProfile } from '../models/exam-profile.model.js';
 import { StudentExamPlan } from '../models/student-exam-plan.model.js';
 import { ExamSyllabusItem } from '../models/exam-syllabus-item.model.js';
+import { StudentResourceInteraction } from '../models/student-resource-interaction.model.js';
+import { ResourceFeedback } from '../models/resource-feedback.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -245,6 +247,8 @@ const inMemResourceFeedback: any[] = [];
 const inMemExamProfiles: any[] = [];
 const inMemStudentExamPlans: any[] = [];
 const inMemExamSyllabusItems: any[] = [];
+const inMemStudentResourceInteractions: any[] = [];
+const inMemResourceFeedbacks: any[] = [];
 
 export const dataRepository = {
   // --- SCHOLARSHIP INTELLIGENCE ---
@@ -4453,6 +4457,83 @@ export const dataRepository = {
       profile,
       summaryGeneratedAt: new Date(),
     };
+  },
+
+  async updateResourceProgress(studentId: string, resourceId: string, progressPercent: number, timeSpentSeconds: number): Promise<any> {
+    if (isDBConnected()) {
+      return await StudentResourceInteraction.findOneAndUpdate(
+        { studentId, resourceId },
+        { $set: { progressPercent, timeSpentSeconds, updatedAt: new Date() } },
+        { new: true, upsert: true }
+      ).lean();
+    }
+    const idx = inMemStudentResourceInteractions.findIndex((i) => i.studentId === studentId && i.resourceId === resourceId);
+    if (idx >= 0) {
+      inMemStudentResourceInteractions[idx].progressPercent = progressPercent;
+      inMemStudentResourceInteractions[idx].timeSpentSeconds += timeSpentSeconds;
+      return inMemStudentResourceInteractions[idx];
+    }
+    const newItem = {
+      _id: `int_${Date.now()}`,
+      interactionId: `int_${Date.now()}`,
+      studentId,
+      resourceId,
+      interactionType: 'started',
+      progressPercent,
+      timeSpentSeconds,
+      createdAt: new Date(),
+    };
+    inMemStudentResourceInteractions.push(newItem);
+    return newItem;
+  },
+
+  async completeResource(studentId: string, resourceId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await StudentResourceInteraction.findOneAndUpdate(
+        { studentId, resourceId },
+        { $set: { interactionType: 'completed', progressPercent: 100, completedAt: new Date() } },
+        { new: true, upsert: true }
+      ).lean();
+    }
+    const idx = inMemStudentResourceInteractions.findIndex((i) => i.studentId === studentId && i.resourceId === resourceId);
+    if (idx >= 0) {
+      inMemStudentResourceInteractions[idx].interactionType = 'completed';
+      inMemStudentResourceInteractions[idx].progressPercent = 100;
+      inMemStudentResourceInteractions[idx].completedAt = new Date();
+      return inMemStudentResourceInteractions[idx];
+    }
+    const newItem = {
+      _id: `int_${Date.now()}`,
+      interactionId: `int_${Date.now()}`,
+      studentId,
+      resourceId,
+      interactionType: 'completed',
+      progressPercent: 100,
+      completedAt: new Date(),
+      createdAt: new Date(),
+    };
+    inMemStudentResourceInteractions.push(newItem);
+    return newItem;
+  },
+
+  async bookmarkResource(studentId: string, resourceId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await StudentResourceInteraction.findOneAndUpdate(
+        { studentId, resourceId },
+        { $set: { interactionType: 'bookmarked' } },
+        { new: true, upsert: true }
+      ).lean();
+    }
+    const newItem = {
+      _id: `int_${Date.now()}`,
+      interactionId: `int_${Date.now()}`,
+      studentId,
+      resourceId,
+      interactionType: 'bookmarked',
+      createdAt: new Date(),
+    };
+    inMemStudentResourceInteractions.push(newItem);
+    return newItem;
   },
 };
 

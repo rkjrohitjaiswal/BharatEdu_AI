@@ -3,14 +3,14 @@ import { BookOpen } from 'lucide-react';
 
 export const ResourceEmptyState: React.FC = () => {
   return (
-    <div className="p-12 bg-slate-900/40 border border-slate-800 rounded-3xl text-center space-y-4">
-      <BookOpen className="w-12 h-12 text-slate-500 mx-auto" />
-      <h3 className="text-lg font-bold text-white">No Matching Resources Found</h3>
-      <p className="text-xs text-slate-400 max-w-sm mx-auto">
-        Try adjusting your filter options or search term to discover verified educational resources.
+    <div className="bg-white rounded-2xl p-12 shadow-sm border border-gray-100 text-center max-w-md mx-auto my-8">
+      <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <BookOpen className="w-8 h-8" />
+      </div>
+      <h3 className="text-lg font-extrabold text-gray-900 mb-1">No Verified Resources Found</h3>
+      <p className="text-xs text-gray-500">
+        No verified resources match the selected search filters. Try adjusting your subject or topic filters.
       </p>
     </div>
   );
 };
-
-export default ResourceEmptyState;

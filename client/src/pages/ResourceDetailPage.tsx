@@ -1,101 +1,159 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchResourceById, startResource, completeResource, saveResource, submitResourceFeedback } from '../services/api';
-import { ILearningResourceClient } from '../types/resource-recommendation';
-import { ResourceDetails } from '../components/resources/ResourceDetails';
-import { ResourceFeedback } from '../components/resources/ResourceFeedback';
-import { ArrowLeft } from 'lucide-react';
+import { fetchStudentResourceDetail, fetchStudentResourceReason, completeStudentResource } from '../services/api';
+import { ArrowLeft, ExternalLink, CheckCircle2, BookOpen, Sparkles, Check, HelpCircle, Play } from 'lucide-react';
 
 export const ResourceDetailPage: React.FC = () => {
   const { resourceId } = useParams<{ resourceId: string }>();
-  const [resource, setResource] = useState<ILearningResourceClient | null>(null);
+  const [resource, setResource] = useState<any>(null);
+  const [reasonData, setReasonData] = useState<any>(null);
+  const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
-    if (resourceId) loadResource(resourceId);
+    if (resourceId) loadDetail();
   }, [resourceId]);
 
-  const loadResource = async (id: string) => {
+  const loadDetail = async () => {
     setLoading(true);
-    const res = await fetchResourceById(id);
-    if (res.success && res.data) {
-      setResource(res.data);
+    const [resDetail, resReason] = await Promise.all([
+      fetchStudentResourceDetail(resourceId!),
+      fetchStudentResourceReason(resourceId!),
+    ]);
+
+    if (resDetail.success && resDetail.data) {
+      setResource(resDetail.data);
+    }
+    if (resReason.success && resReason.data) {
+      setReasonData(resReason.data);
     }
     setLoading(false);
   };
 
-  const handleStart = async () => {
-    if (!resourceId) return;
-    await startResource(resourceId);
-    setStatusMessage('Started learning resource session.');
-  };
-
   const handleComplete = async () => {
     if (!resourceId) return;
-    await completeResource(resourceId, 900);
-    setStatusMessage('Resource marked completed! Great job!');
-  };
-
-  const handleSave = async () => {
-    if (!resourceId) return;
-    await saveResource(resourceId);
-    setStatusMessage('Resource saved to your bookmarks.');
-  };
-
-  const handleFeedback = async (type: string, comment?: string) => {
-    if (!resourceId) return;
-    await submitResourceFeedback(resourceId, type, comment);
-    setStatusMessage(`Thank you for your feedback! (${type})`);
+    const res = await completeStudentResource(resourceId);
+    if (res.success) {
+      setCompleted(true);
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-slate-400">Loading Resource Details...</p>
-        </div>
+      <div className="p-8 text-center text-gray-500 font-semibold flex items-center justify-center space-x-2">
+        <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <span>Loading Resource Details...</span>
       </div>
     );
   }
 
   if (!resource) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 p-6 text-center space-y-4">
-        <h2 className="text-xl font-bold">Resource Not Found</h2>
-        <Link to="/resources" className="text-purple-400 font-bold hover:underline">
-          ← Return to Resources
-        </Link>
+      <div className="p-8 text-center text-gray-500">
+        Resource not found.
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <Link to="/resources" className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-white">
-          <ArrowLeft className="w-4 h-4" /> Back to Resource Catalog
-        </Link>
+  const coach = reasonData?.coach;
 
-        {statusMessage && (
-          <div className="p-3 bg-purple-950/40 border border-purple-500/40 text-purple-300 rounded-xl text-xs font-semibold">
-            {statusMessage}
+  return (
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <Link to="/resources" className="inline-flex items-center space-x-2 text-indigo-600 font-bold text-xs hover:underline">
+        <ArrowLeft className="w-4 h-4" />
+        <span>Back to Resource Catalog</span>
+      </Link>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase">
+                {resource.resourceType}
+              </span>
+              <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center space-x-1">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Verified by {resource.provider}</span>
+              </span>
+            </div>
+            <h1 className="text-2xl font-black text-gray-900">{resource.title}</h1>
+          </div>
+
+          <a
+            href={resource.url}
+            target="_blank"
+            rel="noreferrer"
+            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl flex items-center space-x-2 shadow-md"
+          >
+            <span>Open Content</span>
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        </div>
+
+        <p className="text-xs text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">
+          {resource.description}
+        </p>
+
+        {coach && (
+          <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 p-5 rounded-xl border border-purple-200">
+            <div className="flex items-center space-x-2 text-purple-700 font-bold text-xs uppercase mb-2">
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              <span>Why This Resource Was Recommended For You</span>
+            </div>
+            <p className="text-xs text-gray-800 font-semibold mb-2">{coach.explanation}</p>
+            <div className="text-xs text-gray-600 italic">💡 Next Step: {coach.nextStepAdvice}</div>
           </div>
         )}
 
-        <ResourceDetails
-          resource={resource}
-          onStart={handleStart}
-          onComplete={handleComplete}
-          onSave={handleSave}
-          onFeedback={(type) => handleFeedback(type)}
-        />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+          <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+            <div className="text-gray-400 font-medium">Subject</div>
+            <div className="font-bold text-gray-900 mt-0.5">{resource.subject}</div>
+          </div>
+          <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+            <div className="text-gray-400 font-medium">Topic</div>
+            <div className="font-bold text-gray-900 mt-0.5">{resource.topic}</div>
+          </div>
+          <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+            <div className="text-gray-400 font-medium">Difficulty</div>
+            <div className="font-bold text-gray-900 capitalize mt-0.5">{resource.difficulty}</div>
+          </div>
+          <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+            <div className="text-gray-400 font-medium">Est. Duration</div>
+            <div className="font-bold text-gray-900 mt-0.5">{resource.durationMinutes} Mins</div>
+          </div>
+        </div>
 
-        <ResourceFeedback onSubmit={(type, comment) => handleFeedback(type, comment)} />
+        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+          <button
+            onClick={handleComplete}
+            disabled={completed}
+            className={`px-4 py-2 text-xs font-bold rounded-xl flex items-center space-x-2 ${
+              completed ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
+            }`}
+          >
+            <Check className="w-4 h-4" />
+            <span>{completed ? 'Completed ✓' : 'Mark as Complete'}</span>
+          </button>
+
+          <div className="flex items-center space-x-3">
+            <Link
+              to="/doubts"
+              className="px-3.5 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold rounded-xl flex items-center space-x-1"
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span>Ask Doubt Solver</span>
+            </Link>
+            <Link
+              to="/practice"
+              className="px-3.5 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-semibold rounded-xl flex items-center space-x-1"
+            >
+              <Play className="w-4 h-4" />
+              <span>Practice Questions</span>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
-
-export default ResourceDetailPage;

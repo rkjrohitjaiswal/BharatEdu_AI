@@ -2,7 +2,7 @@ import { dataRepository } from '../../repositories/data.repository.js';
 import { isDBConnected } from '../../services/db.js';
 import { RevisionItem } from '../../models/revision-item.model.js';
 import { getStudentConceptReadinessList, getStudentRootLearningGaps } from '../knowledge-graph/engine.js';
-import { getAllCatalogResources } from '../resource-recommendations/engine.js';
+import { getAllCatalogResources } from '../resource-recommendation/engine.js';
 import { calculateEstimatedMinutes, determineRevisionPriority } from './rules.js';
 import { IDailyRevisionQueueData, IRevisionItemDTO, IRevisionScheduleDay } from './types.js';
 

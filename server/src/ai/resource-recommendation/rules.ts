@@ -17,108 +17,129 @@ export class RecommendationRulesEngine {
     const signals: RecommendationSignal[] = [];
 
     // 1. Learning Gap Signal
-    const matchesGap = profile.weakConcepts.some(
+    const matchesGap = (profile.weakConcepts || []).some(
       (gap) => gap.toLowerCase() === resource.topic.toLowerCase() || gap.toLowerCase() === resource.conceptId.toLowerCase() || gap.toLowerCase() === resource.subject.toLowerCase()
     );
     if (matchesGap) {
       signals.push({
         type: 'learningGap',
+        signalType: 'learningGap',
         weight: SIGNAL_WEIGHTS.learningGap,
+        score: SIGNAL_WEIGHTS.learningGap,
         reason: `Addresses active learning gap in ${resource.topic}.`,
         targetConcept: resource.conceptId,
       });
     }
 
     // 2. Prerequisite Gap Signal (Knowledge Graph Integration)
-    const matchesPrereq = profile.prerequisiteGaps.some(
-      (p) => resource.prerequisites.includes(p) || p.toLowerCase() === resource.conceptId.toLowerCase() || resource.tags.includes(p)
+    const matchesPrereq = (profile.prerequisiteGaps || []).some(
+      (p) => (resource.prerequisites || []).includes(p) || p.toLowerCase() === resource.conceptId.toLowerCase() || (resource.tags || []).includes(p)
     );
     if (matchesPrereq) {
       signals.push({
         type: 'prerequisiteGap',
+        signalType: 'prerequisiteGap',
         weight: SIGNAL_WEIGHTS.prerequisiteGap,
+        score: SIGNAL_WEIGHTS.prerequisiteGap,
         reason: `Builds prerequisite foundational understanding required for dependent topics.`,
         targetConcept: resource.conceptId,
       });
     }
 
     // 3. Exam Urgency & Relevance
-    const matchesExam = profile.examTargets.some(
-      (e) => resource.examRelevance?.some((er) => er.toLowerCase().includes(e.toLowerCase())) || resource.tags.includes(e.toLowerCase())
+    const matchesExam = (profile.examTargets || []).some(
+      (e) => (resource.examRelevance || []).some((er) => er.toLowerCase().includes(e.toLowerCase())) || (resource.tags || []).includes(e.toLowerCase())
     );
     if (matchesExam || (resource.examRelevance && resource.examRelevance.length > 0)) {
       signals.push({
         type: 'examRelevance',
+        signalType: 'examRelevance',
         weight: SIGNAL_WEIGHTS.examRelevance,
+        score: SIGNAL_WEIGHTS.examRelevance,
         reason: `High relevance for upcoming target exam preparations.`,
       });
     }
 
     // 4. Mastery Need
-    if (profile.mastery < 60 && resource.difficulty === 'beginner') {
+    const currentMastery = profile.masteryMap?.[resource.conceptId] ?? 50;
+    if (currentMastery < 60 && resource.difficulty === 'beginner') {
       signals.push({
         type: 'masteryNeed',
+        signalType: 'masteryNeed',
         weight: SIGNAL_WEIGHTS.masteryNeed,
-        reason: `Matched for foundational mastery reinforcement (Current Mastery: ${profile.mastery}%).`,
+        score: SIGNAL_WEIGHTS.masteryNeed,
+        reason: `Matched for foundational mastery reinforcement.`,
       });
-    } else if (profile.mastery >= 60 && resource.difficulty !== 'beginner') {
+    } else if (currentMastery >= 60 && resource.difficulty !== 'beginner') {
       signals.push({
         type: 'masteryNeed',
+        signalType: 'masteryNeed',
         weight: SIGNAL_WEIGHTS.masteryNeed * 0.7,
+        score: SIGNAL_WEIGHTS.masteryNeed * 0.7,
         reason: `Matched to advance topic proficiency towards higher mastery.`,
       });
     }
 
     // 5. Goal Alignment
-    const matchesGoal = profile.activeGoals.some(
-      (g) => resource.tags.includes(g.toLowerCase()) || resource.topic.toLowerCase().includes(g.toLowerCase())
+    const matchesGoal = (profile.activeGoals || []).some(
+      (g) => (resource.tags || []).includes(g.toLowerCase()) || resource.topic.toLowerCase().includes(g.toLowerCase())
     );
     if (matchesGoal) {
       signals.push({
         type: 'goalAlignment',
+        signalType: 'goalAlignment',
         weight: SIGNAL_WEIGHTS.goalAlignment,
+        score: SIGNAL_WEIGHTS.goalAlignment,
         reason: `Directly aligned with active learning goal.`,
       });
     }
 
     // 6. Career Alignment
-    const matchesCareer = profile.careerSkills.some(
-      (c) => resource.careerRelevance?.some((cr) => cr.toLowerCase().includes(c.toLowerCase()))
+    const matchesCareer = (profile.careerSkills || []).some(
+      (c) => (resource.careerRelevance || []).some((cr) => cr.toLowerCase().includes(c.toLowerCase()))
     );
     if (matchesCareer) {
       signals.push({
         type: 'careerAlignment',
+        signalType: 'careerAlignment',
         weight: SIGNAL_WEIGHTS.careerAlignment,
-        reason: `Develops target career skills in ${profile.careerSkills.join(', ')}.`,
+        score: SIGNAL_WEIGHTS.careerAlignment,
+        reason: `Develops target career skills in ${(profile.careerSkills || []).join(', ')}.`,
       });
     }
 
     // 7. Risk Alignment
-    if (profile.riskScore >= 60 && resource.estimatedMinutes <= 20) {
+    if ((profile.riskScore || 0) >= 60 && (resource.durationMinutes || resource.estimatedMinutes || 15) <= 20) {
       signals.push({
         type: 'riskAlignment',
+        signalType: 'riskAlignment',
         weight: SIGNAL_WEIGHTS.riskAlignment,
+        score: SIGNAL_WEIGHTS.riskAlignment,
         reason: `Manageable micro-learning unit tailored for high risk index remediation.`,
       });
     }
 
     // 8. Revision Need
-    const isRevision = profile.revisionDueTopics.some(
+    const isRevision = (profile.revisionDueTopics || profile.revisionDueConcepts || []).some(
       (r) => r.toLowerCase() === resource.topic.toLowerCase() || r.toLowerCase() === resource.conceptId.toLowerCase()
     );
     if (isRevision) {
       signals.push({
         type: 'revisionNeed',
+        signalType: 'revisionNeed',
         weight: SIGNAL_WEIGHTS.revisionNeed,
+        score: SIGNAL_WEIGHTS.revisionNeed,
         reason: `Topic is due for spaced repetition revision.`,
       });
     }
 
     // 9. Language Preference
-    if (resource.language === profile.language) {
+    if (profile.language && resource.language === profile.language) {
       signals.push({
         type: 'resourcePreference',
+        signalType: 'resourcePreference',
         weight: SIGNAL_WEIGHTS.resourcePreference,
+        score: SIGNAL_WEIGHTS.resourcePreference,
         reason: `Matches preferred learning language (${profile.language.toUpperCase()}).`,
       });
     }
@@ -126,8 +147,8 @@ export class RecommendationRulesEngine {
     return signals;
   }
 
-  static calculateScore(signals: RecommendationSignal[]): RecommendationScore {
-    const rawTotal = signals.reduce((sum, s) => sum + s.weight, 0);
+  static calculateScore(signals: RecommendationSignal[]): any {
+    const rawTotal = signals.reduce((sum, s) => sum + (s.weight || 0), 0);
     const maxPossible = Object.values(SIGNAL_WEIGHTS).reduce((a, b) => a + b, 0);
     
     // Normalize to 0 - 100 range deterministically
@@ -144,10 +165,12 @@ export class RecommendationRulesEngine {
 
     const breakdown: Record<string, number> = {};
     signals.forEach((s) => {
-      breakdown[s.type] = s.weight;
+      const k = s.signalType || s.type || 'unknown';
+      breakdown[k] = s.weight || 0;
     });
 
     return {
+      recommendationScore: totalScore,
       totalScore,
       priority,
       breakdown,

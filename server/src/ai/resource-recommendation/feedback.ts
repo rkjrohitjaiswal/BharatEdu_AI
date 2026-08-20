@@ -5,7 +5,8 @@ export class ResourceFeedbackHandler {
     let score = baseScore;
 
     for (const fb of feedbackItems) {
-      switch (fb.feedbackType) {
+      const fbType = fb.feedbackType || (fb.helpful ? 'helpful' : 'not_helpful');
+      switch (fbType) {
         case 'helpful':
           score += 15;
           break;

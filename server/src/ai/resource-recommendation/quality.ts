@@ -45,7 +45,7 @@ export class ResourceQualityValidator {
 
     return {
       isValid,
-      isVerified: resource.isVerified && !flags.includes('unverified_source'),
+      isVerified: !!(resource.verified || resource.isVerified) && !flags.includes('unverified_source'),
       flags,
     };
   }

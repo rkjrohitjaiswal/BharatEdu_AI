@@ -1,120 +1,62 @@
 import React from 'react';
-import { ExternalLink, Bookmark, Clock, CheckCircle2, ShieldCheck } from 'lucide-react';
-import { ILearningResourceClient, IResourceRecommendationClient } from '../../types/learning-resource';
+import { ILearningResourceClient } from '../../types/resource-recommendation';
+import { ExternalLink, CheckCircle2, BookOpen } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ResourceCardProps {
-  recommendation?: IResourceRecommendationClient;
-  resource?: ILearningResourceClient;
-  onOpen?: (resourceId: string, url?: string | null) => void;
-  onBookmark?: (resourceId: string) => void;
-  onDismiss?: (recommendationId: string) => void;
-  isBookmarked?: boolean;
+  resource: ILearningResourceClient;
+  recommendationScore?: number;
+  reason?: string;
 }
 
-export const ResourceCard: React.FC<ResourceCardProps> = ({
-  recommendation,
-  resource: rawResource,
-  onOpen,
-  onBookmark,
-  onDismiss,
-  isBookmarked = false,
-}) => {
-  const res = recommendation?.resource || rawResource;
-  if (!res) return null;
-
-  const priorityColor =
-    recommendation?.priority === 'critical'
-      ? 'bg-red-100 text-red-800 border-red-200'
-      : recommendation?.priority === 'high'
-      ? 'bg-amber-100 text-amber-800 border-amber-200'
-      : 'bg-indigo-50 text-indigo-700 border-indigo-100';
-
+export const ResourceCard: React.FC<ResourceCardProps> = ({ resource, recommendationScore, reason }) => {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition p-6 flex flex-col justify-between space-y-4">
-      <div className="space-y-3">
-        {/* Badges */}
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-1.5">
-            <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold uppercase text-[10px]">
-              {res.resourceType.replace('_', ' ')}
+    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-md transition-all">
+      <div>
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex items-center space-x-2">
+            <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+              {resource.resourceType}
             </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[10px] uppercase">
-              {res.subject}
-            </span>
+            {resource.verified && (
+              <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center space-x-1">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>NCERT Verified</span>
+              </span>
+            )}
           </div>
 
-          {recommendation && (
-            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${priorityColor}`}>
-              {recommendation.priority} • Score {recommendation.score}
+          {recommendationScore && (
+            <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+              {recommendationScore}% Match
             </span>
           )}
         </div>
 
-        {/* Title */}
-        <h3 className="text-base font-extrabold text-slate-900 leading-snug hover:text-indigo-600 transition cursor-pointer"
-            onClick={() => onOpen && onOpen(res.resourceId, res.url)}>
-          {res.title}
-        </h3>
+        <h4 className="font-extrabold text-sm text-gray-900 mb-1 leading-snug">{resource.title}</h4>
+        <p className="text-xs text-gray-600 line-clamp-2 mb-3">{resource.description}</p>
 
-        {/* Description */}
-        <p className="text-xs text-slate-600 line-clamp-2 font-medium leading-relaxed">
-          {res.description}
-        </p>
-
-        {/* Reason Banner */}
-        {recommendation && (
-          <div className="p-2.5 bg-indigo-50/70 border border-indigo-100 rounded-xl text-xs text-indigo-900 font-medium">
-            💡 {recommendation.reason}
-          </div>
-        )}
+        {reason && <div className="text-[11px] text-indigo-900 bg-indigo-50/60 p-2 rounded-lg font-medium mb-3">💡 {reason}</div>}
       </div>
 
-      {/* Footer Info & Actions */}
-      <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-bold">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-slate-400" />
-            {res.estimatedMinutes}m
-          </span>
-
-          {res.verified && (
-            <span className="flex items-center gap-1 text-emerald-600" title="Verified Educational Source">
-              <ShieldCheck className="w-3.5 h-3.5" /> Verified
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {onBookmark && (
-            <button
-              onClick={() => onBookmark(res.resourceId)}
-              className={`p-2 rounded-xl border transition ${
-                isBookmarked ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
-              }`}
-              title={isBookmarked ? 'Bookmarked' : 'Bookmark Resource'}
-            >
-              <Bookmark className="w-4 h-4" />
-            </button>
-          )}
-
-          {res.url ? (
-            <a
-              href={res.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => onOpen && onOpen(res.resourceId, res.url)}
-              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition"
-            >
-              Open <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          ) : (
-            <button
-              onClick={() => onOpen && onOpen(res.resourceId, null)}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs flex items-center gap-1.5 transition"
-            >
-              Launch Native Practice
-            </button>
-          )}
+      <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+        <span className="text-xs text-gray-400 font-medium">⏱️ {resource.durationMinutes} mins</span>
+        <div className="flex items-center space-x-2">
+          <Link
+            to={`/resources/${resource.resourceId}`}
+            className="px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-semibold rounded-lg"
+          >
+            Details
+          </Link>
+          <a
+            href={resource.url}
+            target="_blank"
+            rel="noreferrer"
+            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg flex items-center space-x-1 shadow-sm"
+          >
+            <span>Open</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       </div>
     </div>

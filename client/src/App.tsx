@@ -63,6 +63,10 @@ import { MockExamPage as Feature41MockExamPage } from './pages/MockExamPage';
 import { MockExamResultPage as Feature41MockExamResultPage } from './pages/MockExamResultPage';
 import { TeacherExamPreparationPage } from './pages/TeacherExamPreparationPage';
 import { ParentExamPreparationPage } from './pages/ParentExamPreparationPage';
+import { LearningResourcesPage as Feature42LearningResourcesPage } from './pages/LearningResourcesPage';
+import { ResourceDetailPage as Feature42ResourceDetailPage } from './pages/ResourceDetailPage';
+import { TeacherResourcesPage as Feature42TeacherResourcesPage } from './pages/TeacherResourcesPage';
+import { ParentResourcesPage as Feature42ParentResourcesPage } from './pages/ParentResourcesPage';
 import { CreateAssessmentPage } from './pages/CreateAssessmentPage';
 import { AssessmentAnalyticsPage } from './pages/AssessmentAnalyticsPage';
 import { StudentAssessmentsPage } from './pages/StudentAssessmentsPage';
@@ -127,10 +131,10 @@ export const App: React.FC = () => (
           <Route path="parent/copilot" element={<ProtectedRoute allowedRoles={['parent']}><ParentCopilotPage /></ProtectedRoute>} />
           <Route path="parent/collaboration" element={<ProtectedRoute allowedRoles={['parent']}><ParentCollaborationPage /></ProtectedRoute>} />
           <Route path="collaboration" element={<ProtectedRoute allowedRoles={['student']}><StudentCollaborationPage /></ProtectedRoute>} />
-          <Route path="resources" element={<ProtectedRoute allowedRoles={['student']}><ResourceRecommendationsPage /></ProtectedRoute>} />
-          <Route path="resources/:resourceId" element={<ProtectedRoute allowedRoles={['student']}><ResourceDetailPage /></ProtectedRoute>} />
-          <Route path="teacher/resources" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherResourceRecommendationsPage /></ProtectedRoute>} />
-          <Route path="parent/resources" element={<ProtectedRoute allowedRoles={['parent']}><ParentResourceRecommendationsPage /></ProtectedRoute>} />
+          <Route path="resources" element={<ProtectedRoute allowedRoles={['student']}><Feature42LearningResourcesPage /></ProtectedRoute>} />
+          <Route path="resources/:resourceId" element={<ProtectedRoute allowedRoles={['student']}><Feature42ResourceDetailPage /></ProtectedRoute>} />
+          <Route path="teacher/resources" element={<ProtectedRoute allowedRoles={['teacher']}><Feature42TeacherResourcesPage /></ProtectedRoute>} />
+          <Route path="parent/resources/student/:studentId" element={<ProtectedRoute allowedRoles={['parent']}><Feature42ParentResourcesPage /></ProtectedRoute>} />
           <Route path="assessments" element={<ProtectedRoute allowedRoles={['student']}><AssessmentPage /></ProtectedRoute>} />
           <Route path="assessments/:assessmentId" element={<ProtectedRoute allowedRoles={['student']}><AssessmentPage /></ProtectedRoute>} />
           <Route path="exam-preparation" element={<ProtectedRoute allowedRoles={['student']}><ExamPreparationPage /></ProtectedRoute>} />

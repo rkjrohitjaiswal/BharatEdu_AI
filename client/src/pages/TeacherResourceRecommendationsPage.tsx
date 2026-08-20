@@ -57,7 +57,7 @@ export const TeacherResourceRecommendationsPage: React.FC = () => {
                   <div key={r.resourceId} className="p-4 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-3 text-xs">
                     <div className="flex items-center justify-between">
                       <ResourceSourceBadge provider={r.provider} isVerified={r.isVerified} />
-                      <ResourceDuration minutes={r.estimatedMinutes} />
+                      <ResourceDuration minutes={r.estimatedMinutes || r.durationMinutes || 15} />
                     </div>
                     <div>
                       <h4 className="font-bold text-white text-sm">{r.title}</h4>
