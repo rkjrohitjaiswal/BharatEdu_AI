@@ -41,6 +41,7 @@ import { AssessmentEngineCard } from '../components/dashboard/AssessmentEngineCa
 import { ExamPrepEngineCard } from '../components/dashboard/ExamPrepEngineCard';
 import { PersonalizedResourceEngineCard } from '../components/dashboard/PersonalizedResourceEngineCard';
 import { LearningOrchestratorCard } from '../components/dashboard/LearningOrchestratorCard';
+import { LearningEffectivenessCard } from '../components/dashboard/LearningEffectivenessCard';
 import { TeacherGuidanceCard } from '../components/collaboration/TeacherGuidanceCard';
 import { TeacherAssessmentCard } from '../components/dashboard/TeacherAssessmentCard';
 import { StudyMaterialCard } from '../components/dashboard/StudyMaterialCard';
@@ -117,6 +118,9 @@ export const DashboardPage: React.FC = () => {
 
       {/* Feature 43: AI Learning Orchestrator Card */}
       <LearningOrchestratorCard />
+
+      {/* Feature 44: AI Learning Effectiveness Card */}
+      <LearningEffectivenessCard />
 
       {/* Feature 41: AI Exam Prep Engine Card */}
       <ExamPrepEngineCard />

@@ -5361,6 +5361,107 @@ export const fetchParentChildOrchestrator = async (studentId: string) => {
   }
 };
 
+// --- FEATURE 44: AI LEARNING EFFECTIVENESS & OUTCOME OPTIMIZATION APIs ---
+export const fetchStudentEffectiveness = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/effectiveness`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student effectiveness' };
+  }
+};
+
+export const fetchActionEffectiveness = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/effectiveness/actions`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch action effectiveness' };
+  }
+};
+
+export const fetchConceptEffectiveness = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/effectiveness/concepts`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch concept effectiveness' };
+  }
+};
+
+export const fetchStudentOutcomes = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/effectiveness/outcomes`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch student outcomes' };
+  }
+};
+
+export const fetchEffectivenessRecommendations = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/effectiveness/recommendations`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch recommendations' };
+  }
+};
+
+export const fetchEffectivenessSummary = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/effectiveness/summary`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch effectiveness summary' };
+  }
+};
+
+export const refreshStudentEffectiveness = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/effectiveness/refresh`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to refresh effectiveness' };
+  }
+};
+
+export const fetchTeacherEffectiveness = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/effectiveness`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher effectiveness' };
+  }
+};
+
+export const fetchParentChildEffectiveness = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/effectiveness/student/${studentId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch child effectiveness' };
+  }
+};
+
 
 
 

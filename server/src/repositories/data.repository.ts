@@ -69,6 +69,8 @@ import { StudentResourceInteraction } from '../models/student-resource-interacti
 import { ResourceFeedback } from '../models/resource-feedback.model.js';
 import { LearningOrchestration } from '../models/learning-orchestration.model.js';
 import { OrchestrationAction } from '../models/orchestration-action.model.js';
+import { LearningOutcome } from '../models/learning-outcome.model.js';
+import { EffectivenessSnapshot } from '../models/effectiveness-snapshot.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -253,6 +255,8 @@ const inMemStudentResourceInteractions: any[] = [];
 const inMemResourceFeedbacks: any[] = [];
 const inMemLearningOrchestrations: any[] = [];
 const inMemOrchestrationActions: any[] = [];
+const inMemLearningOutcomes: any[] = [];
+const inMemEffectivenessSnapshots: any[] = [];
 
 export const dataRepository = {
   // --- SCHOLARSHIP INTELLIGENCE ---
@@ -4598,6 +4602,61 @@ export const dataRepository = {
 
   async skipOrchestrationAction(studentId: string, actionId: string): Promise<any> {
     return await this.updateOrchestrationAction(studentId, actionId, { status: 'skipped' });
+  },
+
+  // --- FEATURE 44: AI LEARNING EFFECTIVENESS & OUTCOME OPTIMIZATION ENGINE ---
+  async createLearningOutcome(outcomeData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new LearningOutcome(outcomeData);
+      return await doc.save();
+    }
+    const item = { _id: `out_${Date.now()}`, ...outcomeData, createdAt: new Date() };
+    inMemLearningOutcomes.push(item);
+    return item;
+  },
+
+  async getLearningOutcome(outcomeId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningOutcome.findOne({ outcomeId }).lean();
+    }
+    return inMemLearningOutcomes.find((o) => o.outcomeId === outcomeId) || null;
+  },
+
+  async getStudentLearningOutcomes(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await LearningOutcome.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemLearningOutcomes.filter((o) => o.studentId === studentId);
+  },
+
+  async updateLearningOutcome(outcomeId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningOutcome.findOneAndUpdate({ outcomeId }, { $set: updates }, { new: true }).lean();
+    }
+    const idx = inMemLearningOutcomes.findIndex((o) => o.outcomeId === outcomeId);
+    if (idx >= 0) {
+      inMemLearningOutcomes[idx] = { ...inMemLearningOutcomes[idx], ...updates, updatedAt: new Date() };
+      return inMemLearningOutcomes[idx];
+    }
+    return null;
+  },
+
+  async createEffectivenessSnapshot(snapshotData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new EffectivenessSnapshot(snapshotData);
+      return await doc.save();
+    }
+    const item = { _id: `snap_${Date.now()}`, ...snapshotData, createdAt: new Date() };
+    inMemEffectivenessSnapshots.push(item);
+    return item;
+  },
+
+  async getLatestEffectivenessSnapshot(studentId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await EffectivenessSnapshot.findOne({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    const list = inMemEffectivenessSnapshots.filter((s) => s.studentId === studentId);
+    return list.length > 0 ? list[list.length - 1] : null;
   },
 };
 
