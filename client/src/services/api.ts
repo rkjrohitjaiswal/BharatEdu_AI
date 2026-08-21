@@ -5235,6 +5235,132 @@ export const fetchParentChildResourceList = async (studentId: string) => {
   }
 };
 
+// --- FEATURE 43: AI LEARNING ORCHESTRATOR & UNIFIED STUDENT INTELLIGENCE APIs ---
+export const fetchStudentOrchestrator = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/orchestrator`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch orchestrator plan' };
+  }
+};
+
+export const fetchStudentTodayPlan = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/orchestrator/today`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch today plan' };
+  }
+};
+
+export const fetchStudentWeekPlan = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/orchestrator/week`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch week plan' };
+  }
+};
+
+export const fetchStudentNextBestAction = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/orchestrator/next`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch next best action' };
+  }
+};
+
+export const fetchStudentOrchestratorInsights = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/orchestrator/insights`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch orchestrator insights' };
+  }
+};
+
+export const refreshStudentOrchestratorPlan = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/orchestrator/refresh`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to refresh orchestrator plan' };
+  }
+};
+
+export const startOrchestrationAction = async (actionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/orchestrator/actions/${actionId}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to start action' };
+  }
+};
+
+export const completeOrchestrationAction = async (actionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/orchestrator/actions/${actionId}/complete`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to complete action' };
+  }
+};
+
+export const skipOrchestrationAction = async (actionId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/orchestrator/actions/${actionId}/skip`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to skip action' };
+  }
+};
+
+export const fetchTeacherOrchestrator = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/teacher/orchestrator`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch teacher orchestrator' };
+  }
+};
+
+export const fetchParentChildOrchestrator = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/parent/orchestrator/student/${studentId}`, {
+      headers: getAuthHeaders(),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    return { success: false, message: 'Failed to fetch child orchestrator' };
+  }
+};
+
 
 
 

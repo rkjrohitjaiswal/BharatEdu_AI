@@ -40,6 +40,7 @@ import { ResourceRecommendationsCard } from '../components/dashboard/ResourceRec
 import { AssessmentEngineCard } from '../components/dashboard/AssessmentEngineCard';
 import { ExamPrepEngineCard } from '../components/dashboard/ExamPrepEngineCard';
 import { PersonalizedResourceEngineCard } from '../components/dashboard/PersonalizedResourceEngineCard';
+import { LearningOrchestratorCard } from '../components/dashboard/LearningOrchestratorCard';
 import { TeacherGuidanceCard } from '../components/collaboration/TeacherGuidanceCard';
 import { TeacherAssessmentCard } from '../components/dashboard/TeacherAssessmentCard';
 import { StudyMaterialCard } from '../components/dashboard/StudyMaterialCard';
@@ -113,6 +114,9 @@ export const DashboardPage: React.FC = () => {
     <div className="space-y-6">
       {/* 1. Welcome Header */}
       <StudentWelcome user={user} profile={studentProfile} />
+
+      {/* Feature 43: AI Learning Orchestrator Card */}
+      <LearningOrchestratorCard />
 
       {/* Feature 41: AI Exam Prep Engine Card */}
       <ExamPrepEngineCard />

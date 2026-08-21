@@ -67,6 +67,8 @@ import { StudentExamPlan } from '../models/student-exam-plan.model.js';
 import { ExamSyllabusItem } from '../models/exam-syllabus-item.model.js';
 import { StudentResourceInteraction } from '../models/student-resource-interaction.model.js';
 import { ResourceFeedback } from '../models/resource-feedback.model.js';
+import { LearningOrchestration } from '../models/learning-orchestration.model.js';
+import { OrchestrationAction } from '../models/orchestration-action.model.js';
 import { RevisionItem } from '../models/revision-item.model.js';
 import { RevisionHistory } from '../models/revision-history.model.js';
 import { RevisionSession } from '../models/revision-session.model.js';
@@ -249,6 +251,8 @@ const inMemStudentExamPlans: any[] = [];
 const inMemExamSyllabusItems: any[] = [];
 const inMemStudentResourceInteractions: any[] = [];
 const inMemResourceFeedbacks: any[] = [];
+const inMemLearningOrchestrations: any[] = [];
+const inMemOrchestrationActions: any[] = [];
 
 export const dataRepository = {
   // --- SCHOLARSHIP INTELLIGENCE ---
@@ -4534,6 +4538,66 @@ export const dataRepository = {
     };
     inMemStudentResourceInteractions.push(newItem);
     return newItem;
+  },
+
+  // --- FEATURE 43: AI LEARNING ORCHESTRATOR & UNIFIED STUDENT INTELLIGENCE ENGINE ---
+  async createOrchestrationPlan(planData: any): Promise<any> {
+    if (isDBConnected()) {
+      const doc = new LearningOrchestration(planData);
+      return await doc.save();
+    }
+    const item = { _id: `plan_${Date.now()}`, ...planData, createdAt: new Date() };
+    inMemLearningOrchestrations.push(item);
+    return item;
+  },
+
+  async getOrchestrationPlan(studentId: string): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningOrchestration.findOne({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    const plans = inMemLearningOrchestrations.filter((p) => p.studentId === studentId);
+    return plans.length > 0 ? plans[plans.length - 1] : null;
+  },
+
+  async getStudentOrchestrationPlans(studentId: string): Promise<any[]> {
+    if (isDBConnected()) {
+      return await LearningOrchestration.find({ studentId }).sort({ createdAt: -1 }).lean();
+    }
+    return inMemLearningOrchestrations.filter((p) => p.studentId === studentId);
+  },
+
+  async updateOrchestrationPlan(studentId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await LearningOrchestration.findOneAndUpdate({ studentId }, { $set: updates }, { new: true }).lean();
+    }
+    const idx = inMemLearningOrchestrations.findIndex((p) => p.studentId === studentId);
+    if (idx >= 0) {
+      inMemLearningOrchestrations[idx] = { ...inMemLearningOrchestrations[idx], ...updates, updatedAt: new Date() };
+      return inMemLearningOrchestrations[idx];
+    }
+    return null;
+  },
+
+  async updateOrchestrationAction(studentId: string, actionId: string, updates: any): Promise<any> {
+    if (isDBConnected()) {
+      return await OrchestrationAction.findOneAndUpdate({ studentId, actionId }, { $set: updates }, { new: true }).lean();
+    }
+    const idx = inMemOrchestrationActions.findIndex((a) => a.studentId === studentId && a.actionId === actionId);
+    if (idx >= 0) {
+      inMemOrchestrationActions[idx] = { ...inMemOrchestrationActions[idx], ...updates, updatedAt: new Date() };
+      return inMemOrchestrationActions[idx];
+    }
+    const newAct = { _id: `act_${Date.now()}`, studentId, actionId, ...updates, createdAt: new Date() };
+    inMemOrchestrationActions.push(newAct);
+    return newAct;
+  },
+
+  async completeOrchestrationAction(studentId: string, actionId: string): Promise<any> {
+    return await this.updateOrchestrationAction(studentId, actionId, { status: 'completed', completedAt: new Date() });
+  },
+
+  async skipOrchestrationAction(studentId: string, actionId: string): Promise<any> {
+    return await this.updateOrchestrationAction(studentId, actionId, { status: 'skipped' });
   },
 };
 
